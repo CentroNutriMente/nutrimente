@@ -2,63 +2,131 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
+use App\Models\Patient;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AppointmentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $appointments = Appointment::with(['patient', 'user'])
+            ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
+            ->when($request->start, fn ($q) => $q->where('start_at', '>=', $request->start))
+            ->when($request->end, fn ($q) => $q->where('end_at', '<=', $request->end))
+            ->get()
+            ->map(fn ($apt) => [
+                'id' => $apt->id,
+                'title' => $apt->patient
+                    ? "{$apt->patient->last_name} {$apt->patient->first_name}"
+                    : $apt->title,
+                'start' => $apt->start_at,
+                'end' => $apt->end_at,
+                'color' => $apt->color ?? $this->colorForType($apt->type),
+                'extendedProps' => [
+                    'type' => $apt->type,
+                    'status' => $apt->status,
+                    'room' => $apt->room,
+                    'professional' => $apt->user?->name,
+                    'patient_id' => $apt->patient_id,
+                ],
+            ]);
+
+        return response()->json($appointments);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function calendar(Request $request): Response
     {
-        //
+        $professionals = User::with('professionalProfile')
+            ->whereHas('roles')
+            ->get(['id', 'name'])
+            ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]);
+
+        return Inertia::render('Calendar/Index', [
+            'professionals' => $professionals,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function create(Request $request): Response
     {
-        //
+        return Inertia::render('Calendar/AppointmentForm', [
+            'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+            'professionals' => User::with('professionalProfile')->get(['id', 'name']),
+            'prefill' => $request->only(['patient_id', 'start_at']),
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function store(Request $request): RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'patient_id' => 'nullable|exists:patients,id',
+            'type' => 'required|in:session,intervision,personal,blocked',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_at' => 'required|date',
+            'end_at' => 'required|date|after:start_at',
+            'room' => 'nullable|string|max:100',
+            'color' => 'nullable|string|max:20',
+            'is_shared' => 'boolean',
+        ]);
+
+        $appointment = Appointment::create($validated);
+
+        return redirect()->route('calendar')->with('success', 'Appuntamento creato.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function show(Appointment $appointment): Response
     {
-        //
+        return Inertia::render('Calendar/AppointmentShow', [
+            'appointment' => $appointment->load(['patient', 'user', 'intervisione']),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function edit(Appointment $appointment): Response
     {
-        //
+        return Inertia::render('Calendar/AppointmentForm', [
+            'appointment' => $appointment,
+            'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+            'professionals' => User::with('professionalProfile')->get(['id', 'name']),
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function update(Request $request, Appointment $appointment): RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'start_at' => 'required|date',
+            'end_at' => 'required|date|after:start_at',
+            'status' => 'in:scheduled,confirmed,cancelled,completed',
+            'room' => 'nullable|string',
+            'cancellation_reason' => 'nullable|string',
+        ]);
+
+        $appointment->update($validated);
+
+        return redirect()->route('calendar')->with('success', 'Appuntamento aggiornato.');
+    }
+
+    public function destroy(Appointment $appointment): RedirectResponse
+    {
+        $appointment->delete();
+        return redirect()->route('calendar')->with('success', 'Appuntamento eliminato.');
+    }
+
+    private function colorForType(string $type): string
+    {
+        return match ($type) {
+            'session' => '#059669',
+            'intervision' => '#7c3aed',
+            'personal' => '#0284c7',
+            'blocked' => '#6b7280',
+            default => '#059669',
+        };
     }
 }
