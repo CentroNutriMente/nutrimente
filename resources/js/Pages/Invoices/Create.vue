@@ -56,7 +56,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                     <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Paziente *</label>
-                            <select v-model="form.patient_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <select v-model="form.patient_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 <option value="">Seleziona paziente...</option>
                                 <option v-for="p in patients" :key="p.id" :value="p.id">
                                     {{ p.last_name }} {{ p.first_name }}{{ p.codice_fiscale ? ` — ${p.codice_fiscale}` : '' }}
@@ -66,11 +66,11 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Data fattura *</label>
-                            <input v-model="form.issued_at" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                            <input v-model="form.issued_at" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Metodo di pagamento</label>
-                            <select v-model="form.payment_method" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <select v-model="form.payment_method" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 <option value="">—</option>
                                 <option v-for="m in paymentMethods" :key="m" :value="m">{{ m.charAt(0).toUpperCase() + m.slice(1) }}</option>
                             </select>
@@ -82,7 +82,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                 <div class="bg-white rounded-xl border border-gray-200 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="font-semibold text-gray-700">Prestazioni</h2>
-                        <button type="button" @click="addLine" class="text-sm text-emerald-600 hover:underline">+ Aggiungi riga</button>
+                        <button type="button" @click="addLine" class="text-sm text-purple-600 hover:underline">+ Aggiungi riga</button>
                     </div>
 
                     <div class="space-y-3">
@@ -96,7 +96,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                                     v-model="line.description"
                                     type="text"
                                     placeholder="Descrizione prestazione..."
-                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 />
                                 <p v-if="form.errors[`lines.${i}.description`]" class="text-red-500 text-xs mt-1">{{ form.errors[`lines.${i}.description`] }}</p>
                             </div>
@@ -106,7 +106,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                                     type="number"
                                     min="1"
                                     placeholder="Qtà"
-                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center"
+                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-center"
                                 />
                             </div>
                             <div class="col-span-3">
@@ -118,7 +118,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                                         min="0"
                                         step="0.01"
                                         placeholder="0,00"
-                                        class="w-full border border-gray-200 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
+                                        class="w-full border border-gray-200 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
                                     />
                                 </div>
                             </div>
@@ -143,7 +143,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                         type="button"
                         @click="submit"
                         :disabled="form.processing"
-                        class="px-6 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                        class="px-6 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 transition-colors"
                     >
                         {{ form.processing ? 'Emissione...' : 'Emetti fattura' }}
                     </button>

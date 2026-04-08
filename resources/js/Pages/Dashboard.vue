@@ -18,7 +18,7 @@ const statCards = [
         label: 'Appuntamenti oggi',
         value: props.stats.appointments_today,
         icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-        color: 'bg-emerald-50 text-emerald-600',
+        color: 'bg-purple-50 text-purple-600',
     },
     {
         label: 'Questa settimana',
@@ -44,7 +44,7 @@ const formatDate = (d) => new Date(d).toLocaleDateString('it-IT', { weekday: 'sh
 
 const statusColor = {
     scheduled: 'bg-blue-100 text-blue-700',
-    confirmed: 'bg-emerald-100 text-emerald-700',
+    confirmed: 'bg-purple-100 text-purple-700',
     cancelled: 'bg-red-100 text-red-700',
     completed: 'bg-gray-100 text-gray-600',
 };
@@ -80,7 +80,7 @@ const statusColor = {
             <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200">
                 <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                     <h2 class="font-semibold text-gray-800">Prossimi appuntamenti</h2>
-                    <Link :href="route('calendar')" class="text-sm text-emerald-600 hover:underline">Vai al calendario</Link>
+                    <Link :href="route('calendar')" class="text-sm text-purple-600 hover:underline">Vai al calendario</Link>
                 </div>
                 <div class="divide-y divide-gray-50">
                     <div v-if="upcomingAppointments.length === 0" class="px-5 py-8 text-center text-gray-400 text-sm">
@@ -113,9 +113,9 @@ const statusColor = {
                 <div class="p-4 space-y-2">
                     <Link
                         :href="route('patients.create')"
-                        class="flex items-center gap-3 w-full px-4 py-3 rounded-lg border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors text-sm font-medium text-gray-700"
+                        class="flex items-center gap-3 w-full px-4 py-3 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors text-sm font-medium text-gray-700"
                     >
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                         </svg>
                         Nuovo paziente

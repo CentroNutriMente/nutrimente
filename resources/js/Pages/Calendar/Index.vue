@@ -135,14 +135,14 @@ function filterProfessional() {
                     <select
                         v-model="selectedProfessional"
                         @change="filterProfessional"
-                        class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
                         <option value="">Tutti i professionisti</option>
                         <option v-for="p in professionals" :key="p.id" :value="p.id">{{ p.name }}</option>
                     </select>
                     <Link
                         :href="route('appointments.create')"
-                        class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
                     >+ Appuntamento</Link>
                 </div>
             </div>
@@ -151,7 +151,7 @@ function filterProfessional() {
         <!-- Legenda tipi -->
         <div class="flex gap-4 mb-4">
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                <span class="w-3 h-3 rounded-full bg-emerald-600 inline-block"></span> Seduta
+                <span class="w-3 h-3 rounded-full bg-purple-600 inline-block"></span> Seduta
             </div>
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
                 <span class="w-3 h-3 rounded-full bg-violet-600 inline-block"></span> Intervisione
@@ -209,7 +209,7 @@ function filterProfessional() {
                 <div class="flex gap-2">
                     <Link
                         :href="route('appointments.edit', selectedAppointment.id)"
-                        class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 text-center"
+                        class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 text-center"
                     >Modifica</Link>
                     <Link
                         v-if="selectedAppointment.patient_id"

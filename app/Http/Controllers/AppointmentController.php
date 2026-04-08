@@ -122,11 +122,11 @@ class AppointmentController extends Controller
     private function colorForType(string $type): string
     {
         return match ($type) {
-            'session' => '#059669',
-            'intervision' => '#7c3aed',
-            'personal' => '#0284c7',
-            'blocked' => '#6b7280',
-            default => '#059669',
+            'session' => '#9333ea',   // purple-600
+            'intervision' => '#c084fc', // purple-400
+            'personal' => '#a78bfa',   // violet-400
+            'blocked' => '#d1d5db',    // gray-300
+            default => '#9333ea',
         };
     }
 }

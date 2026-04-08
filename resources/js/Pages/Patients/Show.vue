@@ -29,7 +29,7 @@ const invoiceStatusLabel = { draft: 'Bozza', issued: 'Emessa', paid: 'Pagata', c
 const invoiceStatusClass = {
     draft: 'bg-gray-100 text-gray-600',
     issued: 'bg-amber-100 text-amber-700',
-    paid: 'bg-emerald-100 text-emerald-700',
+    paid: 'bg-purple-100 text-purple-700',
     cancelled: 'bg-red-100 text-red-600',
 };
 </script>
@@ -47,7 +47,7 @@ const invoiceStatusClass = {
                     <h1 class="text-xl font-semibold text-gray-800">{{ patient.last_name }} {{ patient.first_name }}</h1>
                     <p class="text-sm text-gray-400">CF: {{ patient.codice_fiscale ?? '—' }}</p>
                 </div>
-                <span :class="patient.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'" class="ml-2 text-xs px-2 py-1 rounded-full font-medium">
+                <span :class="patient.is_active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'" class="ml-2 text-xs px-2 py-1 rounded-full font-medium">
                     {{ patient.is_active ? 'Attivo' : 'Archiviato' }}
                 </span>
                 <div class="ml-auto flex gap-2">
@@ -113,7 +113,7 @@ const invoiceStatusClass = {
                         :key="tab.key"
                         @click="activeTab = tab.key"
                         :class="[
-                            activeTab === tab.key ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                            activeTab === tab.key ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100',
                             'px-4 py-2 rounded-lg text-sm font-medium transition-colors'
                         ]"
                     >{{ tab.label }}</button>
@@ -124,7 +124,7 @@ const invoiceStatusClass = {
                     <div class="flex justify-end mb-3">
                         <Link
                             :href="route('patients.records', patient.id)"
-                            class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+                            class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
                         >+ Nuova scheda</Link>
                     </div>
                     <div v-if="!patient.records.length" class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
@@ -142,7 +142,7 @@ const invoiceStatusClass = {
                                 <span class="text-xs text-gray-400 shrink-0">{{ fmt(rec.record_date) }}</span>
                             </div>
                             <div v-if="rec.notes" class="text-sm text-gray-600 mb-1 whitespace-pre-line">{{ rec.notes }}</div>
-                            <div v-if="rec.treatment_plan" class="text-sm text-emerald-700 bg-emerald-50 rounded p-2 mt-2">
+                            <div v-if="rec.treatment_plan" class="text-sm text-purple-700 bg-purple-50 rounded p-2 mt-2">
                                 <span class="font-medium text-xs uppercase tracking-wide">Piano di trattamento: </span>{{ rec.treatment_plan }}
                             </div>
                             <div class="text-xs text-gray-400 mt-2">Autore: {{ rec.user?.name }}</div>
@@ -206,7 +206,7 @@ const invoiceStatusClass = {
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        <Link :href="route('invoices.show', inv.id)" class="text-xs text-emerald-600 hover:underline">Apri</Link>
+                                        <Link :href="route('invoices.show', inv.id)" class="text-xs text-purple-600 hover:underline">Apri</Link>
                                     </td>
                                 </tr>
                             </tbody>
@@ -221,7 +221,7 @@ const invoiceStatusClass = {
                     </div>
                     <div v-else class="space-y-3">
                         <div v-for="c in patient.consents" :key="c.id" class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
-                            <div :class="c.accepted ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-500'" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                            <div :class="c.accepted ? 'bg-purple-100 text-purple-600' : 'bg-red-100 text-red-500'" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="c.accepted ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'" />
                                 </svg>

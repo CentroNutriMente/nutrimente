@@ -34,12 +34,12 @@ const logout = () => router.post(route('logout'));
         <!-- Sidebar -->
         <aside
             :class="sidebarOpen ? 'w-64' : 'w-16'"
-            class="flex flex-col bg-emerald-900 text-white min-h-screen transition-all duration-200 shrink-0"
+            class="flex flex-col bg-purple-900 text-white min-h-screen transition-all duration-200 shrink-0"
         >
             <!-- Logo -->
-            <div class="flex items-center gap-3 px-4 py-5 border-b border-emerald-700">
-                <div class="w-8 h-8 bg-emerald-400 rounded-lg flex items-center justify-center shrink-0">
-                    <span class="text-emerald-900 font-bold text-sm">CN</span>
+            <div class="flex items-center gap-3 px-4 py-5 border-b border-purple-700">
+                <div class="w-8 h-8 bg-purple-400 rounded-lg flex items-center justify-center shrink-0">
+                    <span class="text-purple-900 font-bold text-sm">CN</span>
                 </div>
                 <span v-if="sidebarOpen" class="font-semibold text-sm leading-tight">Centro<br>Nutrimento</span>
             </div>
@@ -52,8 +52,8 @@ const logout = () => router.post(route('logout'));
                     :href="route(item.href)"
                     :class="[
                         isActive(item.href)
-                            ? 'bg-emerald-700 text-white'
-                            : 'text-emerald-100 hover:bg-emerald-800',
+                            ? 'bg-purple-700 text-white'
+                            : 'text-purple-100 hover:bg-purple-800',
                         'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors'
                     ]"
                 >
@@ -65,10 +65,10 @@ const logout = () => router.post(route('logout'));
             </nav>
 
             <!-- User -->
-            <div class="border-t border-emerald-700 p-3">
+            <div class="border-t border-purple-700 p-3">
                 <Dropdown align="top-end" width="48">
                     <template #trigger>
-                        <button class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-emerald-800 transition-colors">
+                        <button class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-purple-800 transition-colors">
                             <img
                                 class="w-8 h-8 rounded-full object-cover shrink-0"
                                 :src="$page.props.auth.user.profile_photo_url"
@@ -76,7 +76,7 @@ const logout = () => router.post(route('logout'));
                             />
                             <div v-if="sidebarOpen" class="text-left min-w-0">
                                 <div class="text-sm font-medium truncate">{{ $page.props.auth.user.name }}</div>
-                                <div class="text-xs text-emerald-300 truncate">{{ $page.props.auth.user.email }}</div>
+                                <div class="text-xs text-purple-300 truncate">{{ $page.props.auth.user.email }}</div>
                             </div>
                         </button>
                     </template>
@@ -93,7 +93,7 @@ const logout = () => router.post(route('logout'));
             <!-- Toggle -->
             <button
                 @click="sidebarOpen = !sidebarOpen"
-                class="absolute top-4 -right-3 bg-emerald-700 hover:bg-emerald-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
+                class="absolute top-4 -right-3 bg-purple-700 hover:bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
                 style="position: absolute"
             >
                 <svg class="w-3 h-3 transition-transform" :class="sidebarOpen ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">

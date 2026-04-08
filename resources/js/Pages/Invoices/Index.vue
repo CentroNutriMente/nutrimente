@@ -22,7 +22,7 @@ const statusLabel = { draft: 'Bozza', issued: 'Emessa', paid: 'Pagata', cancelle
 const statusClass = {
     draft: 'bg-gray-100 text-gray-600',
     issued: 'bg-amber-100 text-amber-700',
-    paid: 'bg-emerald-100 text-emerald-700',
+    paid: 'bg-purple-100 text-purple-700',
     cancelled: 'bg-red-100 text-red-600',
 };
 
@@ -37,21 +37,21 @@ const fmtEur = (v) => `€ ${Number(v).toLocaleString('it-IT', { minimumFraction
                 <h1 class="text-xl font-semibold text-gray-800">Fatturazione</h1>
                 <Link
                     :href="route('invoices.create')"
-                    class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
                 >+ Nuova fattura</Link>
             </div>
         </template>
 
         <!-- Filtri -->
         <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex gap-3">
-            <select v-model="status" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <select v-model="status" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                 <option value="">Tutti gli stati</option>
                 <option value="draft">Bozza</option>
                 <option value="issued">Emessa</option>
                 <option value="paid">Pagata</option>
                 <option value="cancelled">Annullata</option>
             </select>
-            <select v-model="year" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <select v-model="year" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                 <option v-for="y in [2024, 2025, 2026, 2027]" :key="y" :value="y">{{ y }}</option>
             </select>
         </div>
@@ -91,11 +91,11 @@ const fmtEur = (v) => `€ ${Number(v).toLocaleString('it-IT', { minimumFraction
                             </span>
                         </td>
                         <td class="px-4 py-3">
-                            <span v-if="inv.sts_sent" class="text-xs text-emerald-600 font-medium">Inviata</span>
+                            <span v-if="inv.sts_sent" class="text-xs text-purple-600 font-medium">Inviata</span>
                             <span v-else class="text-xs text-gray-400">—</span>
                         </td>
                         <td class="px-4 py-3 text-right flex gap-2 justify-end">
-                            <Link :href="route('invoices.show', inv.id)" class="text-xs text-emerald-600 hover:underline">Apri</Link>
+                            <Link :href="route('invoices.show', inv.id)" class="text-xs text-purple-600 hover:underline">Apri</Link>
                             <a :href="route('invoices.pdf', inv.id)" target="_blank" class="text-xs text-gray-400 hover:underline">PDF</a>
                         </td>
                     </tr>
@@ -111,7 +111,7 @@ const fmtEur = (v) => `€ ${Number(v).toLocaleString('it-IT', { minimumFraction
                         :href="link.url ?? '#'"
                         v-html="link.label"
                         :class="[
-                            link.active ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100',
+                            link.active ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100',
                             !link.url ? 'opacity-40 pointer-events-none' : '',
                             'px-3 py-1 rounded text-xs font-medium transition-colors'
                         ]"
