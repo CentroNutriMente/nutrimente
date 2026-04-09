@@ -1,2 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm-10_x", "php83", "php83Packages.composer"]
+
 [phases.install]
-cmds = ["npm install --no-audit --no-fund"]
+cmds = ["npm install --no-audit --no-fund", "composer install --optimize-autoloader --no-scripts --no-interaction"]
+
+[phases.build]
+cmds = ["npm run build", "mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache && chmod -R a+rw storage", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache"]
+
+[start]
+cmd = "/start-container.sh"
