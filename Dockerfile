@@ -9,11 +9,12 @@ RUN apk add --no-cache \
     curl \
     libpng-dev \
     libxml2-dev \
+    postgresql-dev \
     zip \
     unzip
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql pgsql bcmath gd xml
+RUN docker-php-ext-install pdo pdo_pgsql pgsql bcmath gd
 
 # Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
