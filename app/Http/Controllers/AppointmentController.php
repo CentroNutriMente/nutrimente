@@ -17,8 +17,10 @@ class AppointmentController extends Controller
     {
         $appointments = Appointment::with(['patient', 'user'])
             ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
-            ->when($request->start, fn ($q) => $q->where('start_at', '>=', $request->start))
-            ->when($request->end, fn ($q) => $q->where('end_at', '<=', $request->end))
+            ->when($request->start && $request->end, fn ($q) => $q
+                ->where('start_at', '<', $request->end)
+                ->where('end_at', '>', $request->start)
+            )
             ->get()
             ->map(fn ($apt) => [
                 'id' => $apt->id,
@@ -97,18 +99,22 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function update(Request $request, Appointment $appointment): RedirectResponse
+    public function update(Request $request, Appointment $appointment): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'start_at' => 'required|date',
-            'end_at' => 'required|date|after:start_at',
-            'status' => 'in:scheduled,confirmed,cancelled,completed',
+            'title' => 'sometimes|required|string|max:255',
+            'start_at' => 'sometimes|required|date',
+            'end_at' => 'sometimes|required|date|after:start_at',
+            'status' => 'sometimes|in:scheduled,confirmed,cancelled,completed',
             'room' => 'nullable|string',
             'cancellation_reason' => 'nullable|string',
         ]);
 
         $appointment->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
 
         return redirect()->route('calendar')->with('success', 'Appuntamento aggiornato.');
     }

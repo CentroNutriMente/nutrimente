@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration(), // Disabilitata: solo inviti admin
         Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),

@@ -1,6 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -13,32 +13,7 @@ const props = defineProps({ professionals: Array });
 const selectedProfessional = ref('');
 const selectedAppointment = ref(null);
 const showModal = ref(false);
-
-const calendarOptions = ref({
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-    initialView: 'timeGridWeek',
-    locale: itLocale,
-    headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay',
-    },
-    slotMinTime: '08:00:00',
-    slotMaxTime: '21:00:00',
-    allDaySlot: false,
-    nowIndicator: true,
-    selectable: true,
-    selectMirror: true,
-    editable: true,
-    eventResizableFromStart: true,
-    height: 'auto',
-    events: fetchEvents,
-    eventClick: handleEventClick,
-    select: handleSelect,
-    eventDrop: handleEventDrop,
-    eventResize: handleEventResize,
-    eventContent: renderEventContent,
-});
+const calendarRef = ref(null);
 
 async function fetchEvents(info, successCallback) {
     const params = new URLSearchParams({
@@ -66,9 +41,7 @@ function handleEventClick({ event }) {
 }
 
 function handleSelect(info) {
-    router.visit(route('appointments.create', {
-        start_at: info.startStr,
-    }));
+    router.visit(route('appointments.create', { start_at: info.startStr }));
 }
 
 async function handleEventDrop({ event, revert }) {
@@ -81,7 +54,7 @@ async function handleEventDrop({ event, revert }) {
                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content,
                 'X-Requested-With': 'XMLHttpRequest',
             },
-            body: JSON.stringify({ start_at: event.startStr, end_at: event.endStr, title: event.title }),
+            body: JSON.stringify({ start_at: event.startStr, end_at: event.endStr }),
         });
     } catch {
         revert();
@@ -93,17 +66,42 @@ async function handleEventResize({ event, revert }) {
 }
 
 function renderEventContent(arg) {
-    const type = arg.event.extendedProps.type;
     const room = arg.event.extendedProps.room;
     const professional = arg.event.extendedProps.professional;
     return {
-        html: `<div class="fc-event-inner" style="padding:2px 4px; font-size:11px; overflow:hidden">
+        html: `<div style="padding:2px 4px; font-size:11px; overflow:hidden">
             <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${arg.event.title}</div>
             ${professional ? `<div style="opacity:0.85">${professional}</div>` : ''}
             ${room ? `<div style="opacity:0.75">📍 ${room}</div>` : ''}
         </div>`,
     };
 }
+
+const calendarOptions = {
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    initialView: 'timeGridWeek',
+    locale: itLocale,
+    headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay',
+    },
+    slotMinTime: '08:00:00',
+    slotMaxTime: '21:00:00',
+    allDaySlot: false,
+    nowIndicator: true,
+    selectable: true,
+    selectMirror: true,
+    editable: true,
+    eventResizableFromStart: true,
+    height: 'auto',
+    events: fetchEvents,
+    eventClick: handleEventClick,
+    select: handleSelect,
+    eventDrop: handleEventDrop,
+    eventResize: handleEventResize,
+    eventContent: renderEventContent,
+};
 
 const typeLabels = {
     session: 'Seduta',
@@ -118,8 +116,6 @@ const statusLabels = {
     cancelled: 'Annullato',
     completed: 'Completato',
 };
-
-const calendarRef = ref(null);
 
 function filterProfessional() {
     calendarRef.value?.getApi().refetchEvents();
@@ -166,7 +162,7 @@ function filterProfessional() {
 
         <!-- Calendario -->
         <div class="bg-white rounded-xl border border-gray-200 p-4">
-            <FullCalendar ref="calendarRef" v-bind="calendarOptions" />
+            <FullCalendar ref="calendarRef" :options="calendarOptions" />
         </div>
 
         <!-- Modal dettaglio appuntamento -->
