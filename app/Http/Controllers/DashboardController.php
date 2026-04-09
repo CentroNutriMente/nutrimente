@@ -16,33 +16,40 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $stats = [
-            'total_patients' => Patient::count(),
             'appointments_today' => Appointment::whereDate('start_at', today())
                 ->where('user_id', $user->id)
                 ->count(),
-            'appointments_week' => Appointment::whereBetween('start_at', [now()->startOfWeek(), now()->endOfWeek()])
-                ->where('user_id', $user->id)
-                ->count(),
-            'invoices_unpaid' => Invoice::where('user_id', $user->id)
-                ->where('status', 'issued')
-                ->whereNull('paid_at')
+            'active_patients' => Patient::where('is_active', true)->count(),
+            'invoices_month' => Invoice::where('user_id', $user->id)
+                ->whereMonth('issued_at', now()->month)
+                ->whereYear('issued_at', now()->year)
+                ->whereNotIn('status', ['cancelled'])
                 ->count(),
             'revenue_month' => Invoice::where('user_id', $user->id)
-                ->where('status', 'paid')
-                ->whereMonth('paid_at', now()->month)
+                ->whereMonth('issued_at', now()->month)
+                ->whereYear('issued_at', now()->year)
+                ->whereNotIn('status', ['cancelled'])
                 ->sum('total'),
         ];
 
-        $upcomingAppointments = Appointment::with('patient')
+        $todayAppointments = Appointment::with('patient')
             ->where('user_id', $user->id)
-            ->where('start_at', '>=', now())
+            ->whereDate('start_at', today())
             ->orderBy('start_at')
+            ->get();
+
+        $recentActivity = Appointment::with('patient')
+            ->where('user_id', $user->id)
+            ->whereDate('start_at', today())
+            ->orderByDesc('start_at')
             ->limit(5)
             ->get();
 
         return Inertia::render('Dashboard', [
             'stats' => $stats,
-            'upcomingAppointments' => $upcomingAppointments,
+            'todayAppointments' => $todayAppointments,
+            'recentActivity' => $recentActivity,
+            'userName' => $user->name,
         ]);
     }
 }

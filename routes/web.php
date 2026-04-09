@@ -17,12 +17,10 @@ Route::get('/prenota/{profile}', [BookingController::class, 'show'])->name('book
 Route::post('/prenota/{profile}', [BookingController::class, 'store'])->name('booking.store');
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
 });
 
 Route::middleware([
