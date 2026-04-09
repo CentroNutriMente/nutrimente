@@ -49,10 +49,14 @@ RUN printf 'server {\n\
 
 # Start script
 RUN printf '#!/bin/sh\n\
-php artisan config:cache\n\
-php artisan route:cache\n\
-php artisan view:cache\n\
+set -e\n\
+echo "Starting php-fpm..."\n\
 php-fpm -D\n\
+echo "Running artisan commands..."\n\
+php artisan config:cache || true\n\
+php artisan route:cache || true\n\
+php artisan view:cache || true\n\
+echo "Starting nginx..."\n\
 nginx -g "daemon off;"\n' > /start.sh && chmod +x /start.sh
 
 EXPOSE 10000
