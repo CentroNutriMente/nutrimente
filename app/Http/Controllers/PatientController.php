@@ -140,6 +140,7 @@ class PatientController extends Controller
         $patient->records()->create([
             ...$validated,
             'user_id' => $request->user()->id,
+            'data' => $validated['data'] ?? [],
         ]);
 
         return back()->with('success', 'Scheda salvata.');

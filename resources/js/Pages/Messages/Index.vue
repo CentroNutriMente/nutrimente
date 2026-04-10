@@ -25,9 +25,15 @@ const activeLabel = computed(() => {
     return props.colleagues.find(c => c.id === Number(activeId.value))?.name ?? activeId.value;
 });
 
+function directChannelId(otherId) {
+    const a = Math.min(props.currentUser.id, Number(otherId));
+    const b = Math.max(props.currentUser.id, Number(otherId));
+    return `dm_${a}_${b}`;
+}
+
 async function selectChannel(type, id) {
     activeType.value = type;
-    activeId.value = String(id);
+    activeId.value = type === 'direct' ? directChannelId(id) : String(id);
     await loadMessages();
 }
 

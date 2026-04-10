@@ -44,6 +44,19 @@ function handleSelect(info) {
     router.visit(route('appointments.create', { start_at: info.startStr }));
 }
 
+async function deleteAppointment() {
+    if (!confirm('Eliminare questo appuntamento?')) return;
+    await fetch(`/appointments/${selectedAppointment.value.id}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content,
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+    showModal.value = false;
+    calendarRef.value?.getApi().refetchEvents();
+}
+
 async function handleEventDrop({ event, revert }) {
     try {
         await fetch(`/appointments/${event.id}`, {
@@ -202,7 +215,7 @@ function filterProfessional() {
                         <dd>{{ selectedAppointment.room }}</dd>
                     </div>
                 </dl>
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
                     <Link
                         :href="route('appointments.edit', selectedAppointment.id)"
                         class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 text-center"
@@ -212,6 +225,10 @@ function filterProfessional() {
                         :href="route('patients.show', selectedAppointment.patient_id)"
                         class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 text-center"
                     >Cartella paziente</Link>
+                    <button
+                        @click="deleteAppointment"
+                        class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 border border-red-200"
+                    >Elimina</button>
                 </div>
             </div>
         </div>

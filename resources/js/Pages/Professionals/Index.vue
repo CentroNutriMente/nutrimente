@@ -1,8 +1,36 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const props = defineProps({ professionals: Array });
+
+const showModal = ref(false);
+
+const form = useForm({
+    name: '',
+    email: '',
+    password: '',
+    role: 'psicologo',
+    category: '',
+});
+
+function submit() {
+    form.post(route('professionals.store'), {
+        onSuccess: () => {
+            showModal.value = false;
+            form.reset();
+        },
+    });
+}
+
+const roles = [
+    { value: 'psicologo', label: 'Psicologo' },
+    { value: 'nutrizionista', label: 'Nutrizionista' },
+    { value: 'osteopata', label: 'Osteopata' },
+    { value: 'collaboratore', label: 'Collaboratore' },
+    { value: 'admin', label: 'Admin' },
+];
 
 const roleLabel = {
     admin: 'Admin',
@@ -24,7 +52,13 @@ const roleColor = {
 <template>
     <AppLayout title="Professionisti">
         <template #header>
-            <h1 class="text-xl font-semibold text-gray-800">Professionisti</h1>
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-semibold text-gray-800">Professionisti</h1>
+                <button @click="showModal = true"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+                    + Aggiungi professionista
+                </button>
+            </div>
         </template>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -58,7 +92,51 @@ const roleColor = {
             </div>
 
             <div v-if="professionals.length === 0" class="col-span-full bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-400 text-sm">
-                Nessun professionista ancora. Invita i colleghi dal menu Team.
+                Nessun professionista ancora.
+            </div>
+        </div>
+
+        <!-- Modal aggiungi professionista -->
+        <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" @click.self="showModal = false">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="font-semibold text-gray-800 text-lg">Aggiungi professionista</h2>
+                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Nome completo *</label>
+                        <input v-model="form.name" type="text" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                        <p v-if="form.errors.name" class="text-xs text-red-500 mt-1">{{ form.errors.name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Email *</label>
+                        <input v-model="form.email" type="email" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                        <p v-if="form.errors.email" class="text-xs text-red-500 mt-1">{{ form.errors.email }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Password temporanea *</label>
+                        <input v-model="form.password" type="password" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                        <p v-if="form.errors.password" class="text-xs text-red-500 mt-1">{{ form.errors.password }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Ruolo *</label>
+                        <select v-model="form.role" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                            <option v-for="r in roles" :key="r.value" :value="r.value">{{ r.label }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Categoria (opzionale)</label>
+                        <input v-model="form.category" type="text" placeholder="es. Psicologo clinico" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button @click="showModal = false" class="text-sm text-gray-500 px-4 py-2 rounded-xl hover:bg-gray-50">Annulla</button>
+                        <button @click="submit" :disabled="form.processing"
+                            class="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-xl">
+                            {{ form.processing ? 'Salvataggio…' : 'Aggiungi' }}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>
