@@ -3,137 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1a1a1a; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
-        .issuer h2 { font-size: 18px; margin: 0 0 4px; color: #2d6a4f; }
-        .issuer p { margin: 2px 0; color: #555; }
-        .invoice-meta { text-align: right; }
-        .invoice-meta h1 { font-size: 22px; margin: 0; color: #2d6a4f; }
-        .invoice-meta p { margin: 2px 0; }
-        .divider { border-top: 2px solid #2d6a4f; margin: 20px 0; }
-        .parties { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .party-block { width: 48%; }
-        .party-block h4 { margin: 0 0 6px; text-transform: uppercase; color: #888; font-size: 9px; letter-spacing: 1px; }
-        .party-block p { margin: 2px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #2d6a4f; color: white; padding: 8px; text-align: left; font-size: 10px; }
-        td { padding: 8px; border-bottom: 1px solid #eee; }
-        tr:nth-child(even) td { background: #f9f9f9; }
-        .totals { margin-top: 16px; text-align: right; }
-        .totals table { width: 280px; margin-left: auto; }
-        .totals td { border: none; padding: 4px 8px; }
-        .totals .total-row td { font-weight: bold; font-size: 14px; border-top: 2px solid #2d6a4f; }
-        .footer { margin-top: 40px; font-size: 9px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
-        .exempt-note { margin-top: 20px; font-size: 9px; color: #555; font-style: italic; }
-        .stamp-note { color: #c0392b; font-size: 9px; margin-top: 8px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 11px;
+            color: #1a1a1a;
+            padding: 40px 50px;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
+        .header {
+            width: 100%;
+            margin-bottom: 24px;
+        }
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .header-left h1 {
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        .meta p {
+            font-size: 10.5px;
+            line-height: 1.85;
+        }
+        .meta p strong {
+            font-weight: bold;
+        }
+        .header-photo img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 3px;
+        }
+
+        /* ── Divider ─────────────────────────────────────── */
+        .divider {
+            border: none;
+            border-top: 1px solid #cccccc;
+            margin: 22px 0;
+        }
+
+        /* ── Parties (DA / A) ────────────────────────────── */
+        .parties {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+        .party {
+            width: 47%;
+        }
+        .party .label {
+            font-size: 9px;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+        .party .party-name {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .party .detail p {
+            font-size: 10px;
+            line-height: 1.75;
+        }
+        .party .detail strong {
+            font-weight: bold;
+        }
+
+        /* ── Lines table ─────────────────────────────────── */
+        table.lines {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+        }
+        table.lines thead tr {
+            border-top: 1px solid #cccccc;
+            border-bottom: 1px solid #cccccc;
+        }
+        table.lines th {
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #444444;
+            padding: 8px 6px;
+            letter-spacing: 0.2px;
+        }
+        table.lines td {
+            padding: 12px 6px;
+            font-size: 10.5px;
+            vertical-align: top;
+        }
+        table.lines td.amount {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        /* ── Totals ──────────────────────────────────────── */
+        .totals-wrap {
+            margin-top: 16px;
+            float: right;
+            width: 340px;
+        }
+        .totals-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .totals-wrap td {
+            font-size: 10.5px;
+            padding: 5px 6px;
+            color: #1a1a1a;
+        }
+        .totals-wrap td:last-child {
+            text-align: right;
+        }
+        .totals-wrap tr.grand-total td {
+            font-size: 14px;
+            font-weight: bold;
+            padding-top: 12px;
+        }
+        .totals-wrap tr.grand-total td:first-child {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Osservazioni ────────────────────────────────── */
+        .clear { clear: both; }
+        .osservazioni {
+            margin-top: 10px;
+            font-size: 10.5px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
 
+{{-- ── HEADER ──────────────────────────────────────────── --}}
+@php
+    $profile = $invoice->user->professionalProfile ?? null;
+@endphp
+
 <div class="header">
-    <div class="issuer">
-        <h2>{{ $invoice->issuer_name }}</h2>
-        @if($invoice->issuer_partita_iva)
-            <p>P.IVA: {{ $invoice->issuer_partita_iva }}</p>
+    <div class="header-inner">
+        <div class="header-left">
+            <h1>Fattura</h1>
+            <div class="meta">
+                <p><strong>Nº: {{ str_pad($invoice->invoice_number, 2, '0', STR_PAD_LEFT) }}</strong></p>
+                <p><strong>Data fattura:</strong> {{ $invoice->issued_at->format('d/m/Y') }}</p>
+                <p><strong>Metodo di pagamento:</strong>{{ $invoice->payment_method ?? '—' }}</p>
+                <p><strong>Data di pagamento:</strong>{{ $invoice->paid_at ? $invoice->paid_at->format('d/m/Y') : '—' }}</p>
+                <p>Rifiuta invio al sistema TS: {{ $invoice->sts_sent ? 'Sì' : 'No' }}</p>
+            </div>
+        </div>
+        @if($profile && $profile->photo)
+        <div class="header-photo">
+            <img src="{{ storage_path('app/public/' . $profile->photo) }}" alt="">
+        </div>
         @endif
-        @if($invoice->issuer_codice_fiscale)
-            <p>C.F.: {{ $invoice->issuer_codice_fiscale }}</p>
-        @endif
-        @if($invoice->issuer_address)
-            <p>{{ $invoice->issuer_address }}</p>
-        @endif
-    </div>
-    <div class="invoice-meta">
-        <h1>FATTURA</h1>
-        <p><strong>N. {{ $invoice->invoice_code }}</strong></p>
-        <p>Data: {{ $invoice->issued_at->format('d/m/Y') }}</p>
-        <p>Regime: {{ ucfirst($invoice->issuer_regime_fiscale) }}</p>
     </div>
 </div>
 
-<div class="divider"></div>
+<hr class="divider">
 
+{{-- ── DA / A ───────────────────────────────────────────── --}}
 <div class="parties">
-    <div class="party-block">
-        <h4>Emessa da</h4>
-        <p><strong>{{ $invoice->issuer_name }}</strong></p>
-        @if($invoice->issuer_partita_iva)<p>P.IVA: {{ $invoice->issuer_partita_iva }}</p>@endif
+
+    {{-- Issuer --}}
+    <div class="party">
+        <div class="label">DA</div>
+        <div class="party-name">{{ $invoice->issuer_name }}</div>
+        <div class="detail">
+            @if($invoice->issuer_address)
+                <p><strong>Indirizzo:</strong> {{ $invoice->issuer_address }}</p>
+            @endif
+            @if($invoice->issuer_codice_fiscale)
+                <p><strong>Codice Fiscale:</strong> {{ $invoice->issuer_codice_fiscale }}</p>
+            @endif
+            @if($invoice->issuer_partita_iva)
+                <p><strong>Numero partita IVA:</strong> {{ $invoice->issuer_partita_iva }}</p>
+            @endif
+            @if($profile && $profile->albo_professionale)
+                <p><strong>Albo:</strong> {{ $profile->albo_professionale }}{{ $profile->numero_albo ? ' · ' . $profile->numero_albo : '' }}</p>
+            @endif
+        </div>
     </div>
-    <div class="party-block">
-        <h4>Intestata a</h4>
-        <p><strong>{{ $invoice->client_name }}</strong></p>
-        @if($invoice->client_codice_fiscale)<p>C.F.: {{ $invoice->client_codice_fiscale }}</p>@endif
-        @if($invoice->client_address)<p>{{ $invoice->client_address }}</p>@endif
+
+    {{-- Client --}}
+    <div class="party">
+        <div class="label">A</div>
+        <div class="party-name">{{ $invoice->client_name }}</div>
+        <div class="detail">
+            @if($invoice->client_address)
+                <p><strong>Indirizzo:</strong> {{ $invoice->client_address }}</p>
+            @endif
+            @php
+                $clientPhone = $invoice->client_phone ?? ($invoice->patient->phone ?? null);
+                $clientEmail = $invoice->client_email ?? ($invoice->patient->email ?? null);
+            @endphp
+            @if($clientPhone)
+                <p><strong>Telefono:</strong> {{ $clientPhone }}</p>
+            @endif
+            @if($clientEmail)
+                <p><strong>E-mail:</strong> {{ $clientEmail }}</p>
+            @endif
+            @if($invoice->client_codice_fiscale)
+                <p><strong>Codice Fiscale:</strong> {{ $invoice->client_codice_fiscale }}</p>
+            @endif
+        </div>
     </div>
+
 </div>
 
-<table>
+<hr class="divider">
+
+{{-- ── LINES TABLE ─────────────────────────────────────── --}}
+<table class="lines">
     <thead>
         <tr>
-            <th style="width:60%">Descrizione</th>
-            <th style="width:10%; text-align:center">Qtà</th>
-            <th style="width:15%; text-align:right">Prezzo unitario</th>
-            <th style="width:15%; text-align:right">Totale</th>
+            <th style="width:8%">CODICE</th>
+            <th style="width:30%">PRESTAZIONE</th>
+            <th style="width:8%">IVA</th>
+            <th style="width:12%">QUANTITÀ</th>
+            <th style="width:14%">PREZZO</th>
+            <th style="width:10%">SCONTO</th>
+            <th style="width:18%; text-align:right">IMPORTO TOTALE</th>
         </tr>
     </thead>
     <tbody>
         @foreach($invoice->lines as $line)
         <tr>
+            <td></td>
             <td>{{ $line->description }}</td>
-            <td style="text-align:center">{{ $line->quantity }}</td>
-            <td style="text-align:right">€ {{ number_format($line->unit_price, 2, ',', '.') }}</td>
-            <td style="text-align:right">€ {{ number_format($line->total, 2, ',', '.') }}</td>
+            <td>{{ $invoice->iva_exempt ? '0%' : '22%' }}</td>
+            <td>{{ $line->quantity }}</td>
+            <td>{{ number_format($line->unit_price, 2, ',', '.') }} €</td>
+            <td></td>
+            <td class="amount">{{ number_format($line->total, 2, ',', '.') }} €</td>
         </tr>
         @endforeach
     </tbody>
 </table>
 
-<div class="totals">
+{{-- ── TOTALS ───────────────────────────────────────────── --}}
+<div class="totals-wrap">
     <table>
         <tr>
-            <td>Imponibile</td>
-            <td style="text-align:right">€ {{ number_format($invoice->subtotal, 2, ',', '.') }}</td>
+            <td>Base imponibile</td>
+            <td>{{ number_format($invoice->subtotal, 2, ',', '.') }} €</td>
         </tr>
-        @if($invoice->iva_exempt)
         <tr>
-            <td>IVA</td>
-            <td style="text-align:right">Esente</td>
+            <td>Totale imposta</td>
+            <td>{{ $invoice->iva_exempt ? number_format(0, 2, ',', '.') : number_format($invoice->subtotal * 0.22, 2, ',', '.') }} €</td>
         </tr>
-        @endif
         @if($invoice->marca_da_bollo > 0)
         <tr>
             <td>Marca da bollo</td>
-            <td style="text-align:right">€ {{ number_format($invoice->marca_da_bollo, 2, ',', '.') }}</td>
+            <td>{{ number_format($invoice->marca_da_bollo, 2, ',', '.') }} €</td>
         </tr>
         @endif
-        <tr class="total-row">
-            <td>TOTALE</td>
-            <td style="text-align:right">€ {{ number_format($invoice->total, 2, ',', '.') }}</td>
+        <tr class="grand-total">
+            <td>IMPORTO TOTALE</td>
+            <td>{{ number_format($invoice->total, 2, ',', '.') }} €</td>
         </tr>
     </table>
 </div>
 
-@if($invoice->iva_exempt)
-<p class="exempt-note">
-    Operazione esente IVA ai sensi dell'art. 10, n. 18 del D.P.R. 26/10/1972 n. 633.
-</p>
-@endif
+<div class="clear"></div>
+<hr class="divider">
 
-@if($invoice->marca_da_bollo > 0)
-<p class="stamp-note">
-    Marca da bollo assolta in modo virtuale ai sensi del D.M. 17/06/2014 (importo superiore a € 77,47).
-</p>
-@endif
-
-@if($invoice->payment_method)
-<p style="margin-top: 16px;">
-    <strong>Metodo di pagamento:</strong> {{ ucfirst($invoice->payment_method) }}
-</p>
-@endif
-
-<div class="footer">
-    <p>Documento generato il {{ now()->format('d/m/Y') }} &mdash; Centro Nutrimento</p>
-    <p>Prestazione sanitaria soggetta a segreto professionale. Non costituisce sostituto di servizi di emergenza.</p>
+{{-- ── OSSERVAZIONI ─────────────────────────────────────── --}}
+<div class="osservazioni">
+    Osservazioni:
 </div>
 
 </body>

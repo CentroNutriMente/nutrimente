@@ -16,7 +16,7 @@ class Invoice extends Model
         'invoice_number', 'invoice_year', 'invoice_code',
         'issuer_name', 'issuer_partita_iva', 'issuer_codice_fiscale',
         'issuer_address', 'issuer_regime_fiscale',
-        'client_name', 'client_codice_fiscale', 'client_address',
+        'client_name', 'client_codice_fiscale', 'client_address', 'client_phone', 'client_email',
         'subtotal', 'marca_da_bollo', 'total',
         'iva_exempt', 'iva_exemption_reason',
         'sts_sent', 'sts_sent_at',
