@@ -1,6 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -17,6 +17,7 @@ const messages = ref([]);
 const loading = ref(false);
 const body = ref('');
 const messagesEnd = ref(null);
+let pollInterval = null;
 
 const activeLabel = computed(() => {
     if (activeType.value === 'team') {
@@ -35,34 +36,56 @@ async function selectChannel(type, id) {
     activeType.value = type;
     activeId.value = type === 'direct' ? directChannelId(id) : String(id);
     await loadMessages();
+    startPolling();
 }
 
-async function loadMessages() {
-    loading.value = true;
+async function loadMessages(silent = false) {
+    if (!silent) loading.value = true;
     try {
         const { data } = await axios.get(route('messages.load'), {
             params: { channel_type: activeType.value, channel_id: activeId.value },
         });
+        const wasAtBottom = messagesEnd.value
+            ? messagesEnd.value.getBoundingClientRect().bottom <= window.innerHeight + 100
+            : true;
         messages.value = data;
-        await nextTick();
-        messagesEnd.value?.scrollIntoView({ behavior: 'instant' });
+        if (wasAtBottom) {
+            await nextTick();
+            messagesEnd.value?.scrollIntoView({ behavior: 'instant' });
+        }
+    } catch (e) {
+        // silently ignore poll errors
     } finally {
-        loading.value = false;
+        if (!silent) loading.value = false;
     }
+}
+
+function startPolling() {
+    stopPolling();
+    pollInterval = setInterval(() => loadMessages(true), 8000);
+}
+
+function stopPolling() {
+    if (pollInterval) clearInterval(pollInterval);
 }
 
 async function send() {
     if (!body.value.trim()) return;
     const text = body.value.trim();
     body.value = '';
-    const { data } = await axios.post(route('messages.store'), {
-        channel_type: activeType.value,
-        channel_id: activeId.value,
-        body: text,
-    });
-    messages.value.push(data);
-    await nextTick();
-    messagesEnd.value?.scrollIntoView({ behavior: 'smooth' });
+    try {
+        const { data } = await axios.post(route('messages.store'), {
+            channel_type: activeType.value,
+            channel_id: activeId.value,
+            body: text,
+        });
+        messages.value.push(data);
+        await nextTick();
+        messagesEnd.value?.scrollIntoView({ behavior: 'smooth' });
+    } catch (e) {
+        body.value = text; // restore if failed
+        alert('Errore nell\'invio del messaggio. Riprova.');
+    }
 }
 
 function formatTime(dt) {
@@ -75,7 +98,12 @@ function formatTime(dt) {
         d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }
 
-onMounted(() => loadMessages());
+onMounted(() => {
+    loadMessages();
+    startPolling();
+});
+
+onUnmounted(() => stopPolling());
 </script>
 
 <template>
