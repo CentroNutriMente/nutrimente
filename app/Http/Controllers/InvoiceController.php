@@ -106,9 +106,10 @@ class InvoiceController extends Controller
 
     public function show(Request $request, Invoice $invoice): Response
     {
-        abort_if($invoice->user_id !== $request->user()->id, 403);
+        // Tutti i professionisti del gestionale possono visualizzare; solo il proprietario può modificare
         return Inertia::render('Invoices/Show', [
-            'invoice' => $invoice->load(['patient', 'lines', 'user.professionalProfile']),
+            'invoice'   => $invoice->load(['patient', 'lines', 'user.professionalProfile']),
+            'canEdit'   => $invoice->user_id === $request->user()->id,
         ]);
     }
 
@@ -140,7 +141,6 @@ class InvoiceController extends Controller
 
     public function downloadPdf(Request $request, Invoice $invoice): HttpResponse
     {
-        abort_if($invoice->user_id !== $request->user()->id, 403);
 
         $invoice->load(['patient', 'lines', 'user.professionalProfile']);
 

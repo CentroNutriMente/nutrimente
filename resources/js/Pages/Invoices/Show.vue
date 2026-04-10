@@ -2,7 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, router } from '@inertiajs/vue3';
 
-const props = defineProps({ invoice: Object });
+const props = defineProps({ invoice: Object, canEdit: Boolean });
 
 const inv = props.invoice;
 
@@ -62,14 +62,16 @@ function cancel() {
                         class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
                         Scarica PDF
                     </a>
-                    <button v-if="inv.status === 'issued'" @click="markPaid"
-                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
-                        Segna pagata
-                    </button>
-                    <button v-if="inv.status !== 'cancelled'" @click="cancel"
-                        class="px-4 py-2 text-red-400 hover:text-red-600 text-sm hover:underline transition-colors">
-                        Annulla
-                    </button>
+                    <template v-if="canEdit">
+                        <button v-if="inv.status === 'issued'" @click="markPaid"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
+                            Segna pagata
+                        </button>
+                        <button v-if="inv.status !== 'cancelled'" @click="cancel"
+                            class="px-4 py-2 text-red-400 hover:text-red-600 text-sm hover:underline transition-colors">
+                            Annulla
+                        </button>
+                    </template>
                 </div>
             </div>
         </template>
@@ -170,7 +172,7 @@ function cancel() {
                         {{ inv.sts_sent ? `Inviata il ${fmt(inv.sts_sent_at)}` : 'Non ancora inviata al STS' }}
                     </p>
                 </div>
-                <form v-if="!inv.sts_sent && inv.status !== 'cancelled'" @submit.prevent="router.post(route('invoices.sts', inv.id))">
+                <form v-if="canEdit && !inv.sts_sent && inv.status !== 'cancelled'" @submit.prevent="router.post(route('invoices.sts', inv.id))">
                     <button type="submit"
                         class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-medium transition-colors">
                         Invia al STS
