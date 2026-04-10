@@ -92,29 +92,29 @@ const logout = () => router.post(route('logout'));
                 </button>
             </div>
 
-            <!-- User avatar -->
-            <div class="border-t border-gray-100 p-3">
-                <Dropdown align="top-end" width="48">
-                    <template #trigger>
-                        <button class="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
-                            <img
-                                class="w-7 h-7 rounded-full object-cover shrink-0"
-                                :src="$page.props.auth.user.profile_photo_url"
-                                :alt="$page.props.auth.user.name"
-                            />
-                            <div v-if="sidebarOpen" class="text-left min-w-0">
-                                <div class="text-xs font-medium text-gray-700 truncate">{{ $page.props.auth.user.name }}</div>
-                            </div>
-                        </button>
-                    </template>
-                    <template #content>
-                        <DropdownLink :href="route('profile.show')">Profilo</DropdownLink>
-                        <div class="border-t border-gray-100" />
-                        <form @submit.prevent="logout">
-                            <DropdownLink as="button">Esci</DropdownLink>
-                        </form>
-                    </template>
-                </Dropdown>
+            <!-- User + logout -->
+            <div class="border-t border-gray-100 p-3 space-y-1">
+                <!-- Profilo utente -->
+                <Link :href="route('profile.show')"
+                    class="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                    <img
+                        class="w-7 h-7 rounded-full object-cover shrink-0"
+                        :src="$page.props.auth.user.profile_photo_url"
+                        :alt="$page.props.auth.user.name"
+                    />
+                    <div v-if="sidebarOpen" class="text-left min-w-0">
+                        <div class="text-xs font-medium text-gray-700 truncate">{{ $page.props.auth.user.name }}</div>
+                    </div>
+                </Link>
+                <!-- Logout -->
+                <button @click="logout"
+                    class="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span v-if="sidebarOpen" class="text-xs">Esci</span>
+                </button>
             </div>
         </aside>
 
