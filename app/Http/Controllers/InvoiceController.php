@@ -33,9 +33,12 @@ class InvoiceController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
+        $profile = $user->professionalProfile()->firstOrCreate(['user_id' => $user->id]);
+
         return Inertia::render('Invoices/Create', [
-            'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name', 'codice_fiscale']),
-            'profile' => $user->professionalProfile()->firstOrCreate(['user_id' => $user->id]),
+            'patients'   => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name', 'codice_fiscale']),
+            'profile'    => $profile,
+            'issuerName' => $user->name,
         ]);
     }
 

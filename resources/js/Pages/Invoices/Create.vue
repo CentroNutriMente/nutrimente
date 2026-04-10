@@ -4,8 +4,9 @@ import { Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
-    patients: Array,
-    profile: Object,
+    patients:   Array,
+    profile:    Object,
+    issuerName: String,
 });
 
 const form = useForm({
@@ -157,13 +158,36 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
             <div class="space-y-4">
                 <!-- Dati emittente -->
                 <div class="bg-white rounded-xl border border-gray-200 p-5">
-                    <h3 class="font-medium text-gray-700 mb-3 text-sm">Dati emittente</h3>
-                    <div class="text-sm space-y-1 text-gray-600">
-                        <div v-if="profile?.partita_iva"><span class="text-gray-400">P.IVA:</span> {{ profile.partita_iva }}</div>
-                        <div v-if="profile?.codice_fiscale"><span class="text-gray-400">CF:</span> {{ profile.codice_fiscale }}</div>
-                        <div v-if="profile?.regime_fiscale"><span class="text-gray-400">Regime:</span> {{ profile.regime_fiscale }}</div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-medium text-gray-700 text-sm">Dati emittente</h3>
+                        <a :href="route('professionals.index')" class="text-xs text-purple-600 hover:underline">Modifica</a>
                     </div>
-                    <p v-if="!profile?.partita_iva" class="text-xs text-amber-600 mt-2">
+                    <div class="text-sm space-y-1.5 text-gray-700">
+                        <div class="font-semibold">{{ issuerName }}</div>
+                        <div v-if="profile?.address" class="text-gray-500 text-xs">{{ profile.address }}</div>
+                        <div class="border-t border-gray-100 pt-1.5 mt-1.5 space-y-1">
+                            <div v-if="profile?.partita_iva" class="flex justify-between">
+                                <span class="text-gray-400 text-xs">P.IVA</span>
+                                <span class="text-xs font-mono">{{ profile.partita_iva }}</span>
+                            </div>
+                            <div v-if="profile?.codice_fiscale" class="flex justify-between">
+                                <span class="text-gray-400 text-xs">C.F.</span>
+                                <span class="text-xs font-mono">{{ profile.codice_fiscale }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 text-xs">Regime</span>
+                                <span class="text-xs capitalize font-medium" :class="profile?.regime_fiscale === 'forfettario' ? 'text-green-600' : 'text-gray-700'">
+                                    {{ profile?.regime_fiscale ?? 'ordinario' }}
+                                </span>
+                            </div>
+                            <div v-if="profile?.albo_professionale" class="flex justify-between">
+                                <span class="text-gray-400 text-xs">Albo</span>
+                                <span class="text-xs text-gray-600">{{ profile.numero_albo ?? '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p v-if="!profile?.partita_iva && !profile?.codice_fiscale"
+                        class="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mt-3">
                         Completa il profilo professionale per aggiungere i dati fiscali.
                     </p>
                 </div>
