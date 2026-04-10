@@ -7,6 +7,8 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReportTemplateController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -47,6 +49,11 @@ Route::middleware([
     Route::get('intervisioni/{intervisione}', [\App\Http\Controllers\IntervisioneController::class, 'show'])->name('intervisioni.show');
     Route::put('intervisioni/{intervisione}', [\App\Http\Controllers\IntervisioneController::class, 'update'])->name('intervisioni.update');
     Route::delete('intervisioni/{intervisione}', [\App\Http\Controllers\IntervisioneController::class, 'destroy'])->name('intervisioni.destroy');
+
+    // Referti & Modelli
+    Route::resource('report-templates', ReportTemplateController::class);
+    Route::resource('reports', ReportController::class);
+    Route::get('reports/{report}/pdf', [ReportController::class, 'downloadPdf'])->name('reports.pdf');
 
     // Fatturazione
     Route::resource('invoices', InvoiceController::class);
