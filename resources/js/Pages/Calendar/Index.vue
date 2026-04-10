@@ -160,16 +160,16 @@ function filterProfessional() {
         <!-- Legenda tipi -->
         <div class="flex gap-4 mb-4">
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                <span class="w-3 h-3 rounded-full bg-purple-600 inline-block"></span> Seduta
+                <span class="w-3 h-3 rounded-full inline-block" style="background:#7c3aed"></span> Seduta
             </div>
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                <span class="w-3 h-3 rounded-full bg-violet-600 inline-block"></span> Intervisione
+                <span class="w-3 h-3 rounded-full inline-block" style="background:#0ea5e9"></span> Intervisione
             </div>
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                <span class="w-3 h-3 rounded-full bg-sky-600 inline-block"></span> Personale
+                <span class="w-3 h-3 rounded-full inline-block" style="background:#10b981"></span> Personale
             </div>
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                <span class="w-3 h-3 rounded-full bg-gray-400 inline-block"></span> Bloccato
+                <span class="w-3 h-3 rounded-full inline-block" style="background:#9ca3af"></span> Bloccato
             </div>
         </div>
 
