@@ -225,6 +225,15 @@
 
 {{-- ── LINES TABLE ─────────────────────────────────────── --}}
 <table class="lines">
+    <colgroup>
+        <col style="width:8%">
+        <col style="width:30%">
+        <col style="width:8%">
+        <col style="width:12%">
+        <col style="width:14%">
+        <col style="width:10%">
+        <col style="width:18%">
+    </colgroup>
     <thead>
         <tr>
             <th style="width:8%">CODICE</th>
@@ -239,13 +248,13 @@
     <tbody>
         @foreach($invoice->lines as $line)
         <tr>
-            <td></td>
-            <td>{{ $line->description }}</td>
-            <td>{{ $invoice->iva_exempt ? '0%' : '22%' }}</td>
-            <td>{{ $line->quantity }}</td>
-            <td>{{ number_format($line->unit_price, 2, ',', '.') }} €</td>
-            <td></td>
-            <td class="amount">{{ number_format($line->total, 2, ',', '.') }} €</td>
+            <td style="width:8%"></td>
+            <td style="width:30%">{{ $line->description }}</td>
+            <td style="width:8%">{{ $invoice->iva_exempt ? '0%' : '22%' }}</td>
+            <td style="width:12%">{{ $line->quantity }}</td>
+            <td style="width:14%">{{ number_format($line->unit_price, 2, ',', '.') }} €</td>
+            <td style="width:10%"></td>
+            <td style="width:18%; text-align:right; font-weight:bold">{{ number_format($line->total, 2, ',', '.') }} €</td>
         </tr>
         @endforeach
     </tbody>
