@@ -68,7 +68,14 @@ class PatientController extends Controller
 
     public function show(Patient $patient): Response
     {
-        $patient->load(['tags', 'records.user', 'appointments.user', 'consents', 'invoices']);
+        $patient->load([
+            'tags',
+            'records.user',
+            'appointments.user',
+            'consents',
+            'invoices' => fn ($q) => $q->orderByDesc('issued_at'),
+            'reports'  => fn ($q) => $q->with(['user', 'template'])->orderByDesc('report_date'),
+        ]);
 
         return Inertia::render('Patients/Show', [
             'patient' => $patient,

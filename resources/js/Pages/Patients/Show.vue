@@ -7,10 +7,11 @@ const props = defineProps({ patient: Object });
 
 const activeTab = ref('records');
 const tabs = [
-    { key: 'records', label: 'Cartella clinica' },
+    { key: 'records',      label: 'Cartella clinica' },
     { key: 'appointments', label: 'Appuntamenti' },
-    { key: 'invoices', label: 'Fatture' },
-    { key: 'consents', label: 'Consensi' },
+    { key: 'reports',      label: 'Referti' },
+    { key: 'invoices',     label: 'Fatture' },
+    { key: 'consents',     label: 'Consensi' },
 ];
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
@@ -53,6 +54,9 @@ const invoiceStatusClass = {
                 <div class="ml-auto flex gap-2">
                     <Link :href="route('appointments.create', { patient_id: patient.id })" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                         + Appuntamento
+                    </Link>
+                    <Link :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
+                        + Referto
                     </Link>
                     <Link :href="route('invoices.create', { patient_id: patient.id })" class="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700">
                         + Fattura
@@ -176,6 +180,53 @@ const invoiceStatusClass = {
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Referti -->
+                <div v-if="activeTab === 'reports'">
+                    <div class="flex justify-end mb-3">
+                        <Link :href="route('reports.create', { patient_id: patient.id })"
+                            class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
+                            + Nuovo referto
+                        </Link>
+                    </div>
+                    <div v-if="!patient.reports.length" class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
+                        Nessun referto per questo paziente.
+                    </div>
+                    <div v-else class="space-y-2">
+                        <div v-for="rep in patient.reports" :key="rep.id"
+                            class="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0 mt-0.5">
+                                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="font-medium text-gray-800 text-sm">{{ rep.title }}</span>
+                                    <span v-if="rep.template" class="text-xs bg-teal-50 text-teal-600 px-2 py-0.5 rounded-full">
+                                        {{ rep.template.name }}
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    {{ fmt(rep.report_date) }}
+                                    <span class="mx-1">·</span>
+                                    {{ rep.user?.name }}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <a :href="route('reports.pdf', rep.id)" target="_blank"
+                                    class="text-xs border border-gray-200 text-gray-500 px-2.5 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+                                    PDF
+                                </a>
+                                <Link :href="route('reports.show', rep.id)"
+                                    class="text-xs text-teal-600 hover:underline">
+                                    Apri
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
