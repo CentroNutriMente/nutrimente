@@ -1,20 +1,23 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
 
 defineProps({ title: String });
 
-const sidebarOpen = ref(true);
+// Su mobile parte chiuso, su desktop aperto
+const sidebarOpen = ref(false);
+
+onMounted(() => {
+    sidebarOpen.value = window.innerWidth >= 768;
+});
 
 const navItems = [
     { name: 'Dashboard',      href: 'dashboard',          icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z' },
     { name: 'Calendario',     href: 'calendar',            icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { name: 'Pazienti',       href: 'patients.index',         icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-    { name: 'Referti',        href: 'reports.index',          icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { name: 'Fatturazione',   href: 'invoices.index',         icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    { name: 'Pazienti',       href: 'patients.index',      icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+    { name: 'Referti',        href: 'reports.index',       icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    { name: 'Fatturazione',   href: 'invoices.index',      icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
     { name: 'Intervisioni',   href: 'intervisioni.index',  icon: 'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z' },
     { name: 'Documenti',      href: 'documents.index',     icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
     { name: 'Workspace',      href: 'workspace.index',     icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
@@ -25,15 +28,15 @@ const navItems = [
 
 const isActive = (routeName) => {
     try {
-        const pattern = routeName.replace('.index', '.*');
         if (routeName === 'reports.index') {
             return route().current('reports.*') || route().current('report-templates.*');
         }
-        return route().current(pattern);
+        return route().current(routeName.replace('.index', '.*'));
     } catch { return false; }
 };
 
 const logout = () => router.post(route('logout'));
+const closeSidebar = () => { if (window.innerWidth < 768) sidebarOpen.value = false; };
 </script>
 
 <template>
@@ -41,10 +44,19 @@ const logout = () => router.post(route('logout'));
         <Head :title="title" />
         <Banner />
 
+        <!-- Overlay mobile -->
+        <div
+            v-if="sidebarOpen"
+            class="fixed inset-0 bg-black/40 z-30 md:hidden"
+            @click="sidebarOpen = false"
+        />
+
         <!-- Sidebar -->
         <aside
-            :class="sidebarOpen ? 'w-56' : 'w-16'"
-            class="relative flex flex-col bg-white border-r border-gray-200 min-h-screen transition-all duration-200 shrink-0"
+            :class="[
+                sidebarOpen ? 'translate-x-0 w-56' : '-translate-x-full w-56 md:translate-x-0 md:w-16',
+            ]"
+            class="fixed md:relative z-40 flex flex-col bg-white border-r border-gray-200 h-full min-h-screen transition-all duration-200 shrink-0"
         >
             <!-- Logo -->
             <div class="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
@@ -53,8 +65,8 @@ const logout = () => router.post(route('logout'));
                         <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/>
                     </svg>
                 </div>
-                <div v-if="sidebarOpen" class="min-w-0">
-                    <div class="font-bold text-gray-900 text-sm leading-tight">Centro NutriMente</div>
+                <div :class="sidebarOpen ? 'opacity-100' : 'opacity-0 md:opacity-0'" class="min-w-0 transition-opacity">
+                    <div class="font-bold text-gray-900 text-sm leading-tight whitespace-nowrap">Centro NutriMente</div>
                     <div class="text-xs text-gray-400 uppercase tracking-wide">Studio Associato</div>
                 </div>
             </div>
@@ -65,6 +77,7 @@ const logout = () => router.post(route('logout'));
                     v-for="item in navItems"
                     :key="item.href"
                     :href="route(item.href)"
+                    @click="closeSidebar"
                     :class="[
                         isActive(item.href)
                             ? 'bg-purple-50 text-purple-700 font-semibold'
@@ -75,12 +88,12 @@ const logout = () => router.post(route('logout'));
                     <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
                     </svg>
-                    <span v-if="sidebarOpen">{{ item.name }}</span>
+                    <span :class="sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'" class="whitespace-nowrap transition-opacity">{{ item.name }}</span>
                 </Link>
             </nav>
 
-            <!-- Riduci / Espandi -->
-            <div class="border-t border-gray-100 p-2">
+            <!-- Riduci / Espandi (solo desktop) -->
+            <div class="hidden md:block border-t border-gray-100 p-2">
                 <button
                     @click="sidebarOpen = !sidebarOpen"
                     class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 text-sm transition-colors"
@@ -94,36 +107,47 @@ const logout = () => router.post(route('logout'));
 
             <!-- User + logout -->
             <div class="border-t border-gray-100 p-3 space-y-1">
-                <!-- Profilo utente -->
-                <Link :href="route('profile.show')"
+                <Link :href="route('profile.show')" @click="closeSidebar"
                     class="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
                     <img
                         class="w-7 h-7 rounded-full object-cover shrink-0"
                         :src="$page.props.auth.user.profile_photo_url"
                         :alt="$page.props.auth.user.name"
                     />
-                    <div v-if="sidebarOpen" class="text-left min-w-0">
+                    <div :class="sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'" class="text-left min-w-0 transition-opacity">
                         <div class="text-xs font-medium text-gray-700 truncate">{{ $page.props.auth.user.name }}</div>
                     </div>
                 </Link>
-                <!-- Logout -->
                 <button @click="logout"
                     class="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    <span v-if="sidebarOpen" class="text-xs">Esci</span>
+                    <span :class="sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'" class="text-xs transition-opacity">Esci</span>
                 </button>
             </div>
         </aside>
 
         <!-- Main -->
         <div class="flex-1 flex flex-col min-w-0">
-            <header v-if="$slots.header" class="bg-white border-b border-gray-200 px-8 py-4">
-                <slot name="header" />
+            <!-- Top bar (header + hamburger) -->
+            <header class="bg-white border-b border-gray-200 px-4 md:px-8 py-3 md:py-4 flex items-center gap-3 sticky top-0 z-20">
+                <!-- Hamburger mobile -->
+                <button
+                    class="md:hidden p-2 -ml-1 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+                    @click="sidebarOpen = !sidebarOpen"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="flex-1 min-w-0">
+                    <slot name="header" />
+                </div>
             </header>
-            <main class="flex-1 p-8 bg-gray-50">
+
+            <main class="flex-1 p-4 md:p-8 bg-gray-50">
                 <slot />
             </main>
         </div>

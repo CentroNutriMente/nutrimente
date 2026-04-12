@@ -6,6 +6,7 @@ import { ref } from 'vue';
 const props = defineProps({
     intervisione: Object,
     patients: Array,
+    users: Array,
 });
 
 const form = useForm({
@@ -18,7 +19,14 @@ const form = useForm({
         ? new Date(props.intervisione.scheduled_at).toISOString().slice(0, 16)
         : '',
     status: props.intervisione.status,
+    participant_ids: (props.intervisione.participants ?? []).map(p => p.id),
 });
+
+function toggleUser(id) {
+    const idx = form.participant_ids.indexOf(id);
+    if (idx === -1) form.participant_ids.push(id);
+    else form.participant_ids.splice(idx, 1);
+}
 
 const successMsg = ref('');
 
@@ -78,7 +86,7 @@ const statusColor = {
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Paziente</label>
                         <select v-model="form.patient_id"
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                             <option value="">— nessuno —</option>
                             <option v-for="p in patients" :key="p.id" :value="p.id">{{ p.name }}</option>
                         </select>
@@ -91,7 +99,7 @@ const statusColor = {
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Stato</label>
                         <select v-model="form.status"
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                             <option value="draft">Bozza</option>
                             <option value="scheduled">Programmata</option>
                             <option value="completed">Completata</option>
@@ -120,6 +128,31 @@ const statusColor = {
                 <textarea v-model="form.conclusions" rows="4"
                     placeholder="Decisioni prese, piano d'azione concordato..."
                     class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none" />
+            </div>
+
+            <!-- Partecipanti -->
+            <div v-if="users && users.length > 0" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-3">
+                <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Partecipanti</h2>
+                <div class="space-y-2">
+                    <label
+                        v-for="u in users"
+                        :key="u.id"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors"
+                        :class="form.participant_ids.includes(u.id)
+                            ? 'border-purple-400 bg-purple-50'
+                            : 'border-gray-200 hover:border-gray-300'"
+                    >
+                        <input
+                            type="checkbox"
+                            :value="u.id"
+                            :checked="form.participant_ids.includes(u.id)"
+                            @change="toggleUser(u.id)"
+                            class="w-4 h-4 rounded text-purple-600 border-gray-300 focus:ring-purple-500"
+                        />
+                        <span class="text-sm text-gray-700">{{ u.name }}</span>
+                    </label>
+                </div>
+                <p class="text-xs text-gray-400">Il creatore è sempre incluso.</p>
             </div>
 
             <div class="flex justify-end pb-8">

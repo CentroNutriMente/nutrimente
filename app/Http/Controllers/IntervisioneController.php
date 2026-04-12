@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Intervisione;
 use App\Models\Patient;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,7 +33,7 @@ class IntervisioneController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $patients = Patient::select('id', 'first_name', 'last_name')
             ->where('is_active', true)
@@ -40,26 +41,41 @@ class IntervisioneController extends Controller
             ->get()
             ->map(fn ($p) => ['id' => $p->id, 'name' => $p->full_name]);
 
+        $users = User::orderBy('name')
+            ->get(['id', 'name'])
+            ->filter(fn ($u) => $u->id !== $request->user()->id)
+            ->values();
+
         return Inertia::render('Intervisioni/Create', [
             'patients' => $patients,
+            'users'    => $users,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'patient_id' => 'nullable|exists:patients,id',
-            'scheduled_at' => 'nullable|date',
-            'status' => 'in:draft,scheduled,completed',
+            'title'           => 'required|string|max:255',
+            'description'     => 'nullable|string',
+            'patient_id'      => 'nullable|exists:patients,id',
+            'scheduled_at'    => 'nullable|date',
+            'status'          => 'in:draft,scheduled,completed',
+            'participant_ids' => 'nullable|array',
+            'participant_ids.*' => 'exists:users,id',
         ]);
 
         $intervisione = Intervisione::create([
             ...$validated,
             'created_by' => $request->user()->id,
-            'status' => $validated['status'] ?? 'draft',
+            'status'     => $validated['status'] ?? 'draft',
         ]);
+
+        // Salva partecipanti (includi sempre il creatore)
+        $ids = collect($validated['participant_ids'] ?? [])
+            ->push($request->user()->id)
+            ->unique()
+            ->all();
+        $intervisione->participants()->sync($ids);
 
         if ($intervisione->scheduled_at) {
             Appointment::create([
@@ -88,25 +104,38 @@ class IntervisioneController extends Controller
             ->get()
             ->map(fn ($p) => ['id' => $p->id, 'name' => $p->full_name]);
 
+        $users = User::orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('Intervisioni/Show', [
-            'intervisione' => $intervisione->load('createdBy', 'patient'),
-            'patients' => $patients,
+            'intervisione' => $intervisione->load('createdBy', 'patient', 'participants'),
+            'patients'     => $patients,
+            'users'        => $users,
         ]);
     }
 
     public function update(Request $request, Intervisione $intervisione): RedirectResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'discussion_notes' => 'nullable|string',
-            'conclusions' => 'nullable|string',
-            'patient_id' => 'nullable|exists:patients,id',
-            'scheduled_at' => 'nullable|date',
-            'status' => 'in:draft,scheduled,completed',
+            'title'             => 'required|string|max:255',
+            'description'       => 'nullable|string',
+            'discussion_notes'  => 'nullable|string',
+            'conclusions'       => 'nullable|string',
+            'patient_id'        => 'nullable|exists:patients,id',
+            'scheduled_at'      => 'nullable|date',
+            'status'            => 'in:draft,scheduled,completed',
+            'participant_ids'   => 'nullable|array',
+            'participant_ids.*' => 'exists:users,id',
         ]);
 
         $intervisione->update($validated);
+
+        if (isset($validated['participant_ids'])) {
+            $ids = collect($validated['participant_ids'])
+                ->push($intervisione->created_by)
+                ->unique()
+                ->all();
+            $intervisione->participants()->sync($ids);
+        }
 
         // Sync the linked appointment
         $appointment = Appointment::where('intervisione_id', $intervisione->id)->first();
