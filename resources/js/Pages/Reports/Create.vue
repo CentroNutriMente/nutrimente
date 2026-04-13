@@ -158,14 +158,14 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
                             <label class="block text-xs font-medium text-gray-500 mb-1">Titolo referto *</label>
                             <input v-model="form.title" type="text"
                                 placeholder="es. Seduta n.3 – Primo colloquio"
-                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                             <p v-if="form.errors.title" class="text-red-500 text-xs mt-1">{{ form.errors.title }}</p>
                         </div>
 
                         <div>
                             <label class="block text-xs font-medium text-gray-500 mb-1">Data referto *</label>
                             <input v-model="form.report_date" type="date"
-                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                         </div>
                     </div>
                 </div>
@@ -189,7 +189,7 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
                             v-model="sec.content"
                             type="text"
                             :placeholder="activeTemplate?.sections?.[i]?.placeholder || ''"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                 </div>
 
@@ -199,7 +199,7 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
                         <label class="block text-xs font-medium text-gray-500 mb-1">Prossimo Appuntamento</label>
                         <input v-model="form.next_appointment" type="text"
                             placeholder="es. 20 maggio 2026 ore 15:00"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Note interne (non nel PDF)</label>

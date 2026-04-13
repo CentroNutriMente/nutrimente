@@ -144,7 +144,7 @@ function filterProfessional() {
                     <select
                         v-model="selectedProfessional"
                         @change="filterProfessional"
-                        class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        class="border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
                         <option value="">Tutti i professionisti</option>
                         <option v-for="p in professionals" :key="p.id" :value="p.id">{{ p.name }}</option>

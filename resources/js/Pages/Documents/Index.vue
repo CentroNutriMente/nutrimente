@@ -92,7 +92,7 @@ function applyFilters() {
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
                     <select v-model="uploadForm.category"
-                        class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                        class="w-full rounded-xl border border-gray-200 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                         <option value="">— nessuna —</option>
                         <option value="questionario">Questionario</option>
                         <option value="protocollo">Protocollo</option>
@@ -127,7 +127,7 @@ function applyFilters() {
             <input v-model="search" @keydown.enter="applyFilters" type="text" placeholder="Cerca documento…"
                 class="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 w-64" />
             <select v-model="category" @change="applyFilters"
-                class="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                class="rounded-xl border border-gray-200 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                 <option value="">Tutte le categorie</option>
                 <option value="questionario">Questionari</option>
                 <option value="protocollo">Protocolli</option>

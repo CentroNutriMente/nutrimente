@@ -44,14 +44,14 @@ const fmtEur = (v) => `€ ${Number(v).toLocaleString('it-IT', { minimumFraction
 
         <!-- Filtri -->
         <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex gap-3">
-            <select v-model="status" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <select v-model="status" class="border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                 <option value="">Tutti gli stati</option>
                 <option value="draft">Bozza</option>
                 <option value="issued">Emessa</option>
                 <option value="paid">Pagata</option>
                 <option value="cancelled">Annullata</option>
             </select>
-            <select v-model="year" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <select v-model="year" class="border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                 <option v-for="y in [2024, 2025, 2026, 2027]" :key="y" :value="y">{{ y }}</option>
             </select>
         </div>

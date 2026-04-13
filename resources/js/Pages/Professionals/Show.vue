@@ -130,7 +130,7 @@ const role = props.professional.roles?.[0]?.name ?? '';
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Regime fiscale</label>
                         <select v-model="form.regime_fiscale"
-                            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                            class="w-full rounded-xl border border-gray-200 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                             <option value="">— seleziona —</option>
                             <option value="forfettario">Forfettario</option>
                             <option value="ordinario">Ordinario</option>

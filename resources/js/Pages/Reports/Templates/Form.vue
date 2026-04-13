@@ -88,7 +88,7 @@ const sectionTypes = [
                         <label class="block text-xs font-medium text-gray-500 mb-1">Nome del modello *</label>
                         <input v-model="form.name" type="text"
                             placeholder="es. Scheda Primo Colloquio"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                         <p v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</p>
                     </div>
 
@@ -96,7 +96,7 @@ const sectionTypes = [
                         <label class="block text-xs font-medium text-gray-500 mb-1">Descrizione breve</label>
                         <input v-model="form.description" type="text"
                             placeholder="Descrizione opzionale..."
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                 </div>
 
@@ -116,7 +116,7 @@ const sectionTypes = [
                         <label class="block text-xs font-medium text-gray-500 mb-1">Sottotitolo</label>
                         <input v-model="form.header_subtitle" type="text"
                             placeholder="es. Referto di colloquio clinico psicologico"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
 
                     <div>

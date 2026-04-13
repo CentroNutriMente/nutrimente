@@ -121,7 +121,7 @@ const roleColor = {
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Ruolo *</label>
-                        <select v-model="form.role" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                        <select v-model="form.role" class="w-full rounded-xl border border-gray-200 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                             <option v-for="r in roles" :key="r.value" :value="r.value">{{ r.label }}</option>
                         </select>
                     </div>

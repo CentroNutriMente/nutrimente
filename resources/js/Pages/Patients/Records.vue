@@ -70,14 +70,14 @@ const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
                             <div>
                                 <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
                                 <select v-model="form.category"
-                                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                                    class="w-full rounded-xl border border-gray-200 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                                     <option v-for="c in categories" :key="c.value" :value="c.value">{{ c.label }}</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-500 mb-1">Tipo scheda</label>
                                 <select v-model="form.record_type"
-                                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                                    class="w-full rounded-xl border border-gray-200 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
                                     <option v-for="t in recordTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
                                 </select>
                             </div>

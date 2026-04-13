@@ -60,7 +60,7 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
             </div>
             <select
                 v-model="selectedTag"
-                class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                class="border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
                 <option value="">Tutti i tag</option>
                 <option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option>

@@ -57,7 +57,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                     <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Paziente *</label>
-                            <select v-model="form.patient_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <select v-model="form.patient_id" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 <option value="">Seleziona paziente...</option>
                                 <option v-for="p in patients" :key="p.id" :value="p.id">
                                     {{ p.last_name }} {{ p.first_name }}{{ p.codice_fiscale ? ` — ${p.codice_fiscale}` : '' }}
@@ -67,11 +67,11 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Data fattura *</label>
-                            <input v-model="form.issued_at" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            <input v-model="form.issued_at" type="date" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Metodo di pagamento</label>
-                            <select v-model="form.payment_method" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <select v-model="form.payment_method" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 <option value="">—</option>
                                 <option v-for="m in paymentMethods" :key="m" :value="m">{{ m.charAt(0).toUpperCase() + m.slice(1) }}</option>
                             </select>
@@ -97,7 +97,7 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                                     v-model="line.description"
                                     type="text"
                                     placeholder="Descrizione prestazione..."
-                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 />
                                 <p v-if="form.errors[`lines.${i}.description`]" class="text-red-500 text-xs mt-1">{{ form.errors[`lines.${i}.description`] }}</p>
                             </div>
