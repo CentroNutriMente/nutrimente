@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DocTemplate;
 use App\Models\Document;
 use App\Models\Patient;
 use Illuminate\Http\RedirectResponse;
@@ -42,9 +43,17 @@ class DocumentController extends Controller
             'created_at' => $d->created_at,
         ]);
 
+        $templates = DocTemplate::orderByDesc('is_system')->orderBy('name')->get()->map(fn ($t) => [
+            'id'          => $t->id,
+            'name'        => $t->name,
+            'description' => $t->description,
+            'is_system'   => $t->is_system,
+        ]);
+
         return Inertia::render('Documents/Index', [
             'documents' => $documents,
-            'filters' => $request->only(['search', 'category', 'shared_only']),
+            'filters'   => $request->only(['search', 'category', 'shared_only']),
+            'templates' => $templates,
         ]);
     }
 

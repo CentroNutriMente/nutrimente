@@ -5,6 +5,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocTemplateController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageController;
@@ -75,6 +76,14 @@ Route::middleware([
     Route::post('documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
     Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+
+    // Template documenti
+    Route::post('doc-templates', [DocTemplateController::class, 'store'])->name('doc-templates.store');
+    Route::get('doc-templates/{docTemplate}/edit', [DocTemplateController::class, 'edit'])->name('doc-templates.edit');
+    Route::put('doc-templates/{docTemplate}', [DocTemplateController::class, 'update'])->name('doc-templates.update');
+    Route::delete('doc-templates/{docTemplate}', [DocTemplateController::class, 'destroy'])->name('doc-templates.destroy');
+    Route::get('doc-templates/{docTemplate}/compile', [DocTemplateController::class, 'compile'])->name('doc-templates.compile');
+    Route::post('doc-templates/{docTemplate}/generate', [DocTemplateController::class, 'generatePdf'])->name('doc-templates.generate');
 
     // Notifiche
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
