@@ -60,7 +60,7 @@ class DocumentController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('documents', 'local');
+        $path = $file->store('documents', config('filesystems.default'));
 
         Document::create([
             'uploaded_by' => $request->user()->id,
@@ -80,13 +80,14 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
-        abort_if(! Storage::disk('local')->exists($document->file_path), 404);
-        return Storage::disk('local')->download($document->file_path, $document->file_name);
+        $disk = config('filesystems.default');
+        abort_if(! Storage::disk($disk)->exists($document->file_path), 404);
+        return Storage::disk($disk)->download($document->file_path, $document->file_name);
     }
 
     public function destroy(Document $document): RedirectResponse
     {
-        Storage::disk('local')->delete($document->file_path);
+        Storage::disk(config('filesystems.default'))->delete($document->file_path);
         $document->update(['deleted_at' => now()]);
         return back()->with('success', 'Documento eliminato.');
     }
