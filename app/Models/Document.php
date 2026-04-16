@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Document extends Model
 {
     protected $fillable = [
-        'uploaded_by', 'patient_id', 'title', 'description',
+        'uploaded_by', 'patient_id', 'template_id', 'title', 'description',
         'file_path', 'file_name', 'mime_type', 'file_size',
         'category', 'visible_to_categories', 'is_shared_with_patient',
         'deleted_at',

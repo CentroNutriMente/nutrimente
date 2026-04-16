@@ -191,10 +191,18 @@ function applyFilters() {
                         <span>·</span>
                         <span class="truncate">{{ doc.uploaded_by_name }}</span>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <a :href="route('documents.download', doc.id)" target="_blank"
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <a :href="`/documents/${doc.id}/view`" target="_blank"
                             class="text-xs text-purple-600 hover:underline font-medium">
+                            Visualizza
+                        </a>
+                        <a :href="route('documents.download', doc.id)"
+                            class="text-xs text-gray-500 hover:underline">
                             Scarica
+                        </a>
+                        <a v-if="doc.template_id" :href="`/doc-templates/${doc.template_id}/compile`"
+                            class="text-xs text-blue-500 hover:underline">
+                            Ricompila
                         </a>
                         <button @click="deleteDoc(doc.id)" class="text-xs text-red-400 hover:text-red-600 hover:underline ml-auto">
                             Elimina

@@ -134,6 +134,7 @@ class DocTemplateController extends Controller
         Document::create([
             'uploaded_by' => $request->user()->id,
             'patient_id'  => null,
+            'template_id' => $docTemplate->id,
             'title'       => $validated['title'],
             'description' => 'Generato da template: ' . $docTemplate->name,
             'file_path'   => $path,

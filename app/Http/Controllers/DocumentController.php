@@ -30,17 +30,18 @@ class DocumentController extends Controller
         }
 
         $documents = $query->paginate(30)->through(fn ($d) => [
-            'id' => $d->id,
-            'title' => $d->title,
-            'description' => $d->description,
-            'file_name' => $d->file_name,
-            'mime_type' => $d->mime_type,
-            'file_size' => $d->file_size,
-            'category' => $d->category,
+            'id'                     => $d->id,
+            'title'                  => $d->title,
+            'description'            => $d->description,
+            'file_name'              => $d->file_name,
+            'mime_type'              => $d->mime_type,
+            'file_size'              => $d->file_size,
+            'category'               => $d->category,
+            'template_id'            => $d->template_id,
             'is_shared_with_patient' => $d->is_shared_with_patient,
-            'patient_name' => $d->patient ? $d->patient->full_name : null,
-            'uploaded_by_name' => $d->uploader->name,
-            'created_at' => $d->created_at,
+            'patient_name'           => $d->patient ? $d->patient->full_name : null,
+            'uploaded_by_name'       => $d->uploader->name,
+            'created_at'             => $d->created_at,
         ]);
 
         $templates = DocTemplate::orderByDesc('is_system')->orderBy('name')->get()->map(fn ($t) => [
@@ -92,6 +93,17 @@ class DocumentController extends Controller
         $disk = config('filesystems.default');
         abort_if(! Storage::disk($disk)->exists($document->file_path), 404);
         return Storage::disk($disk)->download($document->file_path, $document->file_name);
+    }
+
+    /** Serve the file inline (opens in browser tab rather than downloading). */
+    public function view(Document $document)
+    {
+        $disk = config('filesystems.default');
+        abort_if(! Storage::disk($disk)->exists($document->file_path), 404);
+        return response(Storage::disk($disk)->get($document->file_path), 200, [
+            'Content-Type'        => $document->mime_type,
+            'Content-Disposition' => 'inline; filename="' . addslashes($document->file_name) . '"',
+        ]);
     }
 
     public function destroy(Document $document): RedirectResponse
