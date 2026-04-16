@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+
+const page = usePage();
 import Banner from '@/Components/Banner.vue';
 import axios from 'axios';
 
@@ -41,7 +43,7 @@ const closeSidebar = () => { if (window.innerWidth < 768) sidebarOpen.value = fa
 
 // ── Notifications ────────────────────────────────────────────────────────────
 const notifications   = ref([]);
-const unreadCount     = ref(0);
+const unreadCount     = ref(page.props.notif_unread ?? 0); // seeded from server on every page load
 const bellOpen        = ref(false);
 let   pollInterval    = null;
 
@@ -92,6 +94,10 @@ onMounted(() => {
     fetchNotifications();
     pollInterval = setInterval(fetchNotifications, 30000);
     document.addEventListener('click', closeBell);
+    // Keep badge in sync whenever Inertia navigates to a new page
+    router.on('finish', () => {
+        unreadCount.value = page.props.notif_unread ?? unreadCount.value;
+    });
 });
 
 onUnmounted(() => {
