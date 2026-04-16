@@ -47,7 +47,7 @@ let   pollInterval    = null;
 
 async function fetchNotifications() {
     try {
-        const { data } = await axios.get(route('notifications.index'));
+        const { data } = await axios.get('/notifications');
         notifications.value = data.notifications ?? [];
         unreadCount.value   = data.unread_count  ?? 0;
     } catch (e) {
@@ -57,7 +57,7 @@ async function fetchNotifications() {
 
 async function markAllRead() {
     try {
-        await axios.post(route('notifications.read-all'));
+        await axios.post('/notifications/read-all');
         notifications.value = notifications.value.map(n => ({ ...n, read: true }));
         unreadCount.value   = 0;
     } catch (e) {

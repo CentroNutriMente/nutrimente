@@ -65,9 +65,8 @@ async function loadMessages(silent = false) {
         loadError.value = '';
     }
     try {
-        const url = route('messages.load');
         const params = { channel_type: activeType.value, channel_id: activeId.value };
-        const { data } = await axios.get(url, { params });
+        const { data } = await axios.get('/messages/load', { params });
         const atBottom = !messagesEnd.value ||
             messagesEnd.value.getBoundingClientRect().bottom <= window.innerHeight + 100;
         messages.value = Array.isArray(data) ? data : [];
@@ -86,7 +85,7 @@ async function loadMessages(silent = false) {
 function markRead(channelType, channelId) {
     if (unread.value[channelId]) {
         delete unread.value[channelId];
-        axios.post(route('messages.read-channel'), {
+        axios.post('/messages/read-channel', {
             channel_type: channelType,
             channel_id:   channelId,
         }).catch(() => {});
@@ -96,7 +95,7 @@ function markRead(channelType, channelId) {
 // ── Poll unread counts ─────────────────────────────────────────────────────────
 async function pollUnread() {
     try {
-        const { data } = await axios.get(route('messages.unread'));
+        const { data } = await axios.get('/messages/unread');
         // Merge: don't re-add badge for the currently open channel
         const fresh = data.unread ?? {};
         delete fresh[activeId.value];
@@ -110,7 +109,7 @@ async function send() {
     const text = body.value.trim();
     body.value = '';
     try {
-        const { data } = await axios.post(route('messages.store'), {
+        const { data } = await axios.post('/messages', {
             channel_type: activeType.value,
             channel_id:   activeId.value,
             body:         text,
