@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Message;
 use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,12 +36,23 @@ class MessageController extends Controller
                 'role' => $u->getRoleNames()->first(),
             ]);
 
+        // Per-channel unread count (from notifications)
+        $unreadByChannel = Notification::where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->where('type', 'message')
+            ->whereNotNull('data')
+            ->get()
+            ->groupBy(fn ($n) => $n->data['channel_id'] ?? null)
+            ->filter(fn ($g, $k) => $k !== null)
+            ->map->count();
+
         return Inertia::render('Messages/Index', [
-            'teamChannels' => $teamChannels,
-            'colleagues' => $colleagues,
+            'teamChannels'   => $teamChannels,
+            'colleagues'     => $colleagues,
+            'unreadByChannel' => $unreadByChannel,
             'currentUser' => [
-                'id' => $user->id,
-                'name' => $user->name,
+                'id'                => $user->id,
+                'name'              => $user->name,
                 'profile_photo_url' => $user->profile_photo_url,
             ],
         ]);
@@ -97,9 +109,11 @@ class MessageController extends Controller
         $preview    = mb_strimwidth($validated['body'], 0, 80, '…');
 
         if ($validated['channel_type'] === 'direct') {
-            // Notify the other person in the DM
-            $recipientId = (int) $validated['channel_id'];
-            if ($recipientId !== $senderId) {
+            // channel_id format: dm_{minId}_{maxId}
+            $parts       = explode('_', $validated['channel_id']); // ['dm','1','2']
+            $recipientId = collect([(int)($parts[1] ?? 0), (int)($parts[2] ?? 0)])
+                ->first(fn ($id) => $id !== $senderId);
+            if ($recipientId && $recipientId !== $senderId) {
                 Notification::send(
                     $recipientId,
                     'message',
@@ -131,6 +145,17 @@ class MessageController extends Controller
             'sender_photo' => $message->sender->profile_photo_url,
             'created_at' => $message->created_at,
         ], 201);
+    }
+
+    public function readChannel(Request $request): JsonResponse
+    {
+        $channelId = $request->input('channel_id');
+        Notification::where('user_id', $request->user()->id)
+            ->whereNull('read_at')
+            ->where('type', 'message')
+            ->whereRaw("data->>'channel_id' = ?", [$channelId])
+            ->update(['read_at' => now()]);
+        return response()->json(['ok' => true]);
     }
 
     public function destroy(Request $request, Message $message): JsonResponse
