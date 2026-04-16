@@ -14,9 +14,10 @@ const props = defineProps({
 const activeType = ref('team');
 const activeId   = ref('general');
 
-const messages   = ref([]);
-const loading    = ref(false);
-const body       = ref('');
+const messages    = ref([]);
+const loading     = ref(false);
+const loadError   = ref('');
+const body        = ref('');
 const messagesEnd = ref(null);
 
 // Live unread counts — start from server value, updated by polling
@@ -59,21 +60,29 @@ async function selectChannel(type, id) {
 
 // ── Load messages ──────────────────────────────────────────────────────────────
 async function loadMessages(silent = false) {
-    if (!silent) loading.value = true;
+    if (!silent) {
+        loading.value   = true;
+        loadError.value = '';
+    }
     try {
-        const { data } = await axios.get(route('messages.load'), {
-            params: { channel_type: activeType.value, channel_id: activeId.value },
-        });
-        const wasAtBottom = messagesEnd.value
-            ? messagesEnd.value.getBoundingClientRect().bottom <= window.innerHeight + 100
-            : true;
-        messages.value = data;
-        if (wasAtBottom) {
+        const url = route('messages.load');
+        const params = { channel_type: activeType.value, channel_id: activeId.value };
+        console.log('[messages] loading', params);
+        const { data } = await axios.get(url, { params });
+        console.log('[messages] received', data?.length, 'messages');
+        const atBottom = !messagesEnd.value ||
+            messagesEnd.value.getBoundingClientRect().bottom <= window.innerHeight + 100;
+        messages.value = Array.isArray(data) ? data : [];
+        if (atBottom) {
             await nextTick();
             messagesEnd.value?.scrollIntoView({ behavior: 'instant' });
         }
-    } catch {}
-    finally { if (!silent) loading.value = false; }
+    } catch (e) {
+        console.error('[messages] load error', e?.response?.status, e?.response?.data ?? e?.message);
+        if (!silent) loadError.value = `Errore ${e?.response?.status ?? ''}: ${e?.response?.data?.message ?? e?.message ?? 'impossibile caricare i messaggi'}`;
+    } finally {
+        if (!silent) loading.value = false;
+    }
 }
 
 // ── Mark channel as read ───────────────────────────────────────────────────────
@@ -217,8 +226,9 @@ onUnmounted(() => {
 
                 <!-- Messages -->
                 <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                    <div v-if="loadError" class="text-center text-sm text-red-500 py-4 bg-red-50 rounded-xl px-4">{{ loadError }}</div>
                     <div v-if="loading" class="text-center text-sm text-gray-400 py-10">Caricamento…</div>
-                    <div v-else-if="messages.length === 0"
+                    <div v-else-if="messages.length === 0 && !loadError"
                         class="flex flex-col items-center justify-center h-full gap-3 text-gray-400">
                         <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
