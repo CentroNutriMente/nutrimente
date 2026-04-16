@@ -57,6 +57,8 @@ sleep 1\n\
 echo "Clearing caches..."\n\
 php artisan config:clear || true\n\
 php artisan cache:clear || true\n\
+echo "Running migrations..."\n\
+php artisan migrate --force || true\n\
 echo "Starting scheduler..."\n\
 (while true; do php artisan schedule:run --no-interaction >> /var/log/scheduler.log 2>&1; sleep 60; done) &\n\
 echo "Starting nginx..."\n\

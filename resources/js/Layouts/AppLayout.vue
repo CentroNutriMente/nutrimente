@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
+import axios from 'axios';
 
 defineProps({ title: String });
 
@@ -46,23 +47,22 @@ let   pollInterval    = null;
 
 async function fetchNotifications() {
     try {
-        const res  = await fetch(route('notifications.index'), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        const data = await res.json();
-        notifications.value = data.notifications;
-        unreadCount.value   = data.unread_count;
-    } catch {}
+        const { data } = await axios.get(route('notifications.index'));
+        notifications.value = data.notifications ?? [];
+        unreadCount.value   = data.unread_count  ?? 0;
+    } catch (e) {
+        console.error('[notifications] fetch error', e);
+    }
 }
 
 async function markAllRead() {
-    await fetch(route('notifications.read-all'), {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    });
-    notifications.value = notifications.value.map(n => ({ ...n, read: true }));
-    unreadCount.value   = 0;
+    try {
+        await axios.post(route('notifications.read-all'));
+        notifications.value = notifications.value.map(n => ({ ...n, read: true }));
+        unreadCount.value   = 0;
+    } catch (e) {
+        console.error('[notifications] markAllRead error', e);
+    }
 }
 
 function toggleBell() {
