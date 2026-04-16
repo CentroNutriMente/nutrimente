@@ -67,9 +67,7 @@ async function loadMessages(silent = false) {
     try {
         const url = route('messages.load');
         const params = { channel_type: activeType.value, channel_id: activeId.value };
-        console.log('[messages] loading', params);
         const { data } = await axios.get(url, { params });
-        console.log('[messages] received', data?.length, 'messages');
         const atBottom = !messagesEnd.value ||
             messagesEnd.value.getBoundingClientRect().bottom <= window.innerHeight + 100;
         messages.value = Array.isArray(data) ? data : [];
@@ -78,7 +76,6 @@ async function loadMessages(silent = false) {
             messagesEnd.value?.scrollIntoView({ behavior: 'instant' });
         }
     } catch (e) {
-        console.error('[messages] load error', e?.response?.status, e?.response?.data ?? e?.message);
         if (!silent) loadError.value = `Errore ${e?.response?.status ?? ''}: ${e?.response?.data?.message ?? e?.message ?? 'impossibile caricare i messaggi'}`;
     } finally {
         if (!silent) loading.value = false;
