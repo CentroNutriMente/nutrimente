@@ -98,10 +98,23 @@ class DocumentController extends Controller
     /** Serve the file inline (opens in browser tab rather than downloading). */
     public function view(Document $document)
     {
-        $disk = config('filesystems.default');
-        abort_if(! Storage::disk($disk)->exists($document->file_path), 404);
-        return response(Storage::disk($disk)->get($document->file_path), 200, [
-            'Content-Type'        => $document->mime_type,
+        $disk    = config('filesystems.default');
+        $storage = Storage::disk($disk);
+
+        abort_if(! $storage->exists($document->file_path), 404, 'File non disponibile.');
+
+        // For S3-compatible disks: redirect to a short-lived signed URL so the
+        // browser fetches the file directly (no PHP memory overhead, no CORS).
+        if ($disk !== 'local') {
+            try {
+                return redirect($storage->temporaryUrl($document->file_path, now()->addMinutes(30)));
+            } catch (\Exception) {
+                // Driver doesn't support temporaryUrl — fall through to streaming.
+            }
+        }
+
+        return response($storage->get($document->file_path), 200, [
+            'Content-Type'        => $document->mime_type ?? 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . addslashes($document->file_name) . '"',
         ]);
     }

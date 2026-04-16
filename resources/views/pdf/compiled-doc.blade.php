@@ -162,7 +162,7 @@
                     <div class="checkbox-group-label">{{ $item['label'] }}</div>
                     @foreach ($item['checkboxes'] as $cb)
                     <div class="checkbox-row">
-                        <span class="checkbox-box">{{ $cb['checked'] ? '&#x2713;' : '' }}</span>
+                        <span class="checkbox-box">{!! $cb['checked'] ? '&#x2713;' : '' !!}</span>
                         <span class="checkbox-label">{{ $cb['label'] }}</span>
                     </div>
                     @endforeach
