@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Intervisione;
+use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -78,6 +79,19 @@ class IntervisioneController extends Controller
             ->all();
         $intervisione->participants()->sync($ids);
 
+        // Notify all participants except creator
+        $creatorName = $request->user()->name;
+        $when = $intervisione->scheduled_at ? ' — ' . $intervisione->scheduled_at->format('d/m/Y H:i') : '';
+        collect($ids)
+            ->reject(fn ($id) => $id === $request->user()->id)
+            ->each(fn ($uid) => Notification::send(
+                $uid,
+                'intervisione',
+                "Sei stato incluso in un'intervisione",
+                "{$intervisione->title}{$when} (da {$creatorName})",
+                ['intervisione_id' => $intervisione->id]
+            ));
+
         if ($intervisione->scheduled_at) {
             Appointment::create([
                 'user_id' => $request->user()->id,
@@ -131,11 +145,25 @@ class IntervisioneController extends Controller
         $intervisione->update($validated);
 
         if (isset($validated['participant_ids'])) {
-            $ids = collect($validated['participant_ids'])
+            $newIds = collect($validated['participant_ids'])
                 ->push($intervisione->created_by)
-                ->unique()
-                ->all();
-            $intervisione->participants()->sync($ids);
+                ->unique();
+
+            // Find newly added participants to notify them
+            $existingIds = $intervisione->participants()->pluck('users.id');
+            $addedIds    = $newIds->diff($existingIds)->reject(fn ($id) => $id === $request->user()->id);
+
+            $intervisione->participants()->sync($newIds->all());
+
+            $when = $intervisione->scheduled_at ? ' — ' . $intervisione->scheduled_at->format('d/m/Y H:i') : '';
+            $updaterName = $request->user()->name;
+            $addedIds->each(fn ($uid) => Notification::send(
+                $uid,
+                'intervisione',
+                "Sei stato aggiunto a un'intervisione",
+                "{$intervisione->title}{$when} (da {$updaterName})",
+                ['intervisione_id' => $intervisione->id]
+            ));
         }
 
         // Sync the linked appointment

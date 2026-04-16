@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Message;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -89,6 +90,38 @@ class MessageController extends Controller
         ]);
 
         $message->load('sender');
+
+        $sender     = $request->user();
+        $senderId   = $sender->id;
+        $senderName = $sender->name;
+        $preview    = mb_strimwidth($validated['body'], 0, 80, '…');
+
+        if ($validated['channel_type'] === 'direct') {
+            // Notify the other person in the DM
+            $recipientId = (int) $validated['channel_id'];
+            if ($recipientId !== $senderId) {
+                Notification::send(
+                    $recipientId,
+                    'message',
+                    "Messaggio diretto da {$senderName}",
+                    $preview,
+                    ['channel_type' => 'direct', 'channel_id' => $validated['channel_id']]
+                );
+            }
+        } else {
+            // Team channel: notify all professionals except sender
+            $channelId = $validated['channel_id'];
+            User::whereHas('roles')
+                ->where('id', '!=', $senderId)
+                ->pluck('id')
+                ->each(fn ($uid) => Notification::send(
+                    $uid,
+                    'message',
+                    "#{$channelId} — {$senderName}",
+                    $preview,
+                    ['channel_type' => 'team', 'channel_id' => $channelId]
+                ));
+        }
 
         return response()->json([
             'id' => $message->id,

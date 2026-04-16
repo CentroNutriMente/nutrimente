@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -54,10 +55,23 @@ class TaskController extends Controller
             'priority' => 'in:low,medium,high',
         ]);
 
-        Task::create([
+        $task = Task::create([
             ...$validated,
             'created_by' => $request->user()->id,
         ]);
+
+        // Notify the owner if different from creator
+        if ($task->user_id !== $request->user()->id) {
+            $creatorName = $request->user()->name;
+            $due = $task->due_date ? ' — scadenza ' . $task->due_date->format('d/m/Y') : '';
+            Notification::send(
+                $task->user_id,
+                'task_assigned',
+                "Nuova attività assegnata da {$creatorName}",
+                $task->title . $due,
+                ['task_user_id' => $task->user_id]
+            );
+        }
 
         return back();
     }
