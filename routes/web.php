@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
@@ -72,10 +73,11 @@ Route::middleware([
     Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
     Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 
-    // Workspace (social calendar)
-    Route::get('workspace', function () {
-        return Inertia::render('Workspace/Index');
-    })->name('workspace.index');
+    // Workspace – task list
+    Route::get('workspace', [TaskController::class, 'index'])->name('workspace.index');
+    Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::put('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 
     // GDPR & Privacy
     Route::get('gdpr', function () {
