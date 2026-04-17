@@ -76,6 +76,7 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Codice Fiscale</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Contatto</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Tag</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600">Creato da</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Stato</th>
                         <th class="px-4 py-3"></th>
                     </tr>
@@ -111,6 +112,12 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                                     class="text-xs px-2 py-0.5 rounded-full font-medium"
                                 >{{ tag.name }}</span>
                             </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span v-if="patient.creator" class="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                                {{ patient.creator.name }}
+                            </span>
+                            <span v-else class="text-xs text-gray-300">—</span>
                         </td>
                         <td class="px-4 py-3">
                             <span :class="patient.is_active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'" class="text-xs px-2 py-1 rounded-full font-medium">

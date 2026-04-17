@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,7 +18,7 @@ class Patient extends Model
         'first_name', 'last_name', 'codice_fiscale', 'date_of_birth', 'gender',
         'email', 'phone', 'address', 'city', 'cap',
         'emergency_contact_name', 'emergency_contact_phone',
-        'medico_base', 'notes', 'is_active', 'booking_token',
+        'medico_base', 'notes', 'is_active', 'booking_token', 'created_by',
     ];
 
     protected $casts = [
@@ -37,6 +38,16 @@ class Patient extends Model
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function professionals(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'patient_professional');
     }
 
     public function tags(): BelongsToMany

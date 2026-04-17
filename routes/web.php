@@ -5,6 +5,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SocialController;
 use App\Http\Controllers\DocTemplateController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\InvoiceController;
@@ -96,6 +97,12 @@ Route::middleware([
     Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::put('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::delete('tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+
+    // Social content calendar
+    Route::get('social', [SocialController::class, 'index'])->name('social.index');
+    Route::post('social', [SocialController::class, 'store'])->name('social.store');
+    Route::put('social/{socialPost}', [SocialController::class, 'update'])->name('social.update');
+    Route::delete('social/{socialPost}', [SocialController::class, 'destroy'])->name('social.destroy');
 
     // GDPR & Privacy
     Route::get('gdpr', function () {

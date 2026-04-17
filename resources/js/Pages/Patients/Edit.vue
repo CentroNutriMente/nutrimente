@@ -3,23 +3,26 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
-    patient: Object,
-    tags: Array,
+    patient:       Object,
+    tags:          Array,
+    professionals: Array,
+    authId:        Number,
 });
 
 const form = useForm({
-    first_name: props.patient.first_name,
-    last_name: props.patient.last_name,
+    first_name:     props.patient.first_name,
+    last_name:      props.patient.last_name,
     codice_fiscale: props.patient.codice_fiscale ?? '',
-    date_of_birth: props.patient.date_of_birth?.slice(0, 10) ?? '',
-    gender: props.patient.gender ?? '',
-    email: props.patient.email ?? '',
-    phone: props.patient.phone ?? '',
-    address: props.patient.address ?? '',
-    city: props.patient.city ?? '',
-    cap: props.patient.cap ?? '',
-    notes: props.patient.notes ?? '',
-    tags: props.patient.tags?.map(t => t.id) ?? [],
+    date_of_birth:  props.patient.date_of_birth?.slice(0, 10) ?? '',
+    gender:         props.patient.gender ?? '',
+    email:          props.patient.email ?? '',
+    phone:          props.patient.phone ?? '',
+    address:        props.patient.address ?? '',
+    city:           props.patient.city ?? '',
+    cap:            props.patient.cap ?? '',
+    notes:          props.patient.notes ?? '',
+    tags:           props.patient.tags?.map(t => t.id) ?? [],
+    professionals:  props.patient.professionals?.map(p => p.id) ?? [],
 });
 
 function submit() {
@@ -31,6 +34,16 @@ function toggleTag(id) {
     if (idx === -1) form.tags.push(id);
     else form.tags.splice(idx, 1);
 }
+
+function toggleProfessional(id) {
+    const idx = form.professionals.indexOf(id);
+    if (idx === -1) form.professionals.push(id);
+    else form.professionals.splice(idx, 1);
+}
+
+// Professionals selectable = everyone except the creator
+const creatorId = props.patient.created_by;
+const otherProfessionals = props.professionals.filter(p => p.id !== creatorId);
 </script>
 
 <template>
@@ -116,6 +129,39 @@ function toggleTag(id) {
                         <input v-model="form.cap" type="text"
                             class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
                     </div>
+                </div>
+            </div>
+
+            <!-- Accesso professionisti -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Accesso professionisti</h2>
+                <p class="text-xs text-gray-400 mb-4">Solo i professionisti selezionati possono vedere e gestire questo paziente.</p>
+
+                <!-- Creator badge -->
+                <div class="flex flex-wrap gap-2">
+                    <span v-if="patient.creator" class="flex items-center gap-1.5 text-xs font-medium bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ patient.creator.name }}
+                        <span class="text-purple-400 font-normal">(creatore)</span>
+                    </span>
+
+                    <button
+                        v-for="pro in otherProfessionals"
+                        :key="pro.id"
+                        type="button"
+                        @click="toggleProfessional(pro.id)"
+                        :class="form.professionals.includes(pro.id)
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'"
+                        class="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border font-medium transition-all"
+                    >
+                        <span v-if="form.professionals.includes(pro.id)" class="text-xs">✓</span>
+                        {{ pro.name }}
+                    </button>
+
+                    <p v-if="!otherProfessionals.length" class="text-sm text-gray-400">Nessun altro professionista disponibile.</p>
                 </div>
             </div>
 

@@ -1,8 +1,12 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 
-const props = defineProps({ tags: Array });
+const props = defineProps({
+    tags:          Array,
+    professionals: Array,
+    authId:        Number,
+});
 
 const form = useForm({
     first_name: '',
@@ -20,6 +24,7 @@ const form = useForm({
     emergency_contact_phone: '',
     notes: '',
     tags: [],
+    professionals: [],
 });
 
 const submit = () => form.post(route('patients.store'));
@@ -35,6 +40,14 @@ const tagColor = (tag) => {
         ? { backgroundColor: tag.color, color: '#fff', borderColor: tag.color }
         : { backgroundColor: tag.color + '22', color: tag.color, borderColor: tag.color + '44' };
 };
+
+const toggleProfessional = (id) => {
+    const idx = form.professionals.indexOf(id);
+    idx === -1 ? form.professionals.push(id) : form.professionals.splice(idx, 1);
+};
+
+// Professionals available to be assigned (everyone except the creator themselves)
+const otherProfessionals = props.professionals.filter(p => p.id !== props.authId);
 </script>
 
 <template>
@@ -123,6 +136,29 @@ const tagColor = (tag) => {
                         <input v-model="form.emergency_contact_phone" type="tel" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                 </div>
+            </div>
+
+            <!-- Accesso professionisti -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 class="font-semibold text-gray-700 mb-1">Accesso professionisti</h2>
+                <p class="text-xs text-gray-400 mb-4">Solo i professionisti selezionati potranno vedere e gestire questo paziente. Tu sei sempre incluso come creatore.</p>
+
+                <div v-if="otherProfessionals.length" class="flex flex-wrap gap-2">
+                    <button
+                        v-for="pro in otherProfessionals"
+                        :key="pro.id"
+                        type="button"
+                        @click="toggleProfessional(pro.id)"
+                        :class="form.professionals.includes(pro.id)
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'"
+                        class="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border font-medium transition-all"
+                    >
+                        <span v-if="form.professionals.includes(pro.id)" class="text-xs">✓</span>
+                        {{ pro.name }}
+                    </button>
+                </div>
+                <p v-else class="text-sm text-gray-400">Nessun altro professionista disponibile.</p>
             </div>
 
             <!-- Tag -->
