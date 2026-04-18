@@ -23,6 +23,7 @@ const form = useForm({
     emergency_contact_name: '',
     emergency_contact_phone: '',
     notes: '',
+    diagnosis: '',
     tags: [],
     professionals: [],
 });
@@ -174,6 +175,15 @@ const otherProfessionals = props.professionals.filter(p => p.id !== props.authId
                         class="text-sm px-3 py-1 rounded-full border font-medium transition-all"
                     >{{ tag.name }}</button>
                 </div>
+            </div>
+
+            <!-- Diagnosi -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 class="font-semibold text-gray-700 mb-1">Diagnosi</h2>
+                <p class="text-xs text-gray-400 mb-3">Verrà mostrata come etichetta sul profilo del paziente.</p>
+                <input v-model="form.diagnosis" type="text" maxlength="500"
+                    placeholder="Es. Disturbo d'ansia generalizzato, Obesità di I grado…"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
             </div>
 
             <!-- Note -->

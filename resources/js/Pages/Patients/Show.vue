@@ -83,6 +83,12 @@ const invoiceStatusClass = {
                         </div>
                     </dl>
                 </div>
+                <div v-if="patient.diagnosis" class="bg-white rounded-xl border border-gray-200 p-4">
+                    <h3 class="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">Diagnosi</h3>
+                    <span class="inline-block text-xs px-2.5 py-1 rounded-full font-medium bg-rose-50 text-rose-700 border border-rose-100">
+                        {{ patient.diagnosis }}
+                    </span>
+                </div>
                 <div v-if="patient.tags.length" class="bg-white rounded-xl border border-gray-200 p-4">
                     <h3 class="font-medium text-gray-700 mb-3 text-sm uppercase tracking-wide">Tag / Disturbi</h3>
                     <div class="flex flex-wrap gap-1">

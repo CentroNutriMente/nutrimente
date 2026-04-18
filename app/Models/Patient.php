@@ -18,7 +18,7 @@ class Patient extends Model
         'first_name', 'last_name', 'codice_fiscale', 'date_of_birth', 'gender',
         'email', 'phone', 'address', 'city', 'cap',
         'emergency_contact_name', 'emergency_contact_phone',
-        'medico_base', 'notes', 'is_active', 'booking_token', 'created_by',
+        'medico_base', 'notes', 'diagnosis', 'is_active', 'booking_token', 'created_by',
     ];
 
     protected $casts = [

@@ -106,6 +106,10 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-1">
                                 <span
+                                    v-if="patient.diagnosis"
+                                    class="text-xs px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-700 border border-rose-100"
+                                >{{ patient.diagnosis }}</span>
+                                <span
                                     v-for="tag in patient.tags"
                                     :key="tag.id"
                                     :style="tagColor(tag.color)"

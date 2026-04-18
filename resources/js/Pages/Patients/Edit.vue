@@ -21,6 +21,7 @@ const form = useForm({
     city:           props.patient.city ?? '',
     cap:            props.patient.cap ?? '',
     notes:          props.patient.notes ?? '',
+    diagnosis:      props.patient.diagnosis ?? '',
     tags:           props.patient.tags?.map(t => t.id) ?? [],
     professionals:  props.patient.professionals?.map(p => p.id) ?? [],
 });
@@ -180,6 +181,15 @@ const otherProfessionals = props.professionals.filter(p => p.id !== creatorId);
                         {{ tag.name }}
                     </button>
                 </div>
+            </div>
+
+            <!-- Diagnosi -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Diagnosi</h2>
+                <p class="text-xs text-gray-400 mb-3">Verrà mostrata come etichetta sul profilo del paziente.</p>
+                <input v-model="form.diagnosis" type="text" maxlength="500"
+                    placeholder="Es. Disturbo d'ansia generalizzato, Obesità di I grado…"
+                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
             </div>
 
             <!-- Note -->
