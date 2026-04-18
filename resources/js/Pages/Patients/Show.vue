@@ -5,11 +5,10 @@ import { ref } from 'vue';
 
 const props = defineProps({ patient: Object });
 
-const activeTab = ref('records');
+const activeTab = ref('reports');
 const tabs = [
-    { key: 'records',      label: 'Cartella clinica' },
-    { key: 'appointments', label: 'Appuntamenti' },
     { key: 'reports',      label: 'Referti' },
+    { key: 'appointments', label: 'Appuntamenti' },
     { key: 'invoices',     label: 'Fatture' },
     { key: 'consents',     label: 'Consensi' },
 ];
@@ -18,13 +17,6 @@ const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
 const fmtDatetime = (d) => d ? new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
 const tagColor = (color) => ({ backgroundColor: color + '22', color });
-
-const recordTypes = {
-    anamnesi: 'Anamnesi',
-    seduta: 'Seduta',
-    valutazione: 'Valutazione',
-    'follow-up': 'Follow-up',
-};
 
 const invoiceStatusLabel = { draft: 'Bozza', issued: 'Emessa', paid: 'Pagata', cancelled: 'Annullata' };
 const invoiceStatusClass = {
@@ -121,37 +113,6 @@ const invoiceStatusClass = {
                             'px-4 py-2 rounded-lg text-sm font-medium transition-colors'
                         ]"
                     >{{ tab.label }}</button>
-                </div>
-
-                <!-- Cartella clinica -->
-                <div v-if="activeTab === 'records'">
-                    <div class="flex justify-end mb-3">
-                        <Link
-                            :href="route('patients.records', patient.id)"
-                            class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
-                        >+ Nuova scheda</Link>
-                    </div>
-                    <div v-if="!patient.records.length" class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
-                        Nessuna scheda clinica ancora.
-                    </div>
-                    <div v-else class="space-y-3">
-                        <div v-for="rec in patient.records" :key="rec.id" class="bg-white rounded-xl border border-gray-200 p-4">
-                            <div class="flex items-start justify-between gap-2 mb-2">
-                                <div>
-                                    <span class="font-medium text-gray-800">{{ rec.title }}</span>
-                                    <span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{{ rec.record_type }}</span>
-                                    <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{{ rec.category }}</span>
-                                    <span v-if="rec.is_shared_with_team" class="ml-1 text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">Condivisa</span>
-                                </div>
-                                <span class="text-xs text-gray-400 shrink-0">{{ fmt(rec.record_date) }}</span>
-                            </div>
-                            <div v-if="rec.notes" class="text-sm text-gray-600 mb-1 whitespace-pre-line">{{ rec.notes }}</div>
-                            <div v-if="rec.treatment_plan" class="text-sm text-purple-700 bg-purple-50 rounded p-2 mt-2">
-                                <span class="font-medium text-xs uppercase tracking-wide">Piano di trattamento: </span>{{ rec.treatment_plan }}
-                            </div>
-                            <div class="text-xs text-gray-400 mt-2">Autore: {{ rec.user?.name }}</div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Appuntamenti -->
