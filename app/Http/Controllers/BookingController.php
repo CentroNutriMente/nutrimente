@@ -138,16 +138,20 @@ class BookingController extends Controller
             ->firstOrFail();
 
         // Create the actual appointment in the system
-        $startAt = Carbon::parse("{$booking->requested_date} {$booking->requested_time}");
+        $startAt  = Carbon::parse("{$booking->requested_date} {$booking->requested_time}");
         $duration = $booking->professional->professionalProfile?->session_duration_minutes ?? 50;
+
+        // Try to find an existing patient record by email to link it
+        $patient = \App\Models\Patient::where('email', $booking->patient_email)->first();
 
         $appointment = Appointment::create([
             'user_id'     => $booking->professional_id,
+            'patient_id'  => $patient?->id,
             'title'       => "Appuntamento – {$booking->fullName()}",
             'description' => $booking->notes,
             'start_at'    => $startAt,
             'end_at'      => $startAt->copy()->addMinutes($duration),
-            'type'        => 'visita',
+            'type'        => 'session',
             'status'      => 'confirmed',
             'color'       => '#10b981',
         ]);
