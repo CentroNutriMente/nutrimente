@@ -15,7 +15,7 @@ class ProfessionalController extends Controller
     public function index(): Response
     {
         $professionals = User::with('professionalProfile', 'roles')
-            ->whereHas('roles')
+            ->whereHas('roles', fn ($q) => $q->where('name', '!=', 'admin'))
             ->get()
             ->map(fn ($u) => [
                 'id' => $u->id,
@@ -39,7 +39,7 @@ class ProfessionalController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'role' => 'required|string|in:admin,psicologo,nutrizionista,osteopata,collaboratore',
+            'role' => 'required|string|in:psicologo,nutrizionista,osteopata,collaboratore',
             'category' => 'nullable|string|max:100',
         ]);
 

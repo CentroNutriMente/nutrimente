@@ -29,7 +29,6 @@ const roles = [
     { value: 'nutrizionista', label: 'Nutrizionista' },
     { value: 'osteopata', label: 'Osteopata' },
     { value: 'collaboratore', label: 'Collaboratore' },
-    { value: 'admin', label: 'Admin' },
 ];
 
 const roleLabel = {
