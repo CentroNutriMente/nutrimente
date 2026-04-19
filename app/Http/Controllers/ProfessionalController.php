@@ -54,11 +54,17 @@ class ProfessionalController extends Controller
         $role = Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
         $user->assignRole($role);
 
-        if ($validated['category'] ?? null) {
-            $user->professionalProfile()->create([
-                'category' => $validated['category'],
-            ]);
+        // Always create a profile with a slug
+        $base = Str::slug($user->name);
+        $slug = $base; $i = 2;
+        while (\App\Models\ProfessionalProfile::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
         }
+
+        $user->professionalProfile()->create([
+            'category' => $validated['category'] ?? null,
+            'slug'     => $slug,
+        ]);
 
         return redirect()->route('professionals.index')->with('success', 'Professionista aggiunto.');
     }
