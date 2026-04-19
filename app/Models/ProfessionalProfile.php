@@ -12,7 +12,7 @@ class ProfessionalProfile extends Model
         'photo', 'partita_iva', 'codice_fiscale', 'regime_fiscale',
         'cassa_previdenziale', 'albo_professionale', 'numero_albo',
         'invoice_counter', 'is_bookable', 'session_duration_minutes',
-        'session_price', 'booking_notes', 'phone', 'website', 'address',
+        'session_price', 'booking_notes', 'phone', 'website', 'address', 'slug',
     ];
 
     protected $casts = [

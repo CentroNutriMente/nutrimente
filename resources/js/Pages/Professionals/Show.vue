@@ -1,9 +1,9 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({ professional: Object });
+const props = defineProps({ professional: Object, slug: String });
 
 const profile = props.professional.professional_profile ?? {};
 
@@ -53,6 +53,21 @@ const roleColor = {
 };
 
 const role = props.professional.roles?.[0]?.name ?? '';
+
+// ── Availability slots ─────────────────────────────────────────────────────
+const DAY_LABELS = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+
+const slotForm = useForm({ day_of_week: 0, start_time: '09:00', end_time: '18:00', room: '' });
+
+function addSlot() {
+    slotForm.post(route('professionals.slots.store', props.professional.id), {
+        onSuccess: () => slotForm.reset('room'),
+    });
+}
+
+function removeSlot(slotId) {
+    router.delete(route('professionals.slots.destroy', [props.professional.id, slotId]), { preserveScroll: true });
+}
 </script>
 
 <template>
@@ -182,6 +197,67 @@ const role = props.professional.roles?.[0]?.name ?? '';
                         <label class="block text-xs font-medium text-gray-500 mb-1">Tariffa seduta (€)</label>
                         <input v-model="form.session_price" type="number" min="0" step="0.01" placeholder="0.00"
                             class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Availability slots -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Fasce orarie disponibili</h2>
+                    <a v-if="slug" :href="`/prenota/${slug}`" target="_blank"
+                        class="text-xs text-purple-600 hover:underline">
+                        Pagina pubblica →
+                    </a>
+                </div>
+
+                <!-- Existing slots -->
+                <div v-if="professional.availability_slots?.length" class="space-y-2 mb-5">
+                    <div v-for="slot in professional.availability_slots" :key="slot.id"
+                        class="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-2">
+                        <span class="text-xs font-semibold text-gray-600 w-24 shrink-0">{{ DAY_LABELS[slot.day_of_week] }}</span>
+                        <span class="text-xs text-gray-500 font-mono">{{ slot.start_time.slice(0,5) }} – {{ slot.end_time.slice(0,5) }}</span>
+                        <span v-if="slot.room" class="text-xs text-gray-400 ml-1">· {{ slot.room }}</span>
+                        <button @click="removeSlot(slot.id)"
+                            class="ml-auto text-gray-300 hover:text-red-500 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <p v-else class="text-xs text-gray-400 mb-4">Nessuna fascia configurata.</p>
+
+                <!-- Add slot form -->
+                <div class="border-t border-gray-100 pt-4">
+                    <p class="text-xs font-semibold text-gray-500 mb-3">Aggiungi fascia</p>
+                    <div class="flex flex-wrap gap-3 items-end">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Giorno</label>
+                            <select v-model.number="slotForm.day_of_week"
+                                class="rounded-xl border border-gray-200 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white">
+                                <option v-for="(d, i) in DAY_LABELS" :key="i" :value="i">{{ d }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Dalle</label>
+                            <input v-model="slotForm.start_time" type="time"
+                                class="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Alle</label>
+                            <input v-model="slotForm.end_time" type="time"
+                                class="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Stanza (opz.)</label>
+                            <input v-model="slotForm.room" type="text" placeholder="Studio A"
+                                class="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 w-28" />
+                        </div>
+                        <button @click="addSlot" :disabled="slotForm.processing"
+                            class="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+                            + Aggiungi
+                        </button>
                     </div>
                 </div>
             </div>

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AvailabilitySlot;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -63,8 +65,11 @@ class ProfessionalController extends Controller
 
     public function show(User $user): Response
     {
+        $user->load('professionalProfile', 'roles', 'availabilitySlots');
+
         return Inertia::render('Professionals/Show', [
-            'professional' => $user->load('professionalProfile', 'roles'),
+            'professional' => $user,
+            'slug'         => $user->professionalProfile?->slug,
         ]);
     }
 
@@ -88,11 +93,47 @@ class ProfessionalController extends Controller
             'website' => 'nullable|string|max:255',
         ]);
 
+        // Auto-generate slug if not yet set
+        if (! $user->professionalProfile?->slug) {
+            $base = Str::slug($user->name);
+            $slug = $base; $i = 2;
+            while (\App\Models\ProfessionalProfile::where('slug', $slug)->where('user_id', '!=', $user->id)->exists()) {
+                $slug = $base . '-' . $i++;
+            }
+            $validated['slug'] = $slug;
+        }
+
         $user->professionalProfile()->updateOrCreate(
             ['user_id' => $user->id],
             $validated
         );
 
         return back()->with('success', 'Profilo aggiornato.');
+    }
+
+    // ── Availability slots ────────────────────────────────────────────────────
+
+    public function storeSlot(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'day_of_week' => 'required|integer|between:0,6',
+            'start_time'  => 'required|date_format:H:i',
+            'end_time'    => 'required|date_format:H:i|after:start_time',
+            'room'        => 'nullable|string|max:100',
+        ]);
+
+        $user->availabilitySlots()->create([
+            ...$validated,
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Fascia oraria aggiunta.');
+    }
+
+    public function destroySlot(User $user, AvailabilitySlot $slot): RedirectResponse
+    {
+        abort_if($slot->user_id !== $user->id, 403);
+        $slot->delete();
+        return back()->with('success', 'Fascia rimossa.');
     }
 }

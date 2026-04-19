@@ -19,8 +19,15 @@ use Inertia\Inertia;
 
 // Pagina pubblica di booking
 Route::get('/prenota', [BookingController::class, 'index'])->name('booking.index');
-Route::get('/prenota/{profile}', [BookingController::class, 'show'])->name('booking.show');
-Route::post('/prenota/{profile}', [BookingController::class, 'store'])->name('booking.store');
+Route::get('/prenota/{slug}', [BookingController::class, 'show'])->name('booking.show');
+Route::post('/prenota/{slug}', [BookingController::class, 'store'])->name('booking.store');
+Route::get('/prenota/{slug}/conferma/{token}', [BookingController::class, 'confirm'])->name('booking.confirm');
+Route::get('/prenota/{slug}/rifiuta/{token}', [BookingController::class, 'reject'])->name('booking.reject');
+
+// Area personale paziente
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::get('/mia-area', [\App\Http\Controllers\PatientPortalController::class, 'dashboard'])->name('patient.dashboard');
+});
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -114,4 +121,8 @@ Route::middleware([
     Route::post('team/professionals', [\App\Http\Controllers\ProfessionalController::class, 'store'])->name('professionals.store');
     Route::get('team/professionals/{user}', [\App\Http\Controllers\ProfessionalController::class, 'show'])->name('professionals.show');
     Route::put('team/professionals/{user}', [\App\Http\Controllers\ProfessionalController::class, 'update'])->name('professionals.update');
+
+    // Availability slots
+    Route::post('team/professionals/{user}/slots', [\App\Http\Controllers\ProfessionalController::class, 'storeSlot'])->name('professionals.slots.store');
+    Route::delete('team/professionals/{user}/slots/{slot}', [\App\Http\Controllers\ProfessionalController::class, 'destroySlot'])->name('professionals.slots.destroy');
 });
