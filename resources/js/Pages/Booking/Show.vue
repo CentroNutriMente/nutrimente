@@ -47,9 +47,28 @@ function isPast(d) {
 
 const dayNames = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
 
-// day_of_week in DB: 0=Mon…6=Sun (matching migration comment)
-function slotsForDay(dayIndex) { // dayIndex: 0=Mon…6=Sun
-    return props.availability.filter(s => s.day_of_week === dayIndex);
+// Generate individual bookable time slots from availability ranges for a given day.
+// E.g. range 10:00–12:00 with 50-min sessions → ['10:00', '10:50']
+function slotsForDay(dayIndex) {
+    const ranges   = props.availability.filter(s => s.day_of_week === dayIndex);
+    const duration = props.professional.session_duration || 50;
+    const slots    = [];
+
+    for (const range of ranges) {
+        const [sh, sm] = range.start_time.split(':').map(Number);
+        const [eh, em] = range.end_time.split(':').map(Number);
+        const endMin   = eh * 60 + em;
+        let   cur      = sh * 60 + sm;
+
+        while (cur + duration <= endMin) {
+            const h = String(Math.floor(cur / 60)).padStart(2, '0');
+            const m = String(cur % 60).padStart(2, '0');
+            slots.push(`${h}:${m}`);
+            cur += duration;
+        }
+    }
+
+    return slots;
 }
 
 function isBooked(date, time) {
@@ -218,20 +237,20 @@ const dayFull = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato
                         <div class="p-1 space-y-1">
                             <template v-if="!isPast(day)">
                                 <button
-                                    v-for="slot in slotsForDay(idx)"
-                                    :key="slot.start_time"
-                                    @click="selectSlot(day, slot.start_time)"
-                                    :disabled="isBooked(day, slot.start_time)"
+                                    v-for="time in slotsForDay(idx)"
+                                    :key="time"
+                                    @click="selectSlot(day, time)"
+                                    :disabled="isBooked(day, time)"
                                     :class="[
-                                        isBooked(day, slot.start_time)
+                                        isBooked(day, time)
                                             ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through'
-                                            : selectedSlot?.date === dateKey(day) && selectedSlot?.time === slot.start_time
+                                            : selectedSlot?.date === dateKey(day) && selectedSlot?.time === time
                                                 ? 'bg-purple-600 text-white shadow-sm'
                                                 : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
                                         'w-full text-[11px] font-semibold px-1 py-1 rounded-lg transition-all text-center'
                                     ]"
                                 >
-                                    {{ slot.start_time }}
+                                    {{ time }}
                                 </button>
                                 <div v-if="slotsForDay(idx).length === 0"
                                     class="text-center text-[10px] text-gray-200 pt-2">—</div>
