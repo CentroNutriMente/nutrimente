@@ -123,7 +123,11 @@ class BookingController extends Controller
             'invite_token'    => Str::random(48),
         ]);
 
-        Mail::to($profile->user->email)->send(new BookingRequestMail($booking->load('professional.professionalProfile')));
+        try {
+            Mail::to($profile->user->email)->send(new BookingRequestMail($booking->load('professional.professionalProfile')));
+        } catch (\Exception $e) {
+            \Log::error('BookingRequest mail failed: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Richiesta inviata! Il professionista ti contatterà a breve.');
     }
@@ -164,7 +168,11 @@ class BookingController extends Controller
         ]);
 
         // Send confirmation email to patient
-        Mail::to($booking->patient_email)->send(new BookingConfirmedMail($booking));
+        try {
+            Mail::to($booking->patient_email)->send(new BookingConfirmedMail($booking));
+        } catch (\Exception $e) {
+            \Log::error('BookingConfirmed mail failed: ' . $e->getMessage());
+        }
 
         return Inertia::render('Booking/Confirmed', [
             'booking' => [

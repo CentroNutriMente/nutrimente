@@ -8,7 +8,7 @@ const props = defineProps({
     booked_slots: Array,   // [{date, time}]
 });
 
-const flash = usePage().props.flash ?? {};
+const page = usePage();
 
 // ── Week navigation ───────────────────────────────────────────────────────────
 const weekOffset = ref(0); // 0 = current week, 1 = next week, ...
@@ -105,6 +105,10 @@ function submit() {
             showForm.value = false;
             selectedSlot.value = null;
             form.reset();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        onError: () => {
+            // validation errors are shown inline via form.errors
         },
     });
 }
@@ -144,9 +148,15 @@ const dayFull = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato
         <main class="max-w-4xl mx-auto px-4 py-10 space-y-10">
 
             <!-- Success flash -->
-            <div v-if="$page.props.flash?.success"
+            <div v-if="page.props.flash?.success"
                 class="bg-green-50 border border-green-200 text-green-800 rounded-2xl px-6 py-4 text-sm font-medium">
-                {{ $page.props.flash.success }}
+                {{ page.props.flash.success }}
+            </div>
+
+            <!-- Error flash -->
+            <div v-if="page.props.flash?.error"
+                class="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-6 py-4 text-sm font-medium">
+                {{ page.props.flash.error }}
             </div>
 
             <!-- Professional card -->
