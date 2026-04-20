@@ -10,6 +10,26 @@ const props = defineProps({
 
 const page = usePage();
 
+// Parse curriculum into sections: ALL-CAPS lines → section headers, others → items
+const parsedCurriculum = computed(() => {
+    if (!props.professional.curriculum) return [];
+    const lines = props.professional.curriculum.split('\n').map(l => l.trim());
+    const sections = [];
+    let current = null;
+    for (const line of lines) {
+        if (!line) continue;
+        const isHeader = line === line.toUpperCase() && line.replace(/\s/g, '').length > 3;
+        if (isHeader) {
+            current = { title: line, items: [] };
+            sections.push(current);
+        } else {
+            if (!current) { current = { title: '', items: [] }; sections.push(current); }
+            current.items.push(line.replace(/^[•\-]\s*/, ''));
+        }
+    }
+    return sections.filter(s => s.items.length > 0);
+});
+
 // ── Week navigation ───────────────────────────────────────────────────────────
 const weekOffset = ref(0); // 0 = current week, 1 = next week, ...
 
@@ -168,17 +188,20 @@ const dayFull = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato
                         {{ professional.title ? professional.title + ' ' : '' }}{{ professional.name.split(' ').slice(-1)[0] }}
                     </h1>
                     <p v-if="professional.bio" class="text-gray-600 text-sm leading-relaxed mb-5">{{ professional.bio }}</p>
-                    <!-- Areas of intervention – render bullet lines -->
-                    <div v-if="professional.curriculum" class="border-t border-gray-100 pt-4">
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Aree di intervento</p>
-                        <ul class="space-y-1">
-                            <li v-for="line in professional.curriculum.split('\n').filter(l => l.trim() && !l.startsWith('Aree'))"
-                                :key="line"
-                                class="flex items-start gap-2 text-sm text-gray-600">
-                                <span class="text-purple-400 mt-0.5 shrink-0">•</span>
-                                <span>{{ line.replace(/^[•\-]\s*/, '') }}</span>
-                            </li>
-                        </ul>
+                    <!-- Curriculum: parsed sections (Formazione / Esperienze / Aree) -->
+                    <div v-if="parsedCurriculum.length" class="border-t border-gray-100 pt-5 space-y-5">
+                        <div v-for="(section, i) in parsedCurriculum" :key="i">
+                            <p v-if="section.title" class="text-[11px] font-bold text-purple-400 uppercase tracking-widest mb-2">
+                                {{ section.title }}
+                            </p>
+                            <ul class="space-y-1.5">
+                                <li v-for="item in section.items" :key="item"
+                                    class="flex items-start gap-2 text-sm text-gray-600 leading-snug">
+                                    <span class="text-purple-300 mt-0.5 shrink-0 text-xs">▸</span>
+                                    <span>{{ item }}</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div v-if="professional.session_price" class="mt-4 text-sm text-gray-500">
                         Tariffa seduta: <span class="font-semibold text-gray-700">€ {{ Number(professional.session_price).toLocaleString('it-IT', {minimumFractionDigits:2}) }}</span>
