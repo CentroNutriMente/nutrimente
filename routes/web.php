@@ -33,7 +33,7 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
-    return redirect()->route('login');
+    return redirect()->route('booking.index');
 });
 
 Route::middleware([

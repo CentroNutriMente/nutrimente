@@ -12,9 +12,29 @@ const roleLabel = {
 <template>
     <div class="min-h-screen bg-gray-50">
 
-        <!-- Header / Hero -->
-        <header class="bg-white border-b border-gray-100 shadow-sm">
-            <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col items-center text-center gap-3">
+        <!-- Top nav bar -->
+        <nav class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
+            <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+                <a href="/" class="flex items-center gap-2.5">
+                    <img src="/logo.jpeg" alt="NutriMente" class="w-9 h-9 rounded-xl object-cover shadow-sm" />
+                    <span class="font-bold text-gray-900 text-base">NutriMente</span>
+                </a>
+                <div class="flex items-center gap-2">
+                    <a href="/mia-area"
+                        class="text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors font-medium">
+                        Area pazienti
+                    </a>
+                    <a href="/login"
+                        class="text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-xl transition-colors">
+                        Accesso professionisti
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <header class="bg-white border-b border-gray-100">
+            <div class="max-w-5xl mx-auto px-4 py-10 flex flex-col items-center text-center gap-3">
                 <img src="/logo.jpeg" alt="NutriMente" class="w-20 h-20 rounded-2xl object-cover shadow-lg mb-2" />
                 <h1 class="text-3xl font-bold text-gray-900 tracking-tight">NutriMente</h1>
                 <p class="text-gray-500 max-w-xl">Il tuo centro di riferimento per la salute psicologica e nutrizionale. Scegli il professionista e prenota il tuo appuntamento online.</p>
@@ -61,7 +81,10 @@ const roleLabel = {
         <footer class="border-t border-gray-100 mt-16">
             <div class="max-w-5xl mx-auto px-4 py-6 flex items-center justify-between text-xs text-gray-400">
                 <span>© {{ new Date().getFullYear() }} NutriMente</span>
-                <a href="/login" class="hover:text-gray-600">Accesso professionisti</a>
+                <div class="flex items-center gap-4">
+                    <a href="/mia-area" class="hover:text-gray-600">Area pazienti</a>
+                    <a href="/login" class="hover:text-gray-600">Accesso professionisti</a>
+                </div>
             </div>
         </footer>
     </div>
