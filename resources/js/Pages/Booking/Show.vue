@@ -113,11 +113,6 @@ function submit() {
     });
 }
 
-const roleLabel = {
-    psicologo: 'Psicologo', nutrizionista: 'Nutrizionista',
-    osteopata: 'Osteopata', collaboratore: 'Collaboratore',
-};
-
 // Unique day_of_week values that have at least one slot (for availability table)
 const availabilityByDay = computed(() => {
     const map = {};
@@ -164,17 +159,26 @@ const dayFull = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato
             <!-- Professional card -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col sm:flex-row gap-6">
                 <img :src="professional.photo" :alt="professional.name"
-                    class="w-28 h-28 rounded-2xl object-cover shrink-0 mx-auto sm:mx-0 ring-2 ring-purple-100" />
+                    class="w-32 h-32 rounded-2xl object-cover shrink-0 mx-auto sm:mx-0 ring-2 ring-purple-100" />
                 <div class="flex-1">
                     <div class="text-xs font-semibold text-purple-500 uppercase tracking-wider mb-1">
-                        {{ professional.category ?? roleLabel[professional.role] ?? professional.role }}
+                        {{ professional.category }}
                     </div>
                     <h1 class="text-2xl font-bold text-gray-900 mb-3">
-                        {{ professional.title ? professional.title + ' ' : '' }}{{ professional.name }}
+                        {{ professional.title ? professional.title + ' ' : '' }}{{ professional.name.split(' ').slice(-1)[0] }}
                     </h1>
-                    <p v-if="professional.bio" class="text-gray-600 text-sm leading-relaxed mb-4 whitespace-pre-line">{{ professional.bio }}</p>
-                    <div v-if="professional.curriculum" class="text-sm text-gray-500 leading-relaxed whitespace-pre-line border-l-2 border-purple-100 pl-3">
-                        {{ professional.curriculum }}
+                    <p v-if="professional.bio" class="text-gray-600 text-sm leading-relaxed mb-5">{{ professional.bio }}</p>
+                    <!-- Areas of intervention – render bullet lines -->
+                    <div v-if="professional.curriculum" class="border-t border-gray-100 pt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Aree di intervento</p>
+                        <ul class="space-y-1">
+                            <li v-for="line in professional.curriculum.split('\n').filter(l => l.trim() && !l.startsWith('Aree'))"
+                                :key="line"
+                                class="flex items-start gap-2 text-sm text-gray-600">
+                                <span class="text-purple-400 mt-0.5 shrink-0">•</span>
+                                <span>{{ line.replace(/^[•\-]\s*/, '') }}</span>
+                            </li>
+                        </ul>
                     </div>
                     <div v-if="professional.session_price" class="mt-4 text-sm text-gray-500">
                         Tariffa seduta: <span class="font-semibold text-gray-700">€ {{ Number(professional.session_price).toLocaleString('it-IT', {minimumFractionDigits:2}) }}</span>
