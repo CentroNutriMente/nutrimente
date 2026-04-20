@@ -10,10 +10,11 @@ const props = defineProps({
 
 const page = usePage();
 
-// Parse JSON curriculum (formazione / esperienze / aree)
+// Curriculum arrives as a decoded object from the controller
 const cv = computed(() => {
-    if (!props.professional.curriculum) return null;
-    try { return JSON.parse(props.professional.curriculum); } catch { return null; }
+    const c = props.professional.curriculum;
+    if (!c || typeof c !== 'object') return null;
+    return c;
 });
 
 // ── Week navigation ───────────────────────────────────────────────────────────

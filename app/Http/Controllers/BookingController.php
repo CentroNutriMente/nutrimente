@@ -85,7 +85,7 @@ class BookingController extends Controller
                 'category'         => $profile->category,
                 'title'            => $profile->title,
                 'bio'              => $profile->bio,
-                'curriculum'       => $profile->curriculum,
+                'curriculum'       => json_decode($profile->curriculum, true) ?? $profile->curriculum,
                 'photo'            => $user->profile_photo_url,
                 'session_duration' => $profile->session_duration_minutes,
                 'session_price'    => $profile->session_price,
