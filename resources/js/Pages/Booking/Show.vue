@@ -10,24 +10,10 @@ const props = defineProps({
 
 const page = usePage();
 
-// Parse curriculum into sections: ALL-CAPS lines → section headers, others → items
-const parsedCurriculum = computed(() => {
-    if (!props.professional.curriculum) return [];
-    const lines = props.professional.curriculum.split('\n').map(l => l.trim());
-    const sections = [];
-    let current = null;
-    for (const line of lines) {
-        if (!line) continue;
-        const isHeader = line === line.toUpperCase() && line.replace(/\s/g, '').length > 3;
-        if (isHeader) {
-            current = { title: line, items: [] };
-            sections.push(current);
-        } else {
-            if (!current) { current = { title: '', items: [] }; sections.push(current); }
-            current.items.push(line.replace(/^[•\-]\s*/, ''));
-        }
-    }
-    return sections.filter(s => s.items.length > 0);
+// Parse JSON curriculum (formazione / esperienze / aree)
+const cv = computed(() => {
+    if (!props.professional.curriculum) return null;
+    try { return JSON.parse(props.professional.curriculum); } catch { return null; }
 });
 
 // ── Week navigation ───────────────────────────────────────────────────────────
@@ -176,38 +162,92 @@ const dayFull = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato
                 {{ page.props.flash.error }}
             </div>
 
-            <!-- Professional card -->
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col sm:flex-row gap-6">
-                <img :src="professional.photo" :alt="professional.name"
-                    class="w-32 h-32 rounded-2xl object-cover shrink-0 mx-auto sm:mx-0 ring-2 ring-purple-100" />
-                <div class="flex-1">
-                    <div class="text-xs font-semibold text-purple-500 uppercase tracking-wider mb-1">
-                        {{ professional.category }}
-                    </div>
-                    <h1 class="text-2xl font-bold text-gray-900 mb-3">
-                        {{ professional.title ? professional.title + ' ' : '' }}{{ professional.name.split(' ').slice(-1)[0] }}
-                    </h1>
-                    <p v-if="professional.bio" class="text-gray-600 text-sm leading-relaxed mb-5">{{ professional.bio }}</p>
-                    <!-- Curriculum: parsed sections (Formazione / Esperienze / Aree) -->
-                    <div v-if="parsedCurriculum.length" class="border-t border-gray-100 pt-5 space-y-5">
-                        <div v-for="(section, i) in parsedCurriculum" :key="i">
-                            <p v-if="section.title" class="text-[11px] font-bold text-purple-400 uppercase tracking-widest mb-2">
-                                {{ section.title }}
-                            </p>
-                            <ul class="space-y-1.5">
-                                <li v-for="item in section.items" :key="item"
-                                    class="flex items-start gap-2 text-sm text-gray-600 leading-snug">
-                                    <span class="text-purple-300 mt-0.5 shrink-0 text-xs">▸</span>
-                                    <span>{{ item }}</span>
-                                </li>
-                            </ul>
+            <!-- Professional hero -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <!-- Top: photo + name + bio -->
+                <div class="p-8 flex flex-col sm:flex-row gap-6">
+                    <img :src="professional.photo" :alt="professional.name"
+                        class="w-32 h-32 rounded-2xl object-cover shrink-0 mx-auto sm:mx-0 ring-2 ring-purple-100" />
+                    <div class="flex-1">
+                        <div class="text-xs font-semibold text-purple-500 uppercase tracking-wider mb-1">
+                            {{ professional.category }}
+                        </div>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-3">
+                            {{ professional.title ? professional.title + ' ' : '' }}{{ professional.name.split(' ').slice(-1)[0] }}
+                        </h1>
+                        <p v-if="professional.bio" class="text-gray-500 text-sm leading-relaxed">{{ professional.bio }}</p>
+                        <div v-if="professional.session_price" class="mt-4 inline-flex items-center gap-2 bg-purple-50 text-purple-700 text-sm font-medium px-3 py-1.5 rounded-xl">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            € {{ Number(professional.session_price).toLocaleString('it-IT', {minimumFractionDigits:2}) }} a seduta
+                            <span v-if="professional.session_duration" class="text-purple-400 font-normal">· {{ professional.session_duration }} min</span>
                         </div>
                     </div>
-                    <div v-if="professional.session_price" class="mt-4 text-sm text-gray-500">
-                        Tariffa seduta: <span class="font-semibold text-gray-700">€ {{ Number(professional.session_price).toLocaleString('it-IT', {minimumFractionDigits:2}) }}</span>
-                        <span v-if="professional.session_duration"> · {{ professional.session_duration }} min</span>
-                    </div>
                 </div>
+
+                <template v-if="cv">
+                    <!-- Aree di intervento -->
+                    <div v-if="cv.aree?.length" class="px-8 pb-6">
+                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Aree di intervento</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span v-for="area in cv.aree" :key="area"
+                                class="text-xs bg-purple-50 text-purple-700 font-medium px-3 py-1 rounded-full border border-purple-100">
+                                {{ area }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Formazione -->
+                    <div v-if="cv.formazione?.length" class="border-t border-gray-100 px-8 py-6">
+                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Formazione</p>
+                        <div class="space-y-4">
+                            <div v-for="f in cv.formazione" :key="f.titolo" class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+                                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-800 leading-snug">{{ f.titolo }}</p>
+                                    <p v-if="f.ente" class="text-xs text-gray-400 mt-0.5">{{ f.ente }}</p>
+                                    <p v-if="f.nota" class="text-xs text-purple-400 mt-0.5 italic">{{ f.nota }}</p>
+                                </div>
+                                <div class="shrink-0 flex flex-col items-end gap-1.5 ml-2">
+                                    <span v-if="f.anno" class="text-xs text-gray-400 font-medium">{{ f.anno }}</span>
+                                    <span v-if="f.voto" class="text-[10px] bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded-full border border-emerald-100">
+                                        {{ f.voto }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Esperienze cliniche -->
+                    <div v-if="cv.esperienze?.length" class="border-t border-gray-100 px-8 py-6">
+                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Esperienze cliniche</p>
+                        <div class="space-y-4">
+                            <div v-for="e in cv.esperienze" :key="e.ruolo"
+                                class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                                <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-800">{{ e.ruolo }}</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">{{ e.ente }}</p>
+                                    </div>
+                                    <span class="text-[11px] bg-white border border-purple-100 text-purple-600 font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
+                                        {{ e.periodo }}
+                                    </span>
+                                </div>
+                                <ul v-if="e.attivita?.length" class="space-y-1.5 pt-1 border-t border-gray-200">
+                                    <li v-for="a in e.attivita" :key="a"
+                                        class="flex items-start gap-2 text-xs text-gray-500 leading-snug">
+                                        <span class="text-purple-300 shrink-0 mt-0.5 font-bold">–</span>
+                                        {{ a }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
 
             <!-- Availability table -->
