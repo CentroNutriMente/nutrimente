@@ -16,8 +16,7 @@ const roleLabel = {
         <nav class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
             <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
                 <a href="/" class="flex items-center gap-2.5">
-                    <img src="/logo.jpeg" alt="NutriMente" class="w-9 h-9 rounded-xl object-cover shadow-sm" />
-                    <span class="font-bold text-gray-900 text-base">NutriMente</span>
+                    <img src="/logo.jpeg" alt="NutriMente" class="h-9 w-auto" />
                 </a>
                 <div class="flex items-center gap-2">
                     <a href="/mia-area"
@@ -35,7 +34,7 @@ const roleLabel = {
         <!-- Hero -->
         <header class="bg-white border-b border-gray-100">
             <div class="max-w-5xl mx-auto px-4 py-10 flex flex-col items-center text-center gap-3">
-                <img src="/logo.jpeg" alt="NutriMente" class="w-20 h-20 rounded-2xl object-cover shadow-lg mb-2" />
+                <img src="/logo.jpeg" alt="NutriMente" class="h-36 w-auto mb-2" />
                 <h1 class="text-3xl font-bold text-gray-900 tracking-tight">NutriMente</h1>
                 <p class="text-gray-500 max-w-xl">Il tuo centro di riferimento per la salute psicologica e nutrizionale. Scegli il professionista e prenota il tuo appuntamento online.</p>
             </div>

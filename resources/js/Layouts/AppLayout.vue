@@ -128,7 +128,7 @@ onUnmounted(() => {
         >
             <!-- Logo -->
             <div class="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
-                <img src="/logo.jpeg" alt="NutriMente" class="w-9 h-9 rounded-xl object-cover shrink-0 shadow-sm" />
+                <img src="/logo.jpeg" alt="NutriMente" class="h-9 w-auto shrink-0" />
                 <div :class="sidebarOpen ? 'opacity-100' : 'opacity-0 md:opacity-0'" class="min-w-0 transition-opacity">
                     <div class="font-bold text-gray-900 text-sm leading-tight whitespace-nowrap">Centro NutriMente</div>
                     <div class="text-xs text-gray-400 uppercase tracking-wide">Studio Associato</div>
