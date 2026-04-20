@@ -128,11 +128,7 @@ onUnmounted(() => {
         >
             <!-- Logo -->
             <div class="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
-                <div class="w-9 h-9 bg-purple-600 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/>
-                    </svg>
-                </div>
+                <img src="/logo.jpeg" alt="NutriMente" class="w-9 h-9 rounded-xl object-cover shrink-0 shadow-sm" />
                 <div :class="sidebarOpen ? 'opacity-100' : 'opacity-0 md:opacity-0'" class="min-w-0 transition-opacity">
                     <div class="font-bold text-gray-900 text-sm leading-tight whitespace-nowrap">Centro NutriMente</div>
                     <div class="text-xs text-gray-400 uppercase tracking-wide">Studio Associato</div>

@@ -141,7 +141,10 @@ const dayFull = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </a>
-                <a href="/prenota" class="font-bold text-purple-600 text-lg">NutriMente</a>
+                <a href="/prenota" class="flex items-center gap-2">
+                    <img src="/logo.jpeg" alt="NutriMente" class="w-8 h-8 rounded-lg object-cover" />
+                    <span class="font-bold text-purple-600 text-lg">NutriMente</span>
+                </a>
             </div>
         </header>
 

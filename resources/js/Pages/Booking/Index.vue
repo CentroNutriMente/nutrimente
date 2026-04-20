@@ -15,13 +15,7 @@ const roleLabel = {
         <!-- Header / Hero -->
         <header class="bg-white border-b border-gray-100 shadow-sm">
             <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col items-center text-center gap-3">
-                <!-- Logo placeholder -->
-                <div class="w-20 h-20 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg mb-2">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
-                </div>
+                <img src="/logo.jpeg" alt="NutriMente" class="w-20 h-20 rounded-2xl object-cover shadow-lg mb-2" />
                 <h1 class="text-3xl font-bold text-gray-900 tracking-tight">NutriMente</h1>
                 <p class="text-gray-500 max-w-xl">Il tuo centro di riferimento per la salute psicologica e nutrizionale. Scegli il professionista e prenota il tuo appuntamento online.</p>
             </div>
