@@ -20,6 +20,45 @@ class MessageController extends Controller
         return 'dm_' . min($a, $b) . '_' . max($a, $b);
     }
 
+    /** Unread DM counts keyed by the other user's id: [ user_id => count ] */
+    private function unreadDmCounts(int $userId): array
+    {
+        $reads = DB::table('channel_reads')
+            ->where('user_id', $userId)
+            ->where('channel_type', 'direct')
+            ->get()
+            ->keyBy('channel_id');
+
+        $channels = DB::table('messages')
+            ->where('channel_type', 'direct')
+            ->whereNull('deleted_at')
+            ->distinct()
+            ->pluck('channel_id')
+            ->filter(function ($cid) use ($userId) {
+                $p = explode('_', $cid);
+                return count($p) === 3 && ((int)$p[1] === $userId || (int)$p[2] === $userId);
+            });
+
+        $counts = [];
+        foreach ($channels as $cid) {
+            $lastRead = $reads->get($cid)?->last_read_at;
+            $count = DB::table('messages')
+                ->where('channel_type', 'direct')
+                ->where('channel_id', $cid)
+                ->where('sender_id', '!=', $userId)
+                ->whereNull('deleted_at')
+                ->when($lastRead, fn ($q) => $q->where('created_at', '>', $lastRead))
+                ->count();
+            if ($count > 0) {
+                $p = explode('_', $cid);
+                $otherId = (int)$p[1] === $userId ? (int)$p[2] : (int)$p[1];
+                $counts[$otherId] = $count;
+            }
+        }
+
+        return $counts;
+    }
+
     /** Compute unread message counts per channel for $userId */
     private function unreadCounts(int $userId): array
     {
@@ -271,15 +310,20 @@ class MessageController extends Controller
                     ]);
 
                 return response()->json([
-                    'messages'      => $newMessages,
-                    'unread_counts' => $this->unreadCounts($userId),
+                    'messages'         => $newMessages,
+                    'unread_counts'    => $this->unreadCounts($userId),
+                    'unread_dm_counts' => $this->unreadDmCounts($userId),
                 ]);
             }
 
             usleep(500_000);
         }
 
-        return response()->json(['messages' => [], 'unread_counts' => null]);
+        return response()->json([
+            'messages'         => [],
+            'unread_counts'    => null,
+            'unread_dm_counts' => $this->unreadDmCounts($userId),
+        ]);
     }
 
     public function destroy(Request $request, Message $message): JsonResponse

@@ -143,6 +143,19 @@ async function poll() {
             lastUnreadCheck.value = Math.floor(Date.now() / 1000);
         }
 
+        // Update DM sidebar badges from authoritative server counts
+        if (data.unread_dm_counts) {
+            for (const col of props.colleagues) {
+                const channelId = dmId(col.id);
+                const count = data.unread_dm_counts[col.id] ?? 0;
+                if (count > 0 && channelId !== activeId.value) {
+                    unread.value[channelId] = count;
+                } else {
+                    delete unread.value[channelId];
+                }
+            }
+        }
+
         poll();
     } catch (e) {
         if (pollStopped || e.name === 'AbortError') return;
