@@ -100,6 +100,11 @@ function destroy(report) {
                                 class="px-2.5 py-1 border border-gray-200 text-gray-500 rounded-lg text-xs hover:bg-gray-50 transition-colors">
                                 PDF
                             </a>
+                            <Link :href="route('reports.edit', report.id)"
+                                @click.stop
+                                class="px-2.5 py-1 border border-purple-200 text-purple-600 rounded-lg text-xs hover:bg-purple-50 transition-colors">
+                                Modifica
+                            </Link>
                             <button @click.prevent="destroy(report)"
                                 class="p-1.5 text-gray-300 hover:text-red-400 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

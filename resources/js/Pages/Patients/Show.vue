@@ -188,6 +188,10 @@ const invoiceStatusClass = {
                                     class="text-xs border border-gray-200 text-gray-500 px-2.5 py-1 rounded-lg hover:bg-gray-50 transition-colors">
                                     PDF
                                 </a>
+                                <Link :href="route('reports.edit', rep.id)"
+                                    class="text-xs border border-purple-200 text-purple-600 px-2.5 py-1 rounded-lg hover:bg-purple-50 transition-colors">
+                                    Modifica
+                                </Link>
                                 <Link :href="route('reports.show', rep.id)"
                                     class="text-xs text-teal-600 hover:underline">
                                     Apri

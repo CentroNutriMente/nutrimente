@@ -44,8 +44,8 @@ class AppointmentController extends Controller
 
     public function calendar(Request $request): Response
     {
-        $professionals = User::with('professionalProfile')
-            ->whereHas('roles')
+        $professionals = User::whereHas('professionalProfile')
+            ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]);
 
@@ -58,7 +58,7 @@ class AppointmentController extends Controller
     {
         return Inertia::render('Calendar/AppointmentForm', [
             'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
-            'professionals' => User::with('professionalProfile')->get(['id', 'name']),
+            'professionals' => User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']),
             'prefill' => $request->only(['patient_id', 'start_at']),
         ]);
     }
@@ -95,7 +95,7 @@ class AppointmentController extends Controller
         return Inertia::render('Calendar/AppointmentForm', [
             'appointment' => $appointment,
             'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
-            'professionals' => User::with('professionalProfile')->get(['id', 'name']),
+            'professionals' => User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
