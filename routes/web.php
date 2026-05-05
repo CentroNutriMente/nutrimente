@@ -112,9 +112,8 @@ Route::middleware([
     Route::delete('social/{socialPost}', [SocialController::class, 'destroy'])->name('social.destroy');
 
     // GDPR & Privacy
-    Route::get('gdpr', function () {
-        return Inertia::render('Gdpr/Index');
-    })->name('gdpr.index');
+    Route::get('gdpr', [\App\Http\Controllers\GdprController::class, 'index'])->name('gdpr.index');
+    Route::get('gdpr/download/{document}', [\App\Http\Controllers\GdprController::class, 'download'])->name('gdpr.download');
 
     // Profili professionisti (admin)
     Route::get('team/professionals', [\App\Http\Controllers\ProfessionalController::class, 'index'])->name('professionals.index');

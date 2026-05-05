@@ -62,6 +62,7 @@ class IntervisioneController extends Controller
             'patient_id'      => 'nullable|exists:patients,id',
             'scheduled_at'    => 'nullable|date',
             'status'          => 'in:draft,scheduled,completed',
+            'meet_link'       => 'nullable|url|max:500',
             'participant_ids' => 'nullable|array',
             'participant_ids.*' => 'exists:users,id',
         ]);
@@ -138,6 +139,7 @@ class IntervisioneController extends Controller
             'patient_id'        => 'nullable|exists:patients,id',
             'scheduled_at'      => 'nullable|date',
             'status'            => 'in:draft,scheduled,completed',
+            'meet_link'         => 'nullable|url|max:500',
             'participant_ids'   => 'nullable|array',
             'participant_ids.*' => 'exists:users,id',
         ]);

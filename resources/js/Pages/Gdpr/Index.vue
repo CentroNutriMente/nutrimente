@@ -1,5 +1,9 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+
+const props = defineProps({
+    available: Object,
+});
 </script>
 
 <template>
@@ -24,6 +28,73 @@ import AppLayout from '@/Layouts/AppLayout.vue';
                         Consiglio Nazionale dell'Ordine degli Psicologi (CNOP) in materia di segreto professionale e trattamento
                         dei dati personali in ambito sanitario.
                     </p>
+                </div>
+            </div>
+
+            <!-- Documenti scaricabili -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h2 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Documenti scaricabili
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <!-- Consenso informato -->
+                    <div class="flex items-center justify-between gap-4 rounded-xl border px-4 py-3.5"
+                        :class="available?.['consenso-informato'] ? 'border-gray-200 hover:border-purple-200 transition-colors' : 'border-dashed border-gray-200 opacity-60'">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                                :class="available?.['consenso-informato'] ? 'bg-purple-50' : 'bg-gray-50'">
+                                <svg class="w-4 h-4" :class="available?.['consenso-informato'] ? 'text-purple-500' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">Consenso Informato</p>
+                                <p class="text-xs text-gray-400">PDF</p>
+                            </div>
+                        </div>
+                        <a v-if="available?.['consenso-informato']"
+                            :href="route('gdpr.download', 'consenso-informato')"
+                            class="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors shrink-0">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Scarica
+                        </a>
+                        <span v-else class="text-xs text-gray-400 italic shrink-0">Non disponibile</span>
+                    </div>
+
+                    <!-- Privacy policy -->
+                    <div class="flex items-center justify-between gap-4 rounded-xl border px-4 py-3.5"
+                        :class="available?.['privacy-policy'] ? 'border-gray-200 hover:border-purple-200 transition-colors' : 'border-dashed border-gray-200 opacity-60'">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                                :class="available?.['privacy-policy'] ? 'bg-purple-50' : 'bg-gray-50'">
+                                <svg class="w-4 h-4" :class="available?.['privacy-policy'] ? 'text-purple-500' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">Privacy Policy</p>
+                                <p class="text-xs text-gray-400">PDF</p>
+                            </div>
+                        </div>
+                        <a v-if="available?.['privacy-policy']"
+                            :href="route('gdpr.download', 'privacy-policy')"
+                            class="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors shrink-0">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Scarica
+                        </a>
+                        <span v-else class="text-xs text-gray-400 italic shrink-0">Non disponibile</span>
+                    </div>
+
                 </div>
             </div>
 

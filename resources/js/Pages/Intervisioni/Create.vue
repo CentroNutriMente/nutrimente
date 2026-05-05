@@ -13,6 +13,7 @@ const form = useForm({
     patient_id:      '',
     scheduled_at:    '',
     status:          'draft',
+    meet_link:       '',
     participant_ids: [],
 });
 
@@ -85,6 +86,24 @@ function submit() {
                     <textarea v-model="form.description" rows="3"
                         placeholder="Motivo dell'intervisione, obiettivi da raggiungere..."
                         class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none" />
+                </div>
+
+                <!-- Link Google Meet -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Link Google Meet (opzionale)</label>
+                    <div class="flex gap-2">
+                        <input v-model="form.meet_link" type="url"
+                            placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                            class="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                        <a v-if="form.meet_link" :href="form.meet_link" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center gap-1.5 bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 text-xs font-medium px-3 py-2.5 rounded-xl transition-colors whitespace-nowrap">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+                            </svg>
+                            Entra
+                        </a>
+                    </div>
+                    <p v-if="form.errors.meet_link" class="text-xs text-red-500 mt-1">{{ form.errors.meet_link }}</p>
                 </div>
 
                 <!-- Partecipanti -->

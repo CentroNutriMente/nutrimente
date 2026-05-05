@@ -19,6 +19,7 @@ const form = useForm({
         ? new Date(props.intervisione.scheduled_at).toISOString().slice(0, 16)
         : '',
     status: props.intervisione.status,
+    meet_link: props.intervisione.meet_link ?? '',
     participant_ids: (props.intervisione.participants ?? []).map(p => p.id),
 });
 
@@ -111,6 +112,23 @@ const statusColor = {
                     <label class="block text-xs font-medium text-gray-500 mb-1">Descrizione / Obiettivo</label>
                     <textarea v-model="form.description" rows="3"
                         class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none" />
+                </div>
+
+                <!-- Link Google Meet -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Link Google Meet</label>
+                    <div class="flex gap-2">
+                        <input v-model="form.meet_link" type="url"
+                            placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                            class="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                        <a v-if="form.meet_link" :href="form.meet_link" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center gap-1.5 bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 text-xs font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>
+                            </svg>
+                            Entra in Meet
+                        </a>
+                    </div>
                 </div>
             </div>
 

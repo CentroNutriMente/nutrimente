@@ -12,7 +12,7 @@ class Intervisione extends Model
 
     protected $fillable = [
         'created_by', 'patient_id', 'title', 'description',
-        'discussion_notes', 'conclusions', 'status', 'scheduled_at',
+        'discussion_notes', 'conclusions', 'status', 'scheduled_at', 'meet_link',
     ];
 
     protected $casts = [
