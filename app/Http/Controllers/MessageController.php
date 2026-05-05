@@ -217,6 +217,71 @@ class MessageController extends Controller
         return response()->json(['unread' => $this->unreadCounts($request->user()->id)]);
     }
 
+    /**
+     * Long-poll endpoint. Holds the connection open (max 25s) and returns as
+     * soon as a new message appears in the active channel OR unread counts change.
+     */
+    public function poll(Request $request): JsonResponse
+    {
+        $request->validate([
+            'channel_type'      => 'required|in:team,direct',
+            'channel_id'        => 'required|string',
+            'last_id'           => 'nullable|integer|min:0',
+            'last_unread_check' => 'nullable|numeric|min:0',
+        ]);
+
+        $userId      = $request->user()->id;
+        $channelType = $request->channel_type;
+        $channelId   = $request->channel_id;
+        $lastId      = (int) ($request->last_id ?? 0);
+        $lastCheck   = (float) ($request->last_unread_check ?? 0);
+
+        set_time_limit(30);
+
+        $deadline = microtime(true) + 25;
+
+        while (microtime(true) < $deadline) {
+            $hasNew = Message::where('channel_type', $channelType)
+                ->where('channel_id', $channelId)
+                ->whereNull('deleted_at')
+                ->where('id', '>', $lastId)
+                ->exists();
+
+            $hasUnreadChange = $lastCheck > 0 && Message::whereNull('deleted_at')
+                ->where('sender_id', '!=', $userId)
+                ->where('created_at', '>', date('Y-m-d H:i:s', (int) $lastCheck))
+                ->exists();
+
+            if ($hasNew || $hasUnreadChange) {
+                $newMessages = Message::with('sender')
+                    ->where('channel_type', $channelType)
+                    ->where('channel_id', $channelId)
+                    ->whereNull('deleted_at')
+                    ->where('id', '>', $lastId)
+                    ->orderBy('id')
+                    ->limit(50)
+                    ->get()
+                    ->map(fn ($m) => [
+                        'id'           => $m->id,
+                        'body'         => $m->body,
+                        'sender_id'    => $m->sender_id,
+                        'sender_name'  => $m->sender->name,
+                        'sender_photo' => $m->sender->profile_photo_url,
+                        'created_at'   => $m->created_at,
+                    ]);
+
+                return response()->json([
+                    'messages'      => $newMessages,
+                    'unread_counts' => $this->unreadCounts($userId),
+                ]);
+            }
+
+            usleep(500_000);
+        }
+
+        return response()->json(['messages' => [], 'unread_counts' => null]);
+    }
+
     public function destroy(Request $request, Message $message): JsonResponse
     {
         abort_if($message->sender_id !== $request->user()->id, 403);

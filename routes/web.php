@@ -75,6 +75,7 @@ Route::middleware([
     Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('messages/load', [MessageController::class, 'messages'])->name('messages.load');
     Route::get('messages/unread', [MessageController::class, 'unread'])->name('messages.unread');
+    Route::get('messages/poll', [MessageController::class, 'poll'])->name('messages.poll');
     Route::post('messages', [MessageController::class, 'store'])->name('messages.store');
     Route::post('messages/read-channel', [MessageController::class, 'readChannel'])->name('messages.read-channel');
     Route::delete('messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');

@@ -20,11 +20,14 @@ const loadError   = ref('');
 const body        = ref('');
 const messagesEnd = ref(null);
 
-// Live unread counts — start from server value, updated by polling
+// Live unread counts — start from server value, updated via poll response
 const unread = ref({ ...(props.unreadByChannel ?? {}) });
 
-let msgPollInterval    = null;
-let unreadPollInterval = null;
+// Long-poll state
+const lastId          = ref(0);
+const lastUnreadCheck = ref(Math.floor(Date.now() / 1000));
+let pollController    = null;
+let pollStopped       = false;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function dmId(otherId) {
@@ -56,28 +59,29 @@ async function selectChannel(type, id) {
     activeId.value   = channelId;
     await loadMessages();
     markRead(type, channelId);
+    pollController?.abort();
+    poll();
 }
 
 // ── Load messages ──────────────────────────────────────────────────────────────
-async function loadMessages(silent = false) {
-    if (!silent) {
-        loading.value   = true;
-        loadError.value = '';
-    }
+async function loadMessages() {
+    loading.value   = true;
+    loadError.value = '';
     try {
         const params = { channel_type: activeType.value, channel_id: activeId.value };
         const { data } = await axios.get('/messages/load', { params });
         const atBottom = !messagesEnd.value ||
             messagesEnd.value.getBoundingClientRect().bottom <= window.innerHeight + 100;
         messages.value = Array.isArray(data) ? data : [];
+        lastId.value   = messages.value.length > 0 ? messages.value.at(-1).id : 0;
         if (atBottom) {
             await nextTick();
             messagesEnd.value?.scrollIntoView({ behavior: 'instant' });
         }
     } catch (e) {
-        if (!silent) loadError.value = `Errore ${e?.response?.status ?? ''}: ${e?.response?.data?.message ?? e?.message ?? 'impossibile caricare i messaggi'}`;
+        loadError.value = `Errore ${e?.response?.status ?? ''}: ${e?.response?.data?.message ?? e?.message ?? 'impossibile caricare i messaggi'}`;
     } finally {
-        if (!silent) loading.value = false;
+        loading.value = false;
     }
 }
 
@@ -92,15 +96,58 @@ function markRead(channelType, channelId) {
     }
 }
 
-// ── Poll unread counts ─────────────────────────────────────────────────────────
-async function pollUnread() {
+// ── Long poll ─────────────────────────────────────────────────────────────────
+async function poll() {
+    if (pollStopped) return;
+
+    pollController = new AbortController();
     try {
-        const { data } = await axios.get('/messages/unread');
-        // Merge: don't re-add badge for the currently open channel
-        const fresh = data.unread ?? {};
-        delete fresh[activeId.value];
-        unread.value = { ...fresh };
-    } catch {}
+        const params = new URLSearchParams({
+            channel_type:      activeType.value,
+            channel_id:        activeId.value,
+            last_id:           String(lastId.value),
+            last_unread_check: String(lastUnreadCheck.value),
+        });
+
+        const res = await fetch(`/messages/poll?${params}`, {
+            signal: pollController.signal,
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // Append new messages
+        if (data.messages?.length) {
+            const atBottom = !messagesEnd.value ||
+                messagesEnd.value.getBoundingClientRect().bottom <= window.innerHeight + 100;
+
+            for (const msg of data.messages) {
+                if (!messages.value.some(m => m.id === msg.id)) {
+                    messages.value.push(msg);
+                }
+                if (msg.id > lastId.value) lastId.value = msg.id;
+            }
+
+            if (atBottom) {
+                await nextTick();
+                messagesEnd.value?.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Update unread counts (skip active channel badge)
+        if (data.unread_counts !== null) {
+            const fresh = { ...data.unread_counts };
+            delete fresh[activeId.value];
+            unread.value = fresh;
+            lastUnreadCheck.value = Math.floor(Date.now() / 1000);
+        }
+
+        poll();
+    } catch (e) {
+        if (pollStopped || e.name === 'AbortError') return;
+        setTimeout(poll, 2000);
+    }
 }
 
 // ── Send message ───────────────────────────────────────────────────────────────
@@ -115,6 +162,7 @@ async function send() {
             body:         text,
         });
         messages.value.push(data);
+        if (data.id > lastId.value) lastId.value = data.id;
         await nextTick();
         messagesEnd.value?.scrollIntoView({ behavior: 'smooth' });
     } catch {
@@ -123,16 +171,15 @@ async function send() {
 }
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
-onMounted(() => {
-    loadMessages();
+onMounted(async () => {
+    await loadMessages();
     markRead(activeType.value, activeId.value);
-    msgPollInterval    = setInterval(() => loadMessages(true), 6000);
-    unreadPollInterval = setInterval(pollUnread, 8000);
+    poll();
 });
 
 onUnmounted(() => {
-    clearInterval(msgPollInterval);
-    clearInterval(unreadPollInterval);
+    pollStopped = true;
+    pollController?.abort();
 });
 </script>
 
