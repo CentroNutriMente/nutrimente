@@ -147,6 +147,29 @@ class MessageController extends Controller
         return $counts;
     }
 
+    /** User ids that already have a direct conversation with $userId. */
+    private function directConversationUserIds(int $userId): array
+    {
+        return DB::table('messages')
+            ->where('channel_type', 'direct')
+            ->whereNull('deleted_at')
+            ->distinct()
+            ->pluck('channel_id')
+            ->map(function ($cid) use ($userId) {
+                $participantIds = $this->directParticipantIds($cid);
+
+                if ($participantIds === null || ! in_array($userId, $participantIds, true)) {
+                    return null;
+                }
+
+                return $participantIds[0] === $userId ? $participantIds[1] : $participantIds[0];
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     /** Compute unread message counts per channel for $userId */
     private function unreadCounts(int $userId): array
     {
@@ -208,9 +231,14 @@ class MessageController extends Controller
             ->values()
             ->all();
 
+        $conversationUserIds = $this->directConversationUserIds($user->id);
+
         $colleagues = User::query()
-            ->whereHas('professionalProfile')
             ->where('id', '!=', $user->id)
+            ->where(function ($query) use ($conversationUserIds) {
+                $query->whereHas('professionalProfile')
+                    ->orWhereIn('id', $conversationUserIds);
+            })
             ->orderBy('name')
             ->get()
             ->map(fn ($u) => [

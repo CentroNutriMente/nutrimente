@@ -10,10 +10,6 @@ const props = defineProps({
     currentUser:     Object,
 });
 
-// ── Channel state ─────────────────────────────────────────────────────────────
-const activeType = ref('team');
-const activeId   = ref('general');
-
 const messages    = ref([]);
 const loading     = ref(false);
 const loadError   = ref('');
@@ -35,6 +31,32 @@ function dmId(otherId) {
     const b = Math.max(props.currentUser.id, Number(otherId));
     return `dm_${a}_${b}`;
 }
+
+function initialChannel() {
+    if (typeof window === 'undefined') {
+        return { type: 'team', id: 'general' };
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('channel_type');
+    const id = params.get('channel_id');
+
+    if (type === 'team' && props.teamChannels.some(ch => ch.id === id)) {
+        return { type, id };
+    }
+
+    if (type === 'direct' && id) {
+        return { type, id: /^\d+$/.test(id) ? dmId(id) : id };
+    }
+
+    return { type: 'team', id: 'general' };
+}
+
+const initial = initialChannel();
+
+// ── Channel state ─────────────────────────────────────────────────────────────
+const activeType = ref(initial.type);
+const activeId   = ref(initial.id);
 
 function formatTime(dt) {
     const d     = new Date(dt);

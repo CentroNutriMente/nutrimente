@@ -77,6 +77,25 @@ function closeBell(e) {
     if (!e.target.closest('[data-bell]')) bellOpen.value = false;
 }
 
+function notificationTarget(n) {
+    if (n.type === 'message' && n.data?.channel_type && n.data?.channel_id) {
+        return route('messages.index', {
+            channel_type: n.data.channel_type,
+            channel_id: n.data.channel_id,
+        });
+    }
+
+    return null;
+}
+
+function openNotification(n) {
+    const target = notificationTarget(n);
+    if (!target) return;
+
+    bellOpen.value = false;
+    router.visit(target);
+}
+
 const notifIcon = {
     message:      'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
     task_assigned:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
@@ -251,7 +270,12 @@ onUnmounted(() => {
                             <div
                                 v-for="n in notifications"
                                 :key="n.id"
-                                :class="['flex items-start gap-3 px-4 py-3 transition-colors', n.read ? 'bg-white' : 'bg-purple-50/50']"
+                                @click="openNotification(n)"
+                                :class="[
+                                    'flex items-start gap-3 px-4 py-3 transition-colors',
+                                    n.read ? 'bg-white' : 'bg-purple-50/50',
+                                    notificationTarget(n) ? 'cursor-pointer hover:bg-purple-50' : ''
+                                ]"
                             >
                                 <!-- Icon -->
                                 <div :class="['w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5', notifColor[n.type] ?? 'text-gray-400 bg-gray-100']">

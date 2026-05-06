@@ -159,6 +159,48 @@ class MessageControllerTest extends TestCase
         ]);
     }
 
+    public function test_recipient_can_discover_direct_message_from_sender_without_professional_profile(): void
+    {
+        $alfonso = $this->roleOnlyUser();
+        $alfonso->update(['name' => 'Alfonso']);
+
+        $sara = $this->professionalUser();
+        $sara->update(['name' => 'Sara']);
+
+        $channelId = $this->dmChannelId($alfonso->id, $sara->id);
+
+        $this->actingAs($alfonso)
+            ->postJson('/messages', [
+                'channel_type' => 'direct',
+                'channel_id' => $channelId,
+                'body' => 'Ciao Sara, riesci a leggere questo messaggio?',
+            ])
+            ->assertCreated();
+
+        $response = $this->actingAs($sara)->get('/messages');
+
+        $response->assertOk();
+        $this->assertTrue(
+            collect($response->inertiaProps('colleagues'))->contains('id', $alfonso->id),
+            'Sara should see Alfonso in the direct-message sidebar after Alfonso writes to her.'
+        );
+        $this->assertSame(1, $response->inertiaProps("unreadByChannel.{$channelId}"));
+        $this->assertSame(1, $response->inertiaProps('notif_unread'));
+
+        $this->actingAs($sara)
+            ->getJson('/messages/load?channel_type=direct&channel_id='.$channelId)
+            ->assertOk()
+            ->assertJsonPath('0.body', 'Ciao Sara, riesci a leggere questo messaggio?');
+
+        $this->actingAs($sara)
+            ->getJson('/notifications')
+            ->assertOk()
+            ->assertJsonPath('unread_count', 1)
+            ->assertJsonPath('notifications.0.title', 'Messaggio diretto da Alfonso')
+            ->assertJsonPath('notifications.0.data.channel_type', 'direct')
+            ->assertJsonPath('notifications.0.data.channel_id', $channelId);
+    }
+
     private function professionalUser(): User
     {
         $role = Role::firstOrCreate(['name' => 'psicologo']);
