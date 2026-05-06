@@ -17,7 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        $middleware->alias([
+            'require.professional' => \App\Http\Middleware\RequireProfessional::class,
+            'require.patient'      => \App\Http\Middleware\RequirePatient::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

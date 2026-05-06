@@ -24,15 +24,18 @@ Route::post('/prenota/{slug}', [BookingController::class, 'store'])->name('booki
 Route::get('/prenota/{slug}/conferma/{token}', [BookingController::class, 'confirm'])->name('booking.confirm');
 Route::get('/prenota/{slug}/rifiuta/{token}', [BookingController::class, 'reject'])->name('booking.reject');
 
-// Area personale paziente
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+// Area personale paziente (solo utenti con ruolo patient)
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'require.patient'])->group(function () {
     Route::get('/mia-area', [\App\Http\Controllers\PatientPortalController::class, 'dashboard'])->name('patient.dashboard');
     Route::post('/mia-area/appointments/{appointment}/cancel', [\App\Http\Controllers\PatientPortalController::class, 'cancelAppointment'])->name('patient.appointment.cancel');
 });
 
 Route::get('/', function () {
     if (auth()->check()) {
-        return redirect()->route('dashboard');
+        $professionalRoles = ['admin', 'psicologo', 'nutrizionista', 'osteopata', 'collaboratore'];
+        return auth()->user()->hasAnyRole($professionalRoles)
+            ? redirect()->route('dashboard')
+            : redirect()->route('patient.dashboard');
     }
     return redirect()->route('booking.index');
 });
@@ -41,6 +44,7 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    'require.professional',
 ])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

@@ -118,12 +118,13 @@ class PatientController extends Controller
         // Auto-create patient portal account if email provided and no account exists yet
         if ($patient->email && ! User::where('email', $patient->email)->exists()) {
             $tempPassword = Str::random(10);
-            User::create([
+            $patientUser  = User::create([
                 'name'              => "{$patient->first_name} {$patient->last_name}",
                 'email'             => $patient->email,
                 'password'          => Hash::make($tempPassword),
                 'email_verified_at' => now(),
             ]);
+            $patientUser->assignRole('patient');
 
             try {
                 Mail::to($patient->email)->send(new PatientWelcomeMail($patient, $tempPassword));
