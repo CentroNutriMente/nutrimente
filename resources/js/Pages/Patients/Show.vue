@@ -22,6 +22,17 @@ const tabs = [
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
 const fmtDatetime = (d) => d ? new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
+function aptStatusInfo(apt) {
+    if (apt.status === 'cancelled') return { label: 'Disdetto', cls: 'bg-red-100 text-red-600' };
+    if (apt.status === 'scheduled' || apt.status === 'confirmed') {
+        const past = apt.start_at && new Date(apt.start_at) < new Date();
+        return past
+            ? { label: 'Effettuato', cls: 'bg-green-100 text-green-700' }
+            : { label: 'Prenotato',  cls: 'bg-blue-100 text-blue-700' };
+    }
+    return { label: apt.status, cls: 'bg-gray-100 text-gray-600' };
+}
+
 const unifiedList = computed(() => {
     const reports = (props.patient.reports ?? []).map(r => ({
         type: 'report',
@@ -230,7 +241,9 @@ function deleteDoc(id) {
                                     <td class="px-4 py-3 font-medium text-gray-800">{{ apt.title }}</td>
                                     <td class="px-4 py-3 text-gray-500">{{ apt.user?.name }}</td>
                                     <td class="px-4 py-3">
-                                        <span class="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-700">{{ apt.status }}</span>
+                                        <span :class="['text-xs px-2 py-1 rounded-full font-medium', aptStatusInfo(apt).cls]">
+                                            {{ aptStatusInfo(apt).label }}
+                                        </span>
                                     </td>
                                 </tr>
                             </tbody>
