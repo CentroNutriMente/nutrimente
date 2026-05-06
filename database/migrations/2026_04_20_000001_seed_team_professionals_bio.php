@@ -43,8 +43,10 @@ return new class extends Migration
         $role = Role::firstOrCreate(['name' => 'psicologo', 'guard_name' => 'web']);
 
         foreach ($professionals as $data) {
-            // Find or create user
-            $user = \App\Models\User::where('email', $data['email'])->first();
+            // Find by email first, then by exact name to avoid duplicating an
+            // existing professional whose email was entered differently.
+            $user = \App\Models\User::where('email', $data['email'])->first()
+                ?? \App\Models\User::where('name', $data['name'])->first();
 
             if (! $user) {
                 $user = \App\Models\User::create([

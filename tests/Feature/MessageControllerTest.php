@@ -226,6 +226,33 @@ class MessageControllerTest extends TestCase
             ->assertJsonPath('notifications.0.data.channel_id', $channelId);
     }
 
+    public function test_direct_message_sidebar_collapses_duplicate_display_names(): void
+    {
+        $viewer = $this->professionalUser();
+
+        $duplicateSara = $this->professionalUser();
+        $duplicateSara->update(['name' => 'Sara Alessandri']);
+
+        $saraWithConversation = $this->professionalUser();
+        $saraWithConversation->update(['name' => 'Sara Alessandri']);
+
+        Message::create([
+            'sender_id' => $saraWithConversation->id,
+            'channel_type' => 'direct',
+            'channel_id' => $this->dmChannelId($viewer->id, $saraWithConversation->id),
+            'body' => 'Conversazione esistente',
+        ]);
+
+        $response = $this->actingAs($viewer)->get('/messages');
+        $saras = collect($response->inertiaProps('colleagues'))
+            ->where('name', 'Sara Alessandri')
+            ->values();
+
+        $response->assertOk();
+        $this->assertCount(1, $saras);
+        $this->assertSame($saraWithConversation->id, $saras->first()['id']);
+    }
+
     private function professionalUser(): User
     {
         $role = Role::firstOrCreate(['name' => 'psicologo']);

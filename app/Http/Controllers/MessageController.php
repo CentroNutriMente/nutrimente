@@ -173,6 +173,11 @@ class MessageController extends Controller
             ->all();
     }
 
+    private function colleagueNameKey(string $name): string
+    {
+        return mb_strtolower(trim((string) preg_replace('/\s+/', ' ', $name)));
+    }
+
     /** Compute unread message counts per channel for $userId */
     private function unreadCounts(int $userId): array
     {
@@ -234,13 +239,13 @@ class MessageController extends Controller
             ->values()
             ->all();
 
-        $conversationUserIds = $this->directConversationUserIds($user->id);
+        $conversationUserIds = collect($this->directConversationUserIds($user->id));
 
         $colleagues = User::query()
             ->where('id', '!=', $user->id)
             ->where(function ($query) use ($conversationUserIds) {
                 $query->whereHas('professionalProfile')
-                    ->orWhereIn('id', $conversationUserIds);
+                    ->orWhereIn('id', $conversationUserIds->all());
             })
             ->orderBy('name')
             ->get()
@@ -248,6 +253,27 @@ class MessageController extends Controller
                 'id' => $u->id,
                 'name' => $u->name,
                 'profile_photo_url' => $u->profile_photo_url,
+                'has_direct_conversation' => $conversationUserIds->contains($u->id),
+                'name_key' => $this->colleagueNameKey($u->name),
+            ])
+            ->sort(function ($a, $b) {
+                $conversationComparison = (int) $b['has_direct_conversation'] <=> (int) $a['has_direct_conversation'];
+
+                if ($conversationComparison !== 0) {
+                    return $conversationComparison;
+                }
+
+                $nameComparison = strnatcasecmp($a['name'], $b['name']);
+
+                return $nameComparison !== 0 ? $nameComparison : $a['id'] <=> $b['id'];
+            })
+            ->unique('name_key')
+            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->map(fn ($u) => [
+                'id' => $u['id'],
+                'name' => $u['name'],
+                'profile_photo_url' => $u['profile_photo_url'],
             ]);
 
         return Inertia::render('Messages/Index', [
