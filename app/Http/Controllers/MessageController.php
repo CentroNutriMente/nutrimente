@@ -208,7 +208,7 @@ class MessageController extends Controller
             ->values()
             ->all();
 
-        $colleagues = User::with('roles')
+        $colleagues = User::query()
             ->whereHas('professionalProfile')
             ->where('id', '!=', $user->id)
             ->orderBy('name')
