@@ -8,16 +8,103 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MessageController extends Controller
 {
+    private const TEAM_CHANNELS = [
+        'general' => 'Generale',
+        'psicologo' => 'Psicologi',
+        'nutrizionista' => 'Nutrizionisti',
+        'osteopata' => 'Osteopati',
+    ];
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function dmChannelId(int $a, int $b): string
     {
-        return 'dm_' . min($a, $b) . '_' . max($a, $b);
+        return 'dm_'.min($a, $b).'_'.max($a, $b);
+    }
+
+    private function directParticipantIds(string $channelId): ?array
+    {
+        if (! preg_match('/^dm_(\d+)_(\d+)$/', $channelId, $matches)) {
+            return null;
+        }
+
+        $firstId = (int) $matches[1];
+        $secondId = (int) $matches[2];
+
+        if ($firstId <= 0 || $secondId <= 0 || $firstId === $secondId) {
+            return null;
+        }
+
+        return [$firstId, $secondId];
+    }
+
+    private function directChannelForUser(string $channelId, int $userId): array
+    {
+        $participantIds = $this->directParticipantIds($channelId);
+
+        // Be lenient with clients that send the other user's id instead of dm_a_b.
+        if ($participantIds === null && ctype_digit($channelId)) {
+            $participantIds = [$userId, (int) $channelId];
+        }
+
+        if ($participantIds === null) {
+            throw ValidationException::withMessages([
+                'channel_id' => 'Canale diretto non valido.',
+            ]);
+        }
+
+        if ($participantIds[0] === $participantIds[1]) {
+            throw ValidationException::withMessages([
+                'channel_id' => 'Non puoi aprire un messaggio diretto con te stesso.',
+            ]);
+        }
+
+        if (! in_array($userId, $participantIds, true)) {
+            abort(403);
+        }
+
+        $otherUserId = $participantIds[0] === $userId ? $participantIds[1] : $participantIds[0];
+
+        if (! User::whereKey($otherUserId)->exists()) {
+            throw ValidationException::withMessages([
+                'channel_id' => 'Destinatario non trovato.',
+            ]);
+        }
+
+        return [
+            'channel_id' => $this->dmChannelId($participantIds[0], $participantIds[1]),
+            'other_user_id' => $otherUserId,
+            'participant_ids' => $participantIds,
+        ];
+    }
+
+    private function normalizeChannel(string $channelType, string $channelId, int $userId): array
+    {
+        if ($channelType === 'direct') {
+            return [
+                'channel_type' => 'direct',
+                ...$this->directChannelForUser($channelId, $userId),
+            ];
+        }
+
+        if (! array_key_exists($channelId, self::TEAM_CHANNELS)) {
+            throw ValidationException::withMessages([
+                'channel_id' => 'Canale team non valido.',
+            ]);
+        }
+
+        return [
+            'channel_type' => 'team',
+            'channel_id' => $channelId,
+            'other_user_id' => null,
+            'participant_ids' => null,
+        ];
     }
 
     /** Unread DM counts keyed by the other user's id: [ user_id => count ] */
@@ -35,8 +122,9 @@ class MessageController extends Controller
             ->distinct()
             ->pluck('channel_id')
             ->filter(function ($cid) use ($userId) {
-                $p = explode('_', $cid);
-                return count($p) === 3 && ((int)$p[1] === $userId || (int)$p[2] === $userId);
+                $participantIds = $this->directParticipantIds($cid);
+
+                return $participantIds !== null && in_array($userId, $participantIds, true);
             });
 
         $counts = [];
@@ -50,8 +138,8 @@ class MessageController extends Controller
                 ->when($lastRead, fn ($q) => $q->where('created_at', '>', $lastRead))
                 ->count();
             if ($count > 0) {
-                $p = explode('_', $cid);
-                $otherId = (int)$p[1] === $userId ? (int)$p[2] : (int)$p[1];
+                $participantIds = $this->directParticipantIds($cid);
+                $otherId = $participantIds[0] === $userId ? $participantIds[1] : $participantIds[0];
                 $counts[$otherId] = $count;
             }
         }
@@ -66,7 +154,7 @@ class MessageController extends Controller
         $reads = DB::table('channel_reads')
             ->where('user_id', $userId)
             ->get()
-            ->keyBy(fn ($r) => $r->channel_type . ':' . $r->channel_id);
+            ->keyBy(fn ($r) => $r->channel_type.':'.$r->channel_id);
 
         // Count messages by channel that arrived after last read
         $rows = DB::table('messages')
@@ -78,9 +166,21 @@ class MessageController extends Controller
 
         $counts = [];
         foreach ($rows as $row) {
-            $key     = $row->channel_type . ':' . $row->channel_id;
+            if ($row->channel_type === 'direct') {
+                $participantIds = $this->directParticipantIds($row->channel_id);
+
+                if ($participantIds === null || ! in_array($userId, $participantIds, true)) {
+                    continue;
+                }
+            }
+
+            if ($row->channel_type === 'team' && ! array_key_exists($row->channel_id, self::TEAM_CHANNELS)) {
+                continue;
+            }
+
+            $key = $row->channel_type.':'.$row->channel_id;
             $lastRead = $reads->get($key)?->last_read_at;
-            if (!$lastRead || $row->last_msg > $lastRead) {
+            if (! $lastRead || $row->last_msg > $lastRead) {
                 $count = DB::table('messages')
                     ->whereNull('deleted_at')
                     ->where('sender_id', '!=', $userId)
@@ -103,31 +203,29 @@ class MessageController extends Controller
     {
         $user = $request->user();
 
-        $teamChannels = [
-            ['id' => 'general',       'label' => 'Generale'],
-            ['id' => 'psicologo',     'label' => 'Psicologi'],
-            ['id' => 'nutrizionista', 'label' => 'Nutrizionisti'],
-            ['id' => 'osteopata',     'label' => 'Osteopati'],
-        ];
+        $teamChannels = collect(self::TEAM_CHANNELS)
+            ->map(fn ($label, $id) => ['id' => $id, 'label' => $label])
+            ->values()
+            ->all();
 
         $colleagues = User::with('roles')
-            ->whereHas('roles')
+            ->whereHas('professionalProfile')
             ->where('id', '!=', $user->id)
             ->orderBy('name')
             ->get()
             ->map(fn ($u) => [
-                'id'                => $u->id,
-                'name'              => $u->name,
+                'id' => $u->id,
+                'name' => $u->name,
                 'profile_photo_url' => $u->profile_photo_url,
             ]);
 
         return Inertia::render('Messages/Index', [
-            'teamChannels'    => $teamChannels,
-            'colleagues'      => $colleagues,
+            'teamChannels' => $teamChannels,
+            'colleagues' => $colleagues,
             'unreadByChannel' => $this->unreadCounts($user->id),
-            'currentUser'     => [
-                'id'                => $user->id,
-                'name'              => $user->name,
+            'currentUser' => [
+                'id' => $user->id,
+                'name' => $user->name,
                 'profile_photo_url' => $user->profile_photo_url,
             ],
         ]);
@@ -137,23 +235,29 @@ class MessageController extends Controller
     {
         $request->validate([
             'channel_type' => 'required|in:team,direct',
-            'channel_id'   => 'required|string',
+            'channel_id' => 'required|string',
         ]);
 
+        $channel = $this->normalizeChannel(
+            $request->channel_type,
+            $request->channel_id,
+            $request->user()->id
+        );
+
         $messages = Message::with('sender')
-            ->where('channel_type', $request->channel_type)
-            ->where('channel_id', $request->channel_id)
+            ->where('channel_type', $channel['channel_type'])
+            ->where('channel_id', $channel['channel_id'])
             ->whereNull('deleted_at')
             ->orderBy('created_at')
             ->limit(100)
             ->get()
             ->map(fn ($m) => [
-                'id'          => $m->id,
-                'body'        => $m->body,
-                'sender_id'   => $m->sender_id,
+                'id' => $m->id,
+                'body' => $m->body,
+                'sender_id' => $m->sender_id,
                 'sender_name' => $m->sender->name,
-                'sender_photo'=> $m->sender->profile_photo_url,
-                'created_at'  => $m->created_at,
+                'sender_photo' => $m->sender->profile_photo_url,
+                'created_at' => $m->created_at,
             ]);
 
         return response()->json($messages);
@@ -163,41 +267,42 @@ class MessageController extends Controller
     {
         $validated = $request->validate([
             'channel_type' => 'required|in:team,direct',
-            'channel_id'   => 'required|string',
-            'body'         => 'required|string|max:5000',
+            'channel_id' => 'required|string',
+            'body' => 'required|string|max:5000',
         ]);
 
+        $channel = $this->normalizeChannel(
+            $validated['channel_type'],
+            $validated['channel_id'],
+            $request->user()->id
+        );
+
         $message = Message::create([
-            'sender_id'    => $request->user()->id,
-            'channel_type' => $validated['channel_type'],
-            'channel_id'   => $validated['channel_id'],
-            'body'         => $validated['body'],
+            'sender_id' => $request->user()->id,
+            'channel_type' => $channel['channel_type'],
+            'channel_id' => $channel['channel_id'],
+            'body' => $validated['body'],
         ]);
 
         $message->load('sender');
 
         // Notifications
-        $sender     = $request->user();
-        $senderId   = $sender->id;
+        $sender = $request->user();
+        $senderId = $sender->id;
         $senderName = $sender->name;
-        $preview    = mb_strimwidth($validated['body'], 0, 80, '…');
+        $preview = mb_strimwidth($validated['body'], 0, 80, '…');
 
-        if ($validated['channel_type'] === 'direct') {
-            $parts       = explode('_', $validated['channel_id']); // dm_{a}_{b}
-            $recipientId = collect([(int)($parts[1] ?? 0), (int)($parts[2] ?? 0)])
-                ->first(fn ($id) => $id !== $senderId);
-            if ($recipientId) {
-                Notification::send(
-                    $recipientId,
-                    'message',
-                    "Messaggio diretto da {$senderName}",
-                    $preview,
-                    ['channel_type' => 'direct', 'channel_id' => $validated['channel_id']]
-                );
-            }
+        if ($channel['channel_type'] === 'direct') {
+            Notification::send(
+                $channel['other_user_id'],
+                'message',
+                "Messaggio diretto da {$senderName}",
+                $preview,
+                ['channel_type' => 'direct', 'channel_id' => $channel['channel_id']]
+            );
         } else {
-            $channelId = $validated['channel_id'];
-            User::whereHas('roles')
+            $channelId = $channel['channel_id'];
+            User::whereHas('professionalProfile')
                 ->where('id', '!=', $senderId)
                 ->pluck('id')
                 ->each(fn ($uid) => Notification::send(
@@ -210,12 +315,12 @@ class MessageController extends Controller
         }
 
         return response()->json([
-            'id'           => $message->id,
-            'body'         => $message->body,
-            'sender_id'    => $message->sender_id,
-            'sender_name'  => $message->sender->name,
+            'id' => $message->id,
+            'body' => $message->body,
+            'sender_id' => $message->sender_id,
+            'sender_name' => $message->sender->name,
             'sender_photo' => $message->sender->profile_photo_url,
-            'created_at'   => $message->created_at,
+            'created_at' => $message->created_at,
         ], 201);
     }
 
@@ -224,16 +329,21 @@ class MessageController extends Controller
     {
         $validated = $request->validate([
             'channel_type' => 'required|in:team,direct',
-            'channel_id'   => 'required|string',
+            'channel_id' => 'required|string',
         ]);
 
         $userId = $request->user()->id;
+        $channel = $this->normalizeChannel(
+            $validated['channel_type'],
+            $validated['channel_id'],
+            $userId
+        );
 
         DB::table('channel_reads')->upsert(
             [
-                'user_id'      => $userId,
-                'channel_type' => $validated['channel_type'],
-                'channel_id'   => $validated['channel_id'],
+                'user_id' => $userId,
+                'channel_type' => $channel['channel_type'],
+                'channel_id' => $channel['channel_id'],
                 'last_read_at' => now(),
             ],
             ['user_id', 'channel_type', 'channel_id'],
@@ -244,16 +354,25 @@ class MessageController extends Controller
         Notification::where('user_id', $userId)
             ->whereNull('read_at')
             ->where('type', 'message')
-            ->whereRaw("data->>'channel_id' = ?", [$validated['channel_id']])
+            ->where('data->channel_type', $channel['channel_type'])
+            ->where('data->channel_id', $channel['channel_id'])
             ->update(['read_at' => now()]);
 
-        return response()->json(['unread' => $this->unreadCounts($userId)]);
+        return response()->json([
+            'unread' => $this->unreadCounts($userId),
+            'unread_dm_counts' => $this->unreadDmCounts($userId),
+        ]);
     }
 
     /** Polled by the frontend every 8s to keep sidebar badges live */
     public function unread(Request $request): JsonResponse
     {
-        return response()->json(['unread' => $this->unreadCounts($request->user()->id)]);
+        $userId = $request->user()->id;
+
+        return response()->json([
+            'unread' => $this->unreadCounts($userId),
+            'unread_dm_counts' => $this->unreadDmCounts($userId),
+        ]);
     }
 
     /**
@@ -263,17 +382,18 @@ class MessageController extends Controller
     public function poll(Request $request): JsonResponse
     {
         $request->validate([
-            'channel_type'      => 'required|in:team,direct',
-            'channel_id'        => 'required|string',
-            'last_id'           => 'nullable|integer|min:0',
+            'channel_type' => 'required|in:team,direct',
+            'channel_id' => 'required|string',
+            'last_id' => 'nullable|integer|min:0',
             'last_unread_check' => 'nullable|numeric|min:0',
         ]);
 
-        $userId      = $request->user()->id;
-        $channelType = $request->channel_type;
-        $channelId   = $request->channel_id;
-        $lastId      = (int) ($request->last_id ?? 0);
-        $lastCheck   = (float) ($request->last_unread_check ?? 0);
+        $userId = $request->user()->id;
+        $channel = $this->normalizeChannel($request->channel_type, $request->channel_id, $userId);
+        $channelType = $channel['channel_type'];
+        $channelId = $channel['channel_id'];
+        $lastId = (int) ($request->last_id ?? 0);
+        $lastCheck = (float) ($request->last_unread_check ?? 0);
 
         set_time_limit(30);
 
@@ -301,17 +421,17 @@ class MessageController extends Controller
                     ->limit(50)
                     ->get()
                     ->map(fn ($m) => [
-                        'id'           => $m->id,
-                        'body'         => $m->body,
-                        'sender_id'    => $m->sender_id,
-                        'sender_name'  => $m->sender->name,
+                        'id' => $m->id,
+                        'body' => $m->body,
+                        'sender_id' => $m->sender_id,
+                        'sender_name' => $m->sender->name,
                         'sender_photo' => $m->sender->profile_photo_url,
-                        'created_at'   => $m->created_at,
+                        'created_at' => $m->created_at,
                     ]);
 
                 return response()->json([
-                    'messages'         => $newMessages,
-                    'unread_counts'    => $this->unreadCounts($userId),
+                    'messages' => $newMessages,
+                    'unread_counts' => $this->unreadCounts($userId),
                     'unread_dm_counts' => $this->unreadDmCounts($userId),
                 ]);
             }
@@ -320,8 +440,8 @@ class MessageController extends Controller
         }
 
         return response()->json([
-            'messages'         => [],
-            'unread_counts'    => null,
+            'messages' => [],
+            'unread_counts' => null,
             'unread_dm_counts' => $this->unreadDmCounts($userId),
         ]);
     }
@@ -330,6 +450,7 @@ class MessageController extends Controller
     {
         abort_if($message->sender_id !== $request->user()->id, 403);
         $message->update(['deleted_at' => now()]);
+
         return response()->json(['ok' => true]);
     }
 }

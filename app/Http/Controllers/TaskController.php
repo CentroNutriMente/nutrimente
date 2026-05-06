@@ -15,7 +15,7 @@ class TaskController extends Controller
 {
     public function index(): Response
     {
-        $professionals = User::whereHas('roles')
+        $professionals = User::whereHas('professionalProfile')
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn ($u) => [

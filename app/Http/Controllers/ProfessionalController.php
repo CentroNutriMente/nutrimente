@@ -17,7 +17,7 @@ class ProfessionalController extends Controller
     public function index(): Response
     {
         $professionals = User::with('professionalProfile', 'roles')
-            ->whereHas('roles', fn ($q) => $q->where('name', '!=', 'admin'))
+            ->whereHas('professionalProfile')
             ->get()
             ->map(fn ($u) => [
                 'id' => $u->id,

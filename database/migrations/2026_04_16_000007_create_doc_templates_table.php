@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('doc_templates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_system')->default(false);
@@ -20,7 +20,7 @@ return new class extends Migration
         });
 
         // Seed PSY-19 template
-        $userId = DB::table('users')->value('id') ?? 1;
+        $userId = DB::table('users')->value('id');
 
         DB::table('doc_templates')->insert([
             'created_by'  => $userId,

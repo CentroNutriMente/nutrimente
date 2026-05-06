@@ -42,7 +42,7 @@ class IntervisioneController extends Controller
             ->get()
             ->map(fn ($p) => ['id' => $p->id, 'name' => $p->full_name]);
 
-        $users = User::whereHas('roles')
+        $users = User::whereHas('professionalProfile')
             ->orderBy('name')
             ->get(['id', 'name'])
             ->filter(fn ($u) => $u->id !== $request->user()->id)
@@ -120,7 +120,7 @@ class IntervisioneController extends Controller
             ->get()
             ->map(fn ($p) => ['id' => $p->id, 'name' => $p->full_name]);
 
-        $users = User::whereHas('roles')->orderBy('name')->get(['id', 'name']);
+        $users = User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Intervisioni/Show', [
             'intervisione' => $intervisione->load('createdBy', 'patient', 'participants'),

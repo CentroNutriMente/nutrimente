@@ -25,7 +25,6 @@ class PatientPortalController extends Controller
 
         // List of bookable professionals for "new appointment" CTA
         $professionals = User::with(['professionalProfile', 'roles'])
-            ->whereHas('roles', fn ($q) => $q->where('name', '!=', 'admin'))
             ->whereHas('professionalProfile', fn ($q) => $q->where('is_bookable', true))
             ->get()
             ->map(fn ($u) => [
