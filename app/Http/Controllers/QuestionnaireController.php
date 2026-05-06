@@ -74,7 +74,7 @@ class QuestionnaireController extends Controller
             'notes'                     => $validated['notes'] ?? null,
         ]);
 
-        return redirect()->route('questionnaires.show', $questionnaire)
+        return redirect()->route('patients.show', $questionnaire->patient_id)
             ->with('success', 'Questionario salvato.');
     }
 
@@ -141,7 +141,7 @@ class QuestionnaireController extends Controller
             'notes'                     => $validated['notes'] ?? null,
         ]);
 
-        return redirect()->route('questionnaires.show', $questionnaire)
+        return redirect()->route('patients.show', $questionnaire->patient_id)
             ->with('success', 'Questionario aggiornato.');
     }
 

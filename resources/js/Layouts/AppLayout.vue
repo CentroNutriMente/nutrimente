@@ -37,7 +37,10 @@ const isActive = (routeName) => {
             return route().current('report-templates.*');
         }
         if (routeName === 'questionnaire-templates.index') {
-            return route().current('questionnaire-templates.*') || route().current('questionnaires.*');
+            return route().current('questionnaire-templates.*');
+        }
+        if (routeName === 'patients.index') {
+            return route().current('patients.*') || route().current('questionnaires.*');
         }
         return route().current(routeName.replace('.index', '.*'));
     } catch { return false; }
