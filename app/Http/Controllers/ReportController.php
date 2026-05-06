@@ -149,18 +149,9 @@ class ReportController extends Controller
             ->with('success', 'Referto eliminato.');
     }
 
-    /** Any professional with access to the patient can read/download; only the author can write. */
     private function authorizeRead(Report $report, int $userId): void
     {
-        if ($report->user_id === $userId) return;
-
-        $report->loadMissing('patient.professionals');
-        $patient = $report->patient;
-
-        if ($patient->created_by === null || $patient->created_by === $userId) return;
-        if ($patient->professionals->contains('id', $userId)) return;
-
-        abort(403);
+        abort_if($report->user_id !== $userId, 403);
     }
 
     public function downloadPdf(Request $request, Report $report): HttpResponse

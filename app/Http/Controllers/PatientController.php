@@ -141,10 +141,7 @@ class PatientController extends Controller
         $this->authorizePatient($patient);
 
         $userId = auth()->id();
-        // Any professional with access to the patient (creator or shared) can see reports.
-        $canViewReports = $patient->created_by === null
-            || $patient->created_by === $userId
-            || $patient->professionals->contains('id', $userId);
+        $canViewReports = true;
 
         $relations = [
             'tags',
@@ -152,13 +149,12 @@ class PatientController extends Controller
             'professionals',
             'appointments.user',
             'consents',
-            'invoices'          => fn ($q) => $q->orderByDesc('issued_at'),
-            'consentDocuments'  => fn ($q) => $q->whereNull('deleted_at')->orderByDesc('created_at'),
+            'invoices'         => fn ($q) => $q->orderByDesc('issued_at'),
+            'consentDocuments' => fn ($q) => $q->whereNull('deleted_at')->orderByDesc('created_at'),
+            'reports'          => fn ($q) => $q->with(['user', 'template'])
+                                              ->where('user_id', $userId)
+                                              ->orderByDesc('report_date'),
         ];
-
-        if ($canViewReports) {
-            $relations['reports'] = fn ($q) => $q->with(['user', 'template'])->orderByDesc('report_date');
-        }
 
         $patient->load($relations);
 
