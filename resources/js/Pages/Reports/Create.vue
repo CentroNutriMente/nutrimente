@@ -60,7 +60,7 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
     <AppLayout :title="isEdit ? 'Modifica referto' : 'Nuovo referto'">
         <template #header>
             <div class="flex items-center gap-3">
-                <Link :href="isEdit ? route('reports.show', report.id) : route('reports.index')"
+                <Link :href="isEdit ? route('patients.show', report.patient_id) : route('patients.show', form.patient_id)"
                     class="text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -215,7 +215,7 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
                         class="px-6 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 transition-colors">
                         {{ form.processing ? 'Salvataggio...' : (isEdit ? 'Aggiorna referto' : 'Salva referto') }}
                     </button>
-                    <Link :href="isEdit ? route('reports.show', report.id) : route('reports.index')"
+                    <Link :href="isEdit ? route('patients.show', report.patient_id) : route('patients.show', form.patient_id)"
                         class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
                         Annulla
                     </Link>
