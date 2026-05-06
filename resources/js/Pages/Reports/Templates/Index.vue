@@ -14,10 +14,13 @@ function destroy(template) {
 </script>
 
 <template>
-    <AppLayout title="Modelli referto">
+    <AppLayout title="Gestione Referti">
         <template #header>
             <div class="flex items-center justify-between w-full">
-                <h1 class="text-xl font-semibold text-gray-800">Modelli di Referto</h1>
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-800">Gestione Referti</h1>
+                    <p class="text-sm text-gray-400 mt-0.5">Crea e gestisci i modelli di referto. I referti per i pazienti si creano dalla loro scheda.</p>
+                </div>
                 <Link :href="route('report-templates.create')"
                     class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
                     + Nuovo modello
@@ -75,10 +78,6 @@ function destroy(template) {
 
                 <!-- Azioni -->
                 <div class="flex items-center gap-2 shrink-0">
-                    <Link :href="route('reports.create', { template_id: tmpl.id })"
-                        class="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition-colors">
-                        Usa
-                    </Link>
                     <Link :href="route('report-templates.edit', tmpl.id)"
                         class="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
                         Modifica
@@ -93,12 +92,6 @@ function destroy(template) {
                 </div>
             </div>
 
-            <!-- Link a tutti i referti -->
-            <div class="flex justify-end">
-                <Link :href="route('reports.index')" class="text-sm text-purple-600 hover:underline">
-                    Vai ai referti →
-                </Link>
-            </div>
         </div>
     </AppLayout>
 </template>
