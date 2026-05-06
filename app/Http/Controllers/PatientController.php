@@ -141,14 +141,15 @@ class PatientController extends Controller
         $this->authorizePatient($patient);
 
         $userId = auth()->id();
-        // Only the patient's creator (or legacy patients with no creator) can see reports.
-        $canViewReports = $patient->created_by === null || $patient->created_by === $userId;
+        // Any professional with access to the patient (creator or shared) can see reports.
+        $canViewReports = $patient->created_by === null
+            || $patient->created_by === $userId
+            || $patient->professionals->contains('id', $userId);
 
         $relations = [
             'tags',
             'creator',
             'professionals',
-            'records.user',
             'appointments.user',
             'consents',
             'invoices'          => fn ($q) => $q->orderByDesc('issued_at'),

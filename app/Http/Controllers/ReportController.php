@@ -88,12 +88,13 @@ class ReportController extends Controller
 
     public function show(Request $request, Report $report): Response
     {
-        abort_if($report->user_id !== $request->user()->id, 403);
+        $this->authorizeRead($report, $request->user()->id);
 
         $report->load(['patient', 'template', 'user.professionalProfile']);
 
         return Inertia::render('Reports/Show', [
-            'report' => $report,
+            'report'     => $report,
+            'canEdit'    => $report->user_id === $request->user()->id,
         ]);
     }
 
@@ -148,9 +149,23 @@ class ReportController extends Controller
             ->with('success', 'Referto eliminato.');
     }
 
+    /** Any professional with access to the patient can read/download; only the author can write. */
+    private function authorizeRead(Report $report, int $userId): void
+    {
+        if ($report->user_id === $userId) return;
+
+        $report->loadMissing('patient.professionals');
+        $patient = $report->patient;
+
+        if ($patient->created_by === null || $patient->created_by === $userId) return;
+        if ($patient->professionals->contains('id', $userId)) return;
+
+        abort(403);
+    }
+
     public function downloadPdf(Request $request, Report $report): HttpResponse
     {
-        abort_if($report->user_id !== $request->user()->id, 403);
+        $this->authorizeRead($report, $request->user()->id);
 
         $report->load(['patient', 'template', 'user.professionalProfile']);
 

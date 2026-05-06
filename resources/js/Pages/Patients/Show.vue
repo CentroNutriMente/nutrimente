@@ -1,7 +1,9 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+
+const authUserId = usePage().props.auth.user.id;
 
 const props = defineProps({ patient: Object, canViewReports: Boolean });
 
@@ -12,17 +14,6 @@ const tabs = [
     { key: 'invoices',     label: 'Fatture' },
     { key: 'consents',     label: 'Consensi' },
 ];
-
-const recordTypeLabel = {
-    anamnesi: 'Anamnesi', seduta: 'Seduta', valutazione: 'Valutazione',
-    'follow-up': 'Follow-up', trattamento: 'Trattamento', colloquio: 'Colloquio', test: 'Test',
-};
-const categoryColor = {
-    psicologo: 'bg-blue-50 text-blue-600',
-    nutrizionista: 'bg-teal-50 text-teal-600',
-    osteopata: 'bg-amber-50 text-amber-700',
-    generale: 'bg-gray-100 text-gray-600',
-};
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
 const fmtDatetime = (d) => d ? new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -201,50 +192,7 @@ function deleteDoc(id) {
                 </div>
 
                 <!-- Cartella Clinica -->
-                <div v-if="canViewReports && activeTab === 'cartella'" class="space-y-8">
-
-                    <!-- Annotazioni cliniche -->
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Annotazioni cliniche</h3>
-                            <Link :href="route('patients.records', patient.id)"
-                                class="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                + Nuova annotazione
-                            </Link>
-                        </div>
-                        <div v-if="!patient.records.length" class="bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-400 text-sm">
-                            Nessuna annotazione clinica.
-                        </div>
-                        <div v-else class="space-y-2">
-                            <div v-for="rec in patient.records" :key="rec.id"
-                                class="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-medium text-gray-800 text-sm">{{ rec.title }}</span>
-                                        <span :class="[categoryColor[rec.category] ?? 'bg-gray-100 text-gray-600', 'text-xs px-1.5 py-0.5 rounded']">
-                                            {{ rec.category }}
-                                        </span>
-                                        <span class="text-xs bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded">
-                                            {{ recordTypeLabel[rec.record_type] ?? rec.record_type }}
-                                        </span>
-                                    </div>
-                                    <div class="text-xs text-gray-400">
-                                        {{ fmt(rec.record_date) }} · {{ rec.user?.name }}
-                                    </div>
-                                    <p v-if="rec.notes" class="text-xs text-gray-500 mt-1.5 line-clamp-2">{{ rec.notes }}</p>
-                                </div>
-                                <div class="shrink-0 text-xs text-gray-400">
-                                    <span v-if="rec.is_shared_with_team" class="bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded">team</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div v-if="canViewReports && activeTab === 'cartella'">
 
                     <!-- Referti -->
                     <div>
@@ -283,7 +231,7 @@ function deleteDoc(id) {
                                         class="text-xs border border-gray-200 text-gray-500 px-2.5 py-1 rounded-lg hover:bg-gray-50 transition-colors">
                                         PDF
                                     </a>
-                                    <Link :href="route('reports.edit', rep.id)"
+                                    <Link v-if="rep.user?.id === authUserId" :href="route('reports.edit', rep.id)"
                                         class="text-xs border border-purple-200 text-purple-600 px-2.5 py-1 rounded-lg hover:bg-purple-50 transition-colors">
                                         Modifica
                                     </Link>
@@ -294,7 +242,6 @@ function deleteDoc(id) {
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </div>
 
                 <!-- Fatture -->
