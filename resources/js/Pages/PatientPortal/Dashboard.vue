@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     patient:       Object,  // null if no patient record found for this user
@@ -21,6 +21,14 @@ const upcomingAppointments = computed(() =>
 const pastAppointments = computed(() =>
     props.patient?.appointments?.filter(a => new Date(a.start_at) < new Date()) ?? []
 );
+
+const cancelForm = useForm({});
+function cancelAppointment(id) {
+    if (!confirm('Vuoi davvero disdire questo appuntamento?')) return;
+    cancelForm.post(route('patient.appointment.cancel', id), {
+        onSuccess: () => {},
+    });
+}
 
 const invoiceStatusLabel = { draft:'Bozza', issued:'Emessa', paid:'Pagata', cancelled:'Annullata' };
 const invoiceStatusClass = {
@@ -141,6 +149,13 @@ const invoiceStatusClass = {
                                     </div>
                                 </div>
                                 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{{ apt.status }}</span>
+                                <button
+                                    v-if="apt.status !== 'cancelled'"
+                                    @click="cancelAppointment(apt.id)"
+                                    :disabled="cancelForm.processing"
+                                    class="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50">
+                                    Disdici
+                                </button>
                             </div>
                         </div>
                     </div>

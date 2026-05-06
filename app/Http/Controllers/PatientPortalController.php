@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AppointmentCancelledByPatientMail;
+use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\ProfessionalProfile;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,5 +43,30 @@ class PatientPortalController extends Controller
             'patient'       => $patient,
             'professionals' => $professionals,
         ]);
+    }
+
+    public function cancelAppointment(Appointment $appointment): RedirectResponse
+    {
+        $user = auth()->user();
+
+        // Verify the appointment belongs to this patient (matched by email)
+        $patient = Patient::where('email', $user->email)->first();
+        abort_if(! $patient || $appointment->patient_id !== $patient->id, 403);
+        abort_if($appointment->start_at->isPast(), 422, 'Non puoi disdire un appuntamento già passato.');
+
+        $appointment->load('user', 'patient');
+        $patientName = "{$patient->first_name} {$patient->last_name}";
+
+        $appointment->update(['status' => 'cancelled']);
+
+        // Notify the professional
+        try {
+            Mail::to($appointment->user->email)
+                ->send(new AppointmentCancelledByPatientMail($appointment, $patientName));
+        } catch (\Exception $e) {
+            \Log::error('AppointmentCancelledByPatientMail failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Appuntamento disdetto.');
     }
 }

@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PatientWelcomeMail;
 use App\Models\Patient;
 use App\Models\PatientRecord;
 use App\Models\PatientTag;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -110,6 +114,23 @@ class PatientController extends Controller
         $patient->tags()->sync($tags);
         // Sync the selected professionals (creator always has access via created_by)
         $patient->professionals()->sync($professionals);
+
+        // Auto-create patient portal account if email provided and no account exists yet
+        if ($patient->email && ! User::where('email', $patient->email)->exists()) {
+            $tempPassword = Str::random(10);
+            User::create([
+                'name'              => "{$patient->first_name} {$patient->last_name}",
+                'email'             => $patient->email,
+                'password'          => Hash::make($tempPassword),
+                'email_verified_at' => now(),
+            ]);
+
+            try {
+                Mail::to($patient->email)->send(new PatientWelcomeMail($patient, $tempPassword));
+            } catch (\Exception $e) {
+                \Log::error('PatientWelcomeMail failed: ' . $e->getMessage());
+            }
+        }
 
         return redirect()->route('patients.show', $patient)->with('success', 'Paziente creato.');
     }

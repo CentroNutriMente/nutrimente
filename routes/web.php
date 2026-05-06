@@ -27,6 +27,7 @@ Route::get('/prenota/{slug}/rifiuta/{token}', [BookingController::class, 'reject
 // Area personale paziente
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/mia-area', [\App\Http\Controllers\PatientPortalController::class, 'dashboard'])->name('patient.dashboard');
+    Route::post('/mia-area/appointments/{appointment}/cancel', [\App\Http\Controllers\PatientPortalController::class, 'cancelAppointment'])->name('patient.appointment.cancel');
 });
 
 Route::get('/', function () {

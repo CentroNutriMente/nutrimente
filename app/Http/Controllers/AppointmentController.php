@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AppointmentCancelledByProfessionalMail;
 use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -110,7 +112,15 @@ class AppointmentController extends Controller
             'cancellation_reason' => 'nullable|string',
         ]);
 
+        $wasCancelled = $appointment->status !== 'cancelled'
+            && ($validated['status'] ?? null) === 'cancelled';
+
+        $appointment->load('user', 'patient');
         $appointment->update($validated);
+
+        if ($wasCancelled) {
+            $this->notifyPatientCancelled($appointment);
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['ok' => true]);
@@ -121,8 +131,22 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment): RedirectResponse
     {
+        $appointment->load('user', 'patient');
+        $this->notifyPatientCancelled($appointment);
         $appointment->delete();
         return redirect()->route('calendar')->with('success', 'Appuntamento eliminato.');
+    }
+
+    private function notifyPatientCancelled(Appointment $appointment): void
+    {
+        $email = $appointment->patient?->email;
+        if (! $email) return;
+
+        try {
+            Mail::to($email)->send(new AppointmentCancelledByProfessionalMail($appointment));
+        } catch (\Exception $e) {
+            \Log::error('AppointmentCancelledByProfessionalMail failed: ' . $e->getMessage());
+        }
     }
 
     private function colorForType(string $type): string
