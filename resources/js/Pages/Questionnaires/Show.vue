@@ -29,6 +29,36 @@ const colorMap = {
     red:    'bg-red-100 text-red-700',
 };
 
+function computeSectionScores() {
+    const sections = tmpl?.scoring?.sections ?? [];
+    const formula  = tmpl?.scoring?.formula ?? '';
+    if (!sections.length || !formula) return [];
+
+    const qSection = {};
+    for (const question of (tmpl.questions ?? [])) {
+        if (question.section_id) qSection[question.id] = question.section_id;
+    }
+
+    const buckets = Object.fromEntries(sections.map(s => [s.id, []]));
+    for (const a of (q.answers ?? [])) {
+        const sid = qSection[a.question_id];
+        if (sid && buckets[sid] !== undefined) buckets[sid].push(Number(a.score));
+    }
+
+    return sections.map(s => {
+        const scores = buckets[s.id] ?? [];
+        const n = scores.length;
+        const raw = scores.reduce((a, b) => a + b, 0);
+        let val = (s.operation === 'average' && n > 0) ? raw / n : raw;
+        if (s.multiplier) val *= Number(s.multiplier);
+        if (s.divisor && Number(s.divisor) !== 0) val /= Number(s.divisor);
+        return { name: s.name, score: Math.round(val * 1e6) / 1e6 };
+    });
+}
+
+const sectionScores = computeSectionScores();
+const hasSections   = sectionScores.length > 0;
+
 function getScoreInfo() {
     const thresholds = tmpl?.scoring?.thresholds ?? [];
     const score      = q.total_score;
@@ -121,6 +151,19 @@ function destroy() {
                             {{ scoreInfo.label }}
                         </p>
                     </div>
+                </div>
+
+                <!-- Section scores table -->
+                <div v-if="hasSections" class="mt-4 pt-4 border-t border-gray-100">
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Punteggi per sezione</p>
+                    <table class="w-full text-sm">
+                        <tbody class="divide-y divide-gray-50">
+                            <tr v-for="s in sectionScores" :key="s.name">
+                                <td class="py-1.5 text-gray-600">{{ s.name }}</td>
+                                <td class="py-1.5 text-right font-semibold text-gray-800">{{ s.score }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <div v-if="q.notes" class="mt-4 pt-4 border-t border-gray-100">

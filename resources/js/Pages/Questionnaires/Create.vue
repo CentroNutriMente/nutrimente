@@ -57,19 +57,68 @@ function setAnswer(questionId, answerId, score) {
     }
 }
 
-function computeScore(answers, scoring) {
-    const sum   = answers.reduce((acc, a) => acc + (a.score ?? 0), 0);
-    const base  = scoring?.base ?? 'sum';
-    const count = answers.length;
-    let value   = (base === 'average' && count > 0) ? sum / count : sum;
-    if (scoring?.multiplier) value *= Number(scoring.multiplier);
-    if (scoring?.divisor && Number(scoring.divisor) !== 0) value /= Number(scoring.divisor);
-    return Math.round(value);
+function computeLiveScore(template, answers) {
+    const sections = template?.scoring?.sections ?? [];
+    const formula  = template?.scoring?.formula ?? '';
+
+    if (sections.length > 0 && formula) {
+        const qSection = {};
+        for (const q of (template.questions ?? [])) {
+            if (q.section_id) qSection[q.id] = q.section_id;
+        }
+
+        const buckets = Object.fromEntries(sections.map(s => [s.id, []]));
+        for (const a of answers) {
+            const sid = qSection[a.question_id];
+            if (sid && buckets[sid] !== undefined) buckets[sid].push(Number(a.score));
+        }
+
+        const vars = {};
+        for (const s of sections) {
+            const scores = buckets[s.id] ?? [];
+            const n = scores.length;
+            const raw = scores.reduce((a, b) => a + b, 0);
+            let val = (s.operation === 'average' && n > 0) ? raw / n : raw;
+            if (s.multiplier) val *= Number(s.multiplier);
+            if (s.divisor && Number(s.divisor) !== 0) val /= Number(s.divisor);
+            vars[s.name] = Math.round(val * 1e6) / 1e6;
+        }
+
+        let expr = formula;
+        const sortedNames = Object.keys(vars).sort((a, b) => b.length - a.length);
+        for (const name of sortedNames) expr = expr.replaceAll(name, String(vars[name]));
+        if (!/^[\d\s+\-*/().]+$/.test(expr)) return { total: 0, sectionScores: vars };
+        try {
+            const total = Math.round(Function('"use strict"; return (' + expr + ')')());
+            return { total, sectionScores: vars };
+        } catch {
+            return { total: 0, sectionScores: vars };
+        }
+    }
+
+    const sum  = answers.reduce((acc, a) => acc + Number(a.score ?? 0), 0);
+    const base = template?.scoring?.base ?? 'sum';
+    const n    = answers.length;
+    let val    = (base === 'average' && n > 0) ? sum / n : sum;
+    if (template?.scoring?.multiplier) val *= Number(template.scoring.multiplier);
+    if (template?.scoring?.divisor && Number(template.scoring.divisor) !== 0) val /= Number(template.scoring.divisor);
+    return { total: Math.round(val), sectionScores: {} };
 }
 
-const liveScore = computed(() => {
+const liveResult = computed(() => {
     const answered = form.answers.filter(a => a.score !== null);
-    return computeScore(answered, activeTemplate.value?.scoring);
+    return computeLiveScore(activeTemplate.value, answered);
+});
+
+const liveScore = computed(() => liveResult.value.total);
+
+const liveSectionScores = computed(() => {
+    const sections = activeTemplate.value?.scoring?.sections ?? [];
+    if (!sections.length) return [];
+    return sections.map(s => ({
+        name:  s.name,
+        score: liveResult.value.sectionScores[s.name] ?? 0,
+    }));
 });
 
 const liveThreshold = computed(() => {
@@ -96,6 +145,32 @@ const allAnswered = computed(() =>
         : false
 );
 
+// Group questions by section for display
+const questionGroups = computed(() => {
+    if (!activeTemplate.value) return [];
+    const sections = activeTemplate.value.scoring?.sections ?? [];
+    if (!sections.length) {
+        return [{ section: null, questions: activeTemplate.value.questions }];
+    }
+
+    const groups = sections.map(s => ({ section: s, questions: [] }));
+    const ungrouped = [];
+
+    for (const q of (activeTemplate.value.questions ?? [])) {
+        if (q.section_id) {
+            const g = groups.find(g => g.section.id === q.section_id);
+            if (g) { g.questions.push(q); continue; }
+        }
+        ungrouped.push(q);
+    }
+
+    const result = groups.filter(g => g.questions.length > 0);
+    if (ungrouped.length > 0) {
+        result.push({ section: { id: '__general', name: 'Generale' }, questions: ungrouped });
+    }
+    return result;
+});
+
 function submit() {
     if (isEdit) {
         form.put(route('questionnaires.update', props.questionnaire.id));
@@ -105,6 +180,15 @@ function submit() {
 }
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '';
+
+// Question index across groups (for display numbering)
+function questionIndex(groupIndex, questionIndexInGroup) {
+    let count = 0;
+    for (let i = 0; i < groupIndex; i++) {
+        count += questionGroups.value[i].questions.length;
+    }
+    return count + questionIndexInGroup + 1;
+}
 </script>
 
 <template>
@@ -160,36 +244,56 @@ const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '';
                 </div>
 
                 <div v-if="activeTemplate" class="bg-white rounded-xl border border-gray-200 p-6">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-start justify-between mb-4 gap-4">
                         <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Compilazione</h2>
-                        <div :class="[liveScoreClass, 'text-sm font-semibold px-3 py-1.5 rounded-lg']">
-                            Punteggio attuale: {{ liveScore }}
-                            <span v-if="liveThreshold" class="ml-1">— {{ liveThreshold.label }}</span>
+                        <div class="shrink-0 text-right">
+                            <div :class="[liveScoreClass, 'text-sm font-semibold px-3 py-1.5 rounded-lg']">
+                                Punteggio: {{ liveScore }}
+                                <span v-if="liveThreshold" class="ml-1">— {{ liveThreshold.label }}</span>
+                            </div>
+                            <div v-if="liveSectionScores.length > 0" class="mt-2">
+                                <table class="text-xs text-right ml-auto">
+                                    <tbody>
+                                        <tr v-for="s in liveSectionScores" :key="s.name">
+                                            <td class="text-gray-500 pr-2">{{ s.name }}</td>
+                                            <td class="font-medium text-gray-700">{{ s.score }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="space-y-5">
-                        <div v-for="(q, qi) in activeTemplate.questions" :key="q.id"
-                            class="border border-gray-100 rounded-lg p-4">
-                            <p class="text-sm font-semibold text-gray-800 mb-3">
-                                <span class="text-purple-500 mr-1">{{ qi + 1 }}.</span>
-                                {{ q.text }}
-                            </p>
+                    <div class="space-y-6">
+                        <div v-for="(group, gi) in questionGroups" :key="group.section?.id ?? 'flat'">
+                            <h3 v-if="group.section" class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                                {{ group.section.name }}
+                            </h3>
 
-                            <div class="space-y-2">
-                                <label v-for="ans in q.answers" :key="ans.id"
-                                    class="flex items-center gap-3 cursor-pointer group">
-                                    <input
-                                        type="radio"
-                                        :name="`q_${q.id}`"
-                                        :value="ans.id"
-                                        :checked="getAnswer(q.id)?.answer_id === ans.id"
-                                        @change="setAnswer(q.id, ans.id, ans.score)"
-                                        class="text-purple-600 focus:ring-purple-400"
-                                    />
-                                    <span class="text-sm text-gray-700 group-hover:text-gray-900 flex-1">{{ ans.label }}</span>
-                                    <span class="text-xs text-gray-400">({{ ans.score }})</span>
-                                </label>
+                            <div class="space-y-4">
+                                <div v-for="(q, qi) in group.questions" :key="q.id"
+                                    class="border border-gray-100 rounded-lg p-4">
+                                    <p class="text-sm font-semibold text-gray-800 mb-3">
+                                        <span class="text-purple-500 mr-1">{{ questionIndex(gi, qi) }}.</span>
+                                        {{ q.text }}
+                                    </p>
+
+                                    <div class="space-y-2">
+                                        <label v-for="ans in q.answers" :key="ans.id"
+                                            class="flex items-center gap-3 cursor-pointer group">
+                                            <input
+                                                type="radio"
+                                                :name="`q_${q.id}`"
+                                                :value="ans.id"
+                                                :checked="getAnswer(q.id)?.answer_id === ans.id"
+                                                @change="setAnswer(q.id, ans.id, ans.score)"
+                                                class="text-purple-600 focus:ring-purple-400"
+                                            />
+                                            <span class="text-sm text-gray-700 group-hover:text-gray-900 flex-1">{{ ans.label }}</span>
+                                            <span class="text-xs text-gray-400">({{ ans.score }})</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

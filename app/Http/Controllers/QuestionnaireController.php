@@ -61,7 +61,7 @@ class QuestionnaireController extends Controller
         ]);
 
         $template   = QuestionnaireTemplate::findOrFail($validated['questionnaire_template_id']);
-        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? []);
+        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? [], $template->questions ?? []);
 
         $questionnaire = Questionnaire::create([
             'user_id'                   => $request->user()->id,
@@ -130,7 +130,7 @@ class QuestionnaireController extends Controller
         ]);
 
         $template   = QuestionnaireTemplate::findOrFail($validated['questionnaire_template_id']);
-        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? []);
+        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? [], $template->questions ?? []);
 
         $questionnaire->update([
             'questionnaire_template_id' => $validated['questionnaire_template_id'],
@@ -156,18 +156,54 @@ class QuestionnaireController extends Controller
             ->with('success', 'Questionario eliminato.');
     }
 
-    private function computeScore(array $answers, array $scoring): int
+    private function computeScore(array $answers, array $scoring, array $questions = []): int
     {
-        $sum   = collect($answers)->sum('score');
+        $sections = $scoring['sections'] ?? [];
+
+        if (!empty($sections) && !empty($scoring['formula'])) {
+            $qSection = [];
+            foreach ($questions as $q) {
+                if (!empty($q['section_id'])) {
+                    $qSection[$q['id']] = $q['section_id'];
+                }
+            }
+
+            $buckets = array_fill_keys(array_column($sections, 'id'), []);
+            foreach ($answers as $a) {
+                $sid = $qSection[$a['question_id']] ?? null;
+                if ($sid !== null && array_key_exists($sid, $buckets)) {
+                    $buckets[$sid][] = (float) $a['score'];
+                }
+            }
+
+            $vars = [];
+            foreach ($sections as $s) {
+                $scores = $buckets[$s['id']] ?? [];
+                $n      = count($scores);
+                $raw    = array_sum($scores);
+                $val    = ($s['operation'] === 'average' && $n > 0) ? $raw / $n : $raw;
+                if (!empty($s['multiplier'])) $val *= (float) $s['multiplier'];
+                if (!empty($s['divisor']) && (float) $s['divisor'] !== 0.0) $val /= (float) $s['divisor'];
+                $vars[$s['name']] = round($val, 6);
+            }
+
+            $expr = $scoring['formula'];
+            uksort($vars, fn($a, $b) => strlen($b) - strlen($a));
+            foreach ($vars as $name => $val) {
+                $expr = str_replace($name, (string) $val, $expr);
+            }
+
+            if (!preg_match('/^[\d\s\+\-\*\/\(\)\.]+$/', $expr)) return 0;
+            $result = eval("return (float)($expr);");
+            return (int) round((float) $result);
+        }
+
+        $sum   = (float) collect($answers)->sum('score');
         $base  = $scoring['base'] ?? 'sum';
         $count = count($answers);
-        $value = ($base === 'average' && $count > 0) ? $sum / $count : $sum;
-        if (!empty($scoring['multiplier'])) {
-            $value *= (float) $scoring['multiplier'];
-        }
-        if (!empty($scoring['divisor']) && (float) $scoring['divisor'] !== 0.0) {
-            $value /= (float) $scoring['divisor'];
-        }
-        return (int) round($value);
+        $val   = ($base === 'average' && $count > 0) ? $sum / $count : $sum;
+        if (!empty($scoring['multiplier'])) $val *= (float) $scoring['multiplier'];
+        if (!empty($scoring['divisor']) && (float) $scoring['divisor'] !== 0.0) $val /= (float) $scoring['divisor'];
+        return (int) round($val);
     }
 }

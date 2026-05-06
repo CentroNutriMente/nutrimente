@@ -35,13 +35,21 @@ class QuestionnaireTemplateController extends Controller
             'description'                   => 'nullable|string|max:1000',
             'questions'                     => 'required|array',
             'questions.*.text'              => 'required|string',
+            'questions.*.section_id'        => 'nullable|string',
             'questions.*.answers'           => 'required|array',
             'questions.*.answers.*.label'   => 'required|string',
             'questions.*.answers.*.score'   => 'required|numeric',
             'scoring'                       => 'nullable|array',
+            'scoring.sections'              => 'nullable|array',
+            'scoring.sections.*.id'         => 'required_with:scoring.sections|string',
+            'scoring.sections.*.name'       => 'required_with:scoring.sections|string',
+            'scoring.sections.*.operation'  => 'required_with:scoring.sections|in:sum,average',
+            'scoring.sections.*.multiplier' => 'nullable|numeric',
+            'scoring.sections.*.divisor'    => 'nullable|numeric|min:0.01',
             'scoring.base'                  => 'nullable|in:sum,average',
             'scoring.divisor'               => 'nullable|numeric|min:0.01',
             'scoring.multiplier'            => 'nullable|numeric',
+            'scoring.formula'               => 'nullable|string',
             'scoring.thresholds'            => 'nullable|array',
             'scoring.thresholds.*.min'      => 'required_with:scoring.thresholds|numeric',
             'scoring.thresholds.*.max'      => 'required_with:scoring.thresholds|numeric',
@@ -49,15 +57,7 @@ class QuestionnaireTemplateController extends Controller
             'scoring.thresholds.*.color'    => 'required_with:scoring.thresholds|string',
         ]);
 
-        $questions = collect($validated['questions'])->values()->map(fn ($q, $i) => [
-            'id'      => 'q' . ($i + 1),
-            'text'    => $q['text'],
-            'answers' => collect($q['answers'])->values()->map(fn ($a, $ai) => [
-                'id'    => 'a' . ($ai + 1),
-                'label' => $a['label'],
-                'score' => (int) $a['score'],
-            ])->all(),
-        ])->all();
+        $questions = $this->buildQuestions($validated['questions']);
 
         QuestionnaireTemplate::create([
             'user_id'     => $request->user()->id,
@@ -89,13 +89,21 @@ class QuestionnaireTemplateController extends Controller
             'description'                   => 'nullable|string|max:1000',
             'questions'                     => 'required|array',
             'questions.*.text'              => 'required|string',
+            'questions.*.section_id'        => 'nullable|string',
             'questions.*.answers'           => 'required|array',
             'questions.*.answers.*.label'   => 'required|string',
             'questions.*.answers.*.score'   => 'required|numeric',
             'scoring'                       => 'nullable|array',
+            'scoring.sections'              => 'nullable|array',
+            'scoring.sections.*.id'         => 'required_with:scoring.sections|string',
+            'scoring.sections.*.name'       => 'required_with:scoring.sections|string',
+            'scoring.sections.*.operation'  => 'required_with:scoring.sections|in:sum,average',
+            'scoring.sections.*.multiplier' => 'nullable|numeric',
+            'scoring.sections.*.divisor'    => 'nullable|numeric|min:0.01',
             'scoring.base'                  => 'nullable|in:sum,average',
             'scoring.divisor'               => 'nullable|numeric|min:0.01',
             'scoring.multiplier'            => 'nullable|numeric',
+            'scoring.formula'               => 'nullable|string',
             'scoring.thresholds'            => 'nullable|array',
             'scoring.thresholds.*.min'      => 'required_with:scoring.thresholds|numeric',
             'scoring.thresholds.*.max'      => 'required_with:scoring.thresholds|numeric',
@@ -103,15 +111,7 @@ class QuestionnaireTemplateController extends Controller
             'scoring.thresholds.*.color'    => 'required_with:scoring.thresholds|string',
         ]);
 
-        $questions = collect($validated['questions'])->values()->map(fn ($q, $i) => [
-            'id'      => 'q' . ($i + 1),
-            'text'    => $q['text'],
-            'answers' => collect($q['answers'])->values()->map(fn ($a, $ai) => [
-                'id'    => 'a' . ($ai + 1),
-                'label' => $a['label'],
-                'score' => (int) $a['score'],
-            ])->all(),
-        ])->all();
+        $questions = $this->buildQuestions($validated['questions']);
 
         $questionnaireTemplate->update([
             'name'        => $validated['name'],
@@ -132,5 +132,19 @@ class QuestionnaireTemplateController extends Controller
 
         return redirect()->route('questionnaire-templates.index')
             ->with('success', 'Modello eliminato.');
+    }
+
+    private function buildQuestions(array $raw): array
+    {
+        return collect($raw)->values()->map(fn ($q, $i) => [
+            'id'         => 'q' . ($i + 1),
+            'section_id' => $q['section_id'] ?? null,
+            'text'       => $q['text'],
+            'answers'    => collect($q['answers'])->values()->map(fn ($a, $ai) => [
+                'id'    => 'a' . ($ai + 1),
+                'label' => $a['label'],
+                'score' => (int) $a['score'],
+            ])->all(),
+        ])->all();
     }
 }
