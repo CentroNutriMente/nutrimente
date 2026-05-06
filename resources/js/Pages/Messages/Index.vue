@@ -24,6 +24,8 @@ const lastId          = ref(0);
 const lastUnreadCheck = ref(Math.floor(Date.now() / 1000));
 let pollController    = null;
 let pollStopped       = false;
+let pollTimer         = null;
+let pollErrorCount    = 0;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function dmId(otherId) {
@@ -82,6 +84,7 @@ async function selectChannel(type, id) {
     await loadMessages();
     markRead(type, channelId);
     pollController?.abort();
+    clearScheduledPoll();
     poll();
 }
 
@@ -119,6 +122,23 @@ function markRead(channelType, channelId) {
 }
 
 // ── Long poll ─────────────────────────────────────────────────────────────────
+function clearScheduledPoll() {
+    if (pollTimer) {
+        clearTimeout(pollTimer);
+        pollTimer = null;
+    }
+}
+
+function schedulePoll(delay = 0) {
+    if (pollStopped) return;
+
+    clearScheduledPoll();
+    pollTimer = setTimeout(() => {
+        pollTimer = null;
+        poll();
+    }, delay);
+}
+
 async function poll() {
     if (pollStopped) return;
 
@@ -138,6 +158,7 @@ async function poll() {
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        pollErrorCount = 0;
 
         // Append new messages
         if (data.messages?.length) {
@@ -178,10 +199,11 @@ async function poll() {
             }
         }
 
-        poll();
+        schedulePoll(data.messages?.length ? 0 : 750);
     } catch (e) {
         if (pollStopped || e.name === 'AbortError') return;
-        setTimeout(poll, 2000);
+        pollErrorCount += 1;
+        schedulePoll(Math.min(10000, pollErrorCount * 2000));
     }
 }
 
@@ -215,6 +237,7 @@ onMounted(async () => {
 onUnmounted(() => {
     pollStopped = true;
     pollController?.abort();
+    clearScheduledPoll();
 });
 </script>
 

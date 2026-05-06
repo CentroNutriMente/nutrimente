@@ -14,6 +14,9 @@ use Inertia\Response;
 
 class MessageController extends Controller
 {
+    private const POLL_SECONDS = 10;
+    private const POLL_INTERVAL_MICROSECONDS = 750_000;
+
     private const TEAM_CHANNELS = [
         'general' => 'Generale',
         'psicologo' => 'Psicologi',
@@ -404,8 +407,9 @@ class MessageController extends Controller
     }
 
     /**
-     * Long-poll endpoint. Holds the connection open (max 25s) and returns as
-     * soon as a new message appears in the active channel OR unread counts change.
+     * Long-poll endpoint. Returns as soon as a new message appears in the active
+     * channel or unread counts change. Keep the hold short so platform proxies do
+     * not close the request first and surface it as a 502.
      */
     public function poll(Request $request): JsonResponse
     {
@@ -423,9 +427,11 @@ class MessageController extends Controller
         $lastId = (int) ($request->last_id ?? 0);
         $lastCheck = (float) ($request->last_unread_check ?? 0);
 
-        set_time_limit(30);
+        if (function_exists('set_time_limit')) {
+            set_time_limit(self::POLL_SECONDS + 5);
+        }
 
-        $deadline = microtime(true) + 25;
+        $deadline = microtime(true) + self::POLL_SECONDS;
 
         while (microtime(true) < $deadline) {
             $hasNew = Message::where('channel_type', $channelType)
@@ -461,17 +467,17 @@ class MessageController extends Controller
                     'messages' => $newMessages,
                     'unread_counts' => $this->unreadCounts($userId),
                     'unread_dm_counts' => $this->unreadDmCounts($userId),
-                ]);
+                ])->header('Cache-Control', 'no-store');
             }
 
-            usleep(500_000);
+            usleep(self::POLL_INTERVAL_MICROSECONDS);
         }
 
         return response()->json([
             'messages' => [],
-            'unread_counts' => null,
+            'unread_counts' => $this->unreadCounts($userId),
             'unread_dm_counts' => $this->unreadDmCounts($userId),
-        ]);
+        ])->header('Cache-Control', 'no-store');
     }
 
     public function destroy(Request $request, Message $message): JsonResponse

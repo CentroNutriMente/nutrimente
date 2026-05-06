@@ -134,6 +134,31 @@ class MessageControllerTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_poll_returns_direct_messages_when_new_messages_exist(): void
+    {
+        $sender = $this->professionalUser();
+        $recipient = $this->professionalUser();
+        $channelId = $this->dmChannelId($sender->id, $recipient->id);
+
+        $message = Message::create([
+            'sender_id' => $sender->id,
+            'channel_type' => 'direct',
+            'channel_id' => $channelId,
+            'body' => 'Messaggio in tempo reale',
+        ]);
+
+        $response = $this->actingAs($recipient)
+            ->getJson('/messages/poll?channel_type=direct&channel_id='.$channelId.'&last_id=0&last_unread_check=0')
+            ->assertOk()
+            ->assertJsonPath('messages.0.id', $message->id)
+            ->assertJsonPath('messages.0.body', 'Messaggio in tempo reale');
+
+        $data = $response->json();
+
+        $this->assertSame(1, $data['unread_counts'][$channelId]);
+        $this->assertSame(1, $data['unread_dm_counts'][$sender->id]);
+    }
+
     public function test_team_message_notifications_are_sent_only_to_professional_profiles(): void
     {
         $sender = $this->professionalUser();
