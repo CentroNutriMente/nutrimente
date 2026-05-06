@@ -121,6 +121,71 @@ function deleteDoc(id) {
     if (!confirm('Eliminare questo documento?')) return;
     deleteDocForm.delete(route('documents.destroy', id));
 }
+
+// ── Grafici ──────────────────────────────────────────────────────────────────
+const svgBandFill = {
+    green:  'rgba(34,197,94,0.13)',
+    yellow: 'rgba(234,179,8,0.13)',
+    orange: 'rgba(249,115,22,0.13)',
+    red:    'rgba(239,68,68,0.13)',
+};
+const svgBandText = { green: '#15803d', yellow: '#854d0e', orange: '#9a3412', red: '#991b1b' };
+
+function buildChart(items, thresholds, yMin, yMax) {
+    const W = 520, H = 190, ml = 38, mr = 8, mt = 22, mb = 52;
+    const cw = W - ml - mr, ch = H - mt - mb;
+    const n = items.length;
+    const xPos = i => ml + (n < 2 ? cw / 2 : (i * cw) / (n - 1));
+    const yPos = v => {
+        const range = yMax - yMin;
+        if (range === 0) return mt + ch / 2;
+        return mt + ch - ((Number(v) - yMin) / range) * ch;
+    };
+    const points = items.map((item, i) => ({
+        x: xPos(i),
+        y: yPos(item.total_score),
+        score: item.total_score,
+        dateLabel: new Date(item.filled_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+    }));
+    const polyline = points.map(p => `${p.x},${p.y}`).join(' ');
+    const bands = thresholds.map(t => {
+        const yTop = yPos(Math.min(Number(t.max), yMax));
+        const yBot = yPos(Math.max(Number(t.min), yMin));
+        return { ...t, y: yTop, h: Math.max(yBot - yTop, 0), midY: (yTop + yBot) / 2 };
+    });
+    const rawTicks = thresholds.length
+        ? [...new Set(thresholds.flatMap(t => [Number(t.min), Number(t.max)]))]
+        : [yMin, yMax];
+    const yTicks = rawTicks
+        .filter(v => v >= yMin && v <= yMax)
+        .map(v => ({ v, y: yPos(v) }));
+    return { W, H, ml, mr, mt, mb, cw, ch, points, polyline, bands, yTicks };
+}
+
+const chartsData = computed(() => {
+    const qs = props.patient.questionnaires ?? [];
+    const groups = {};
+    for (const q of qs) {
+        const tid = q.questionnaire_template_id;
+        if (!groups[tid]) groups[tid] = { template: q.template, items: [] };
+        groups[tid].items.push(q);
+    }
+    return Object.values(groups)
+        .filter(g => g.items.length >= 2)
+        .map(g => {
+            const items = [...g.items].sort((a, b) => new Date(a.filled_at) - new Date(b.filled_at));
+            const thresholds = [...(g.template?.scoring?.thresholds ?? [])]
+                .sort((a, b) => Number(a.min) - Number(b.min));
+            const scores = items.map(i => i.total_score);
+            const yMin = thresholds.length ? Number(thresholds[0].min) : Math.min(...scores);
+            const yMax = thresholds.length ? Number(thresholds[thresholds.length - 1].max) : Math.max(...scores);
+            return {
+                template: g.template,
+                items,
+                chart: buildChart(items, thresholds, yMin, yMax),
+            };
+        });
+});
 </script>
 
 <template>
@@ -369,6 +434,72 @@ function deleteDoc(id) {
                             </Link>
 
                         </template>
+                    </div>
+
+                    <!-- Grafici -->
+                    <div v-if="chartsData.length > 0" class="mt-6">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Grafici</h3>
+                        <div class="space-y-4">
+                            <div v-for="group in chartsData" :key="group.template?.id ?? group.template?.name"
+                                class="bg-white rounded-xl border border-gray-200 p-4">
+                                <p class="text-sm font-semibold text-gray-700 mb-3">{{ group.template?.name }}</p>
+                                <svg :viewBox="`0 0 ${group.chart.W} ${group.chart.H}`" width="100%"
+                                    class="overflow-visible" style="font-family:inherit">
+
+                                    <!-- Threshold bands -->
+                                    <rect v-for="band in group.chart.bands" :key="'band-' + band.label"
+                                        :x="group.chart.ml" :y="band.y"
+                                        :width="group.chart.cw" :height="band.h"
+                                        :fill="svgBandFill[band.color] ?? 'rgba(156,163,175,0.1)'" />
+
+                                    <!-- Band labels (inside right edge of chart) -->
+                                    <text v-for="band in group.chart.bands" :key="'bl-' + band.label"
+                                        :x="group.chart.ml + group.chart.cw - 5" :y="band.midY"
+                                        text-anchor="end" dominant-baseline="middle"
+                                        font-size="8.5" :fill="svgBandText[band.color] ?? '#6b7280'"
+                                        opacity="0.9">{{ band.label }}</text>
+
+                                    <!-- X axis baseline -->
+                                    <line :x1="group.chart.ml" :y1="group.chart.mt + group.chart.ch"
+                                        :x2="group.chart.ml + group.chart.cw" :y2="group.chart.mt + group.chart.ch"
+                                        stroke="#e5e7eb" stroke-width="1" />
+
+                                    <!-- Y axis -->
+                                    <line :x1="group.chart.ml" :y1="group.chart.mt"
+                                        :x2="group.chart.ml" :y2="group.chart.mt + group.chart.ch"
+                                        stroke="#e5e7eb" stroke-width="1" />
+
+                                    <!-- Y ticks -->
+                                    <g v-for="tick in group.chart.yTicks" :key="'yt-' + tick.v">
+                                        <line :x1="group.chart.ml - 3" :y1="tick.y"
+                                            :x2="group.chart.ml" :y2="tick.y"
+                                            stroke="#d1d5db" stroke-width="1" />
+                                        <text :x="group.chart.ml - 5" :y="tick.y"
+                                            text-anchor="end" dominant-baseline="middle"
+                                            font-size="9" fill="#9ca3af">{{ tick.v }}</text>
+                                    </g>
+
+                                    <!-- Score line -->
+                                    <polyline :points="group.chart.polyline"
+                                        fill="none" stroke="#7c3aed" stroke-width="2"
+                                        stroke-linejoin="round" stroke-linecap="round" />
+
+                                    <!-- Dots + labels -->
+                                    <g v-for="pt in group.chart.points" :key="'pt-' + pt.x">
+                                        <!-- Score above dot -->
+                                        <text :x="pt.x" :y="pt.y - 9"
+                                            text-anchor="middle" font-size="9"
+                                            fill="#7c3aed" font-weight="600">{{ pt.score }}</text>
+                                        <!-- Dot -->
+                                        <circle :cx="pt.x" :cy="pt.y" r="4"
+                                            fill="#7c3aed" stroke="white" stroke-width="1.5" />
+                                        <!-- Date label (rotated -40°) -->
+                                        <text :transform="`translate(${pt.x},${group.chart.mt + group.chart.ch + 10}) rotate(-40)`"
+                                            text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.dateLabel }}</text>
+                                    </g>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
