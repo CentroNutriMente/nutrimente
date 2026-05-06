@@ -11,13 +11,14 @@ class ProfessionalProfile extends Model
         'user_id', 'category', 'title', 'bio', 'curriculum', 'specializations',
         'photo', 'partita_iva', 'codice_fiscale', 'regime_fiscale',
         'cassa_previdenziale', 'albo_professionale', 'numero_albo',
-        'invoice_counter', 'is_bookable', 'session_duration_minutes',
+        'invoice_counter', 'is_bookable', 'is_founder', 'session_duration_minutes',
         'session_price', 'booking_notes', 'phone', 'website', 'address', 'slug',
     ];
 
     protected $casts = [
         'specializations' => 'array',
         'is_bookable' => 'boolean',
+        'is_founder'  => 'boolean',
         'session_price' => 'decimal:2',
     ];
 

@@ -26,17 +26,20 @@ class BookingController extends Controller
             ->whereHas('professionalProfile', fn ($q) => $q->where('is_bookable', true))
             ->get()
             ->map(fn ($u) => [
-                'id'       => $u->id,
-                'name'     => $u->name,
-                'slug'     => $u->professionalProfile?->slug,
-                'role'     => $u->getRoleNames()->first(),
-                'category' => $u->professionalProfile?->category,
-                'title'    => $u->professionalProfile?->title,
-                'bio'      => $u->professionalProfile?->bio
-                    ? Str::limit($u->professionalProfile->bio, 160)
+                'id'         => $u->id,
+                'name'       => $u->name,
+                'slug'       => $u->professionalProfile?->slug,
+                'role'       => $u->getRoleNames()->first(),
+                'category'   => $u->professionalProfile?->category,
+                'title'      => $u->professionalProfile?->title,
+                'bio'        => $u->professionalProfile?->bio
+                    ? Str::limit($u->professionalProfile->bio, 200)
                     : null,
-                'photo'    => $u->profile_photo_url,
-            ]);
+                'photo'      => $u->profile_photo_url,
+                'is_founder' => (bool) $u->professionalProfile?->is_founder,
+            ])
+            ->sortByDesc('is_founder')
+            ->values();
 
         return Inertia::render('Booking/Index', compact('professionals'));
     }

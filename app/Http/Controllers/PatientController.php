@@ -118,19 +118,30 @@ class PatientController extends Controller
     {
         $this->authorizePatient($patient);
 
-        $patient->load([
+        $userId = auth()->id();
+        // Only the patient's creator (or legacy patients with no creator) can see reports.
+        $canViewReports = $patient->created_by === null || $patient->created_by === $userId;
+
+        $relations = [
             'tags',
             'creator',
             'professionals',
             'records.user',
             'appointments.user',
             'consents',
-            'invoices' => fn ($q) => $q->orderByDesc('issued_at'),
-            'reports'  => fn ($q) => $q->with(['user', 'template'])->orderByDesc('report_date'),
-        ]);
+            'invoices'          => fn ($q) => $q->orderByDesc('issued_at'),
+            'consentDocuments'  => fn ($q) => $q->whereNull('deleted_at')->orderByDesc('created_at'),
+        ];
+
+        if ($canViewReports) {
+            $relations['reports'] = fn ($q) => $q->with(['user', 'template'])->orderByDesc('report_date');
+        }
+
+        $patient->load($relations);
 
         return Inertia::render('Patients/Show', [
-            'patient' => $patient,
+            'patient'        => $patient,
+            'canViewReports' => $canViewReports,
         ]);
     }
 

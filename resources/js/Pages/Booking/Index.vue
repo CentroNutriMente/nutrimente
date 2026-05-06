@@ -70,7 +70,7 @@ const props = defineProps({ professionals: Array });
         </section>
 
         <!-- Professionals -->
-        <main class="max-w-5xl mx-auto px-4 py-14">
+        <main class="max-w-3xl mx-auto px-4 py-14">
             <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">Il nostro team</h2>
             <p class="text-center text-gray-400 text-sm mb-10">Scegli il professionista e prenota direttamente online.</p>
 
@@ -78,33 +78,39 @@ const props = defineProps({ professionals: Array });
                 Nessun professionista disponibile al momento.
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="flex flex-col gap-6">
                 <a
                     v-for="p in professionals"
                     :key="p.id"
                     :href="`/prenota/${p.slug}`"
-                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 flex flex-col items-center text-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-start gap-6 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
                 >
                     <img :src="p.photo" :alt="p.name"
-                        class="w-28 h-28 rounded-full object-cover ring-2 ring-purple-100 group-hover:ring-purple-300 transition-all" />
+                        class="w-24 h-24 rounded-full object-cover ring-2 ring-purple-100 group-hover:ring-purple-300 transition-all shrink-0" />
 
-                    <div>
-                        <div class="font-bold text-gray-900 text-lg leading-snug">
-                            {{ p.title ? p.title + ' ' : '' }}{{ p.name.split(' ').slice(-1)[0] }}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap mb-0.5">
+                            <span class="font-bold text-gray-900 text-lg leading-snug">
+                                {{ p.title ? p.title + ' ' : '' }}{{ p.name }}
+                            </span>
+                            <span v-if="p.is_founder"
+                                class="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                                {{ p.title?.includes('ssa') ? 'Fondatrice' : 'Fondatore' }} di NutriMente
+                            </span>
+                            <span v-else
+                                class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                                {{ p.title?.includes('ssa') ? 'Co-fondatrice' : 'Co-fondatore' }} di NutriMente
+                            </span>
                         </div>
-                        <div class="text-sm text-purple-600 font-medium mt-1">
-                            {{ p.category }}
-                        </div>
+                        <div class="text-sm text-purple-600 font-medium mb-3">{{ p.category }}</div>
+                        <p v-if="p.bio" class="text-sm text-gray-500 leading-relaxed line-clamp-3">{{ p.bio }}</p>
+                        <span class="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 group-hover:underline mt-3">
+                            Scopri e prenota
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </span>
                     </div>
-
-                    <p v-if="p.bio" class="text-sm text-gray-500 line-clamp-4 leading-relaxed text-left">{{ p.bio }}</p>
-
-                    <span class="mt-auto inline-flex items-center gap-1 text-xs font-semibold text-purple-600 group-hover:underline">
-                        Scopri e prenota
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </span>
                 </a>
             </div>
         </main>

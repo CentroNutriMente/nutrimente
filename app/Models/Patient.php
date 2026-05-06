@@ -84,4 +84,9 @@ class Patient extends Model
     {
         return $this->hasMany(Document::class);
     }
+
+    public function consentDocuments(): HasMany
+    {
+        return $this->hasMany(Document::class)->where('category', 'consenso');
+    }
 }
