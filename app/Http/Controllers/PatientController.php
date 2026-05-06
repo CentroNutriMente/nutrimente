@@ -6,6 +6,7 @@ use App\Mail\PatientWelcomeMail;
 use App\Models\Patient;
 use App\Models\PatientRecord;
 use App\Models\PatientTag;
+use App\Models\QuestionnaireTemplate;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -154,13 +155,19 @@ class PatientController extends Controller
             'reports'          => fn ($q) => $q->with(['user', 'template'])
                                               ->where('user_id', $userId)
                                               ->orderByDesc('report_date'),
+            'questionnaires'   => fn ($q) => $q->with(['template', 'user'])
+                                              ->where('user_id', $userId)
+                                              ->orderByDesc('filled_at'),
         ];
 
         $patient->load($relations);
 
+        $canCreateQuestionnaire = QuestionnaireTemplate::where('user_id', $userId)->exists();
+
         return Inertia::render('Patients/Show', [
-            'patient'        => $patient,
-            'canViewReports' => $canViewReports,
+            'patient'                => $patient,
+            'canViewReports'         => $canViewReports,
+            'canCreateQuestionnaire' => $canCreateQuestionnaire,
         ]);
     }
 

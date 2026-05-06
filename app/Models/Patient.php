@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use App\Models\Report;
 
 class Patient extends Model
 {
@@ -88,5 +87,10 @@ class Patient extends Model
     public function consentDocuments(): HasMany
     {
         return $this->hasMany(Document::class)->where('category', 'consenso');
+    }
+
+    public function questionnaires(): HasMany
+    {
+        return $this->hasMany(Questionnaire::class);
     }
 }

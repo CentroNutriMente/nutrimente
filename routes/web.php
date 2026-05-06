@@ -11,6 +11,8 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\QuestionnaireController;
+use App\Http\Controllers\QuestionnaireTemplateController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportTemplateController;
 use Illuminate\Foundation\Application;
@@ -70,6 +72,10 @@ Route::middleware([
     Route::resource('report-templates', ReportTemplateController::class);
     Route::resource('reports', ReportController::class);
     Route::get('reports/{report}/pdf', [ReportController::class, 'downloadPdf'])->name('reports.pdf');
+
+    // Questionari
+    Route::resource('questionnaire-templates', QuestionnaireTemplateController::class);
+    Route::resource('questionnaires', QuestionnaireController::class)->except(['index']);
 
     // Fatturazione
     Route::resource('invoices', InvoiceController::class);

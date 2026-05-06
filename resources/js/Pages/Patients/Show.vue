@@ -1,11 +1,15 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const authUserId = usePage().props.auth.user.id;
 
-const props = defineProps({ patient: Object, canViewReports: Boolean });
+const props = defineProps({
+    patient:                Object,
+    canViewReports:         Boolean,
+    canCreateQuestionnaire: Boolean,
+});
 
 const activeTab = ref(props.canViewReports ? 'cartella' : 'appointments');
 const tabs = [
@@ -17,6 +21,51 @@ const tabs = [
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
 const fmtDatetime = (d) => d ? new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+
+const unifiedList = computed(() => {
+    const reports = (props.patient.reports ?? []).map(r => ({
+        type: 'report',
+        date: r.report_date,
+        item: r,
+    }));
+
+    const standaloneQuestionnaires = (props.patient.questionnaires ?? [])
+        .filter(q => !q.report_id)
+        .map(q => ({
+            type: 'questionnaire',
+            date: q.filled_at,
+            item: q,
+        }));
+
+    return [...reports, ...standaloneQuestionnaires].sort((a, b) => {
+        const da = a.date ? new Date(a.date) : new Date(0);
+        const db = b.date ? new Date(b.date) : new Date(0);
+        return db - da;
+    });
+});
+
+function questionnairesForReport(reportId) {
+    return (props.patient.questionnaires ?? []).filter(q => q.report_id === reportId);
+}
+
+function scoreClass(q) {
+    const tmpl = q.template;
+    if (!tmpl?.questions) return 'bg-gray-100 text-gray-600';
+    const max = tmpl.questions.reduce((sum, question) => {
+        if (question.type === 'text') return sum;
+        if (question.type === 'yesno') return sum + 1;
+        if (question.type === 'scale') {
+            const m = Math.max(...(question.options?.map(o => o.value) ?? [0]));
+            return sum + m;
+        }
+        return sum;
+    }, 0);
+    if (max === 0) return 'bg-gray-100 text-gray-600';
+    const pct = q.total_score / max;
+    if (pct <= 0.33) return 'bg-green-100 text-green-700';
+    if (pct <= 0.66) return 'bg-amber-100 text-amber-700';
+    return 'bg-red-100 text-red-700';
+}
 
 const tagColor = (color) => ({ backgroundColor: color + '22', color });
 
@@ -90,6 +139,9 @@ function deleteDoc(id) {
                     </Link>
                     <Link v-if="canViewReports" :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
                         + Referto
+                    </Link>
+                    <Link v-if="canCreateQuestionnaire" :href="route('questionnaires.create', { patient_id: patient.id })" class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+                        + Questionario
                     </Link>
                     <Link :href="route('invoices.create', { patient_id: patient.id })" class="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700">
                         + Fattura
@@ -193,21 +245,29 @@ function deleteDoc(id) {
 
                 <!-- Cartella Clinica -->
                 <div v-if="canViewReports && activeTab === 'cartella'">
-
-                    <!-- Referti -->
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Referti</h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cartella Clinica</h3>
+                        <div class="flex gap-2">
                             <Link :href="route('reports.create', { patient_id: patient.id })"
                                 class="text-xs px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
                                 + Nuovo referto
                             </Link>
+                            <Link v-if="canCreateQuestionnaire" :href="route('questionnaires.create', { patient_id: patient.id })"
+                                class="text-xs px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                + Nuovo questionario
+                            </Link>
                         </div>
-                        <div v-if="!patient.reports.length" class="bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-400 text-sm">
-                            Nessun referto per questo paziente.
-                        </div>
-                        <div v-else class="space-y-2">
-                            <div v-for="rep in patient.reports" :key="rep.id"
+                    </div>
+
+                    <div v-if="unifiedList.length === 0" class="bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-400 text-sm">
+                        Nessun documento clinico per questo paziente.
+                    </div>
+
+                    <div v-else class="space-y-2">
+                        <template v-for="entry in unifiedList" :key="entry.type + entry.item.id">
+
+                            <!-- Report card -->
+                            <div v-if="entry.type === 'report'"
                                 class="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-4">
                                 <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0 mt-0.5">
                                     <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,31 +277,88 @@ function deleteDoc(id) {
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="font-medium text-gray-800 text-sm">{{ rep.title }}</span>
-                                        <span v-if="rep.template" class="text-xs bg-teal-50 text-teal-600 px-2 py-0.5 rounded-full">
-                                            {{ rep.template.name }}
+                                        <span class="font-medium text-gray-800 text-sm">{{ entry.item.title }}</span>
+                                        <span v-if="entry.item.template" class="text-xs bg-teal-50 text-teal-600 px-2 py-0.5 rounded-full">
+                                            {{ entry.item.template.name }}
                                         </span>
                                     </div>
-                                    <div class="text-xs text-gray-400">
-                                        {{ fmt(rep.report_date) }} · {{ rep.user?.name }}
-                                    </div>
+                                    <div class="text-xs text-gray-400">{{ fmt(entry.item.report_date) }} · {{ entry.item.user?.name }}</div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <a :href="route('reports.pdf', rep.id)" target="_blank"
+                                    <a :href="route('reports.pdf', entry.item.id)" target="_blank"
                                         class="text-xs border border-gray-200 text-gray-500 px-2.5 py-1 rounded-lg hover:bg-gray-50 transition-colors">
                                         PDF
                                     </a>
-                                    <Link v-if="rep.user?.id === authUserId" :href="route('reports.edit', rep.id)"
+                                    <Link v-if="entry.item.user?.id === authUserId" :href="route('reports.edit', entry.item.id)"
                                         class="text-xs border border-purple-200 text-purple-600 px-2.5 py-1 rounded-lg hover:bg-purple-50 transition-colors">
                                         Modifica
                                     </Link>
-                                    <Link :href="route('reports.show', rep.id)"
+                                    <Link :href="route('reports.show', entry.item.id)"
                                         class="text-xs text-teal-600 hover:underline">
                                         Apri
                                     </Link>
                                 </div>
                             </div>
-                        </div>
+
+                            <!-- Linked questionnaires (indented below their report) -->
+                            <div v-if="entry.type === 'report'" class="ml-6 space-y-2">
+                                <Link
+                                    v-for="qItem in questionnairesForReport(entry.item.id)"
+                                    :key="qItem.id"
+                                    :href="route('questionnaires.show', qItem.id)"
+                                    class="block bg-purple-50/60 rounded-xl border border-purple-100 p-3 flex items-start gap-3 hover:border-purple-300 transition-colors">
+                                    <div class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center shrink-0 mt-0.5">
+                                        <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-0.5">
+                                            <span class="text-xs font-medium text-gray-800">{{ qItem.template?.name }}</span>
+                                            <span :class="[scoreClass(qItem), 'text-xs px-2 py-0.5 rounded-full font-medium']">
+                                                Score: {{ qItem.total_score }}
+                                            </span>
+                                        </div>
+                                        <div class="text-xs text-gray-400">{{ fmt(qItem.filled_at) }} · {{ qItem.user?.name }}</div>
+                                    </div>
+                                    <Link v-if="qItem.user?.id === authUserId"
+                                        :href="route('questionnaires.edit', qItem.id)"
+                                        class="text-xs border border-purple-200 text-purple-600 px-2.5 py-1 rounded-lg hover:bg-purple-50 transition-colors shrink-0"
+                                        @click.stop>
+                                        Modifica
+                                    </Link>
+                                </Link>
+                            </div>
+
+                            <!-- Standalone questionnaire card -->
+                            <Link v-if="entry.type === 'questionnaire'"
+                                :href="route('questionnaires.show', entry.item.id)"
+                                class="block bg-white rounded-xl border border-purple-100 p-4 flex items-start gap-4 hover:border-purple-300 transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0 mt-0.5">
+                                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="font-medium text-gray-800 text-sm">{{ entry.item.template?.name }}</span>
+                                        <span :class="[scoreClass(entry.item), 'text-xs px-2 py-0.5 rounded-full font-medium']">
+                                            Score: {{ entry.item.total_score }}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-gray-400">{{ fmt(entry.item.filled_at) }} · {{ entry.item.user?.name }}</div>
+                                </div>
+                                <Link v-if="entry.item.user?.id === authUserId"
+                                    :href="route('questionnaires.edit', entry.item.id)"
+                                    class="text-xs border border-purple-200 text-purple-600 px-2.5 py-1 rounded-lg hover:bg-purple-50 transition-colors shrink-0"
+                                    @click.stop>
+                                    Modifica
+                                </Link>
+                            </Link>
+
+                        </template>
                     </div>
                 </div>
 
