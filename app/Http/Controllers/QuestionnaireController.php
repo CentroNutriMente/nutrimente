@@ -16,15 +16,15 @@ class QuestionnaireController extends Controller
     {
         $request->validate(['patient_id' => 'required|exists:patients,id']);
 
-        $userId   = $request->user()->id;
-        $patient  = Patient::findOrFail($request->patient_id);
+        $userId  = $request->user()->id;
+        $patient = Patient::findOrFail($request->patient_id);
 
         $templates = QuestionnaireTemplate::where('user_id', $userId)
             ->orderBy('name')
             ->get();
 
-        $reports = $patient->reports()
-            ->where('user_id', $userId)
+        $reports = \App\Models\Report::where('user_id', $userId)
+            ->where('patient_id', $patient->id)
             ->orderByDesc('report_date')
             ->get(['id', 'title', 'report_date']);
 
@@ -54,11 +54,14 @@ class QuestionnaireController extends Controller
             'report_id'                 => 'nullable|exists:reports,id',
             'filled_at'                 => 'required|date',
             'answers'                   => 'required|array',
+            'answers.*.question_id'     => 'required|string',
+            'answers.*.answer_id'       => 'required|string',
+            'answers.*.score'           => 'required|numeric',
             'notes'                     => 'nullable|string',
         ]);
 
-        $totalScore = collect($validated['answers'])
-            ->sum(fn ($a) => is_numeric($a['value'] ?? null) ? (int) $a['value'] : 0);
+        $template   = QuestionnaireTemplate::findOrFail($validated['questionnaire_template_id']);
+        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? []);
 
         $questionnaire = Questionnaire::create([
             'user_id'                   => $request->user()->id,
@@ -83,6 +86,7 @@ class QuestionnaireController extends Controller
 
         return Inertia::render('Questionnaires/Show', [
             'questionnaire' => $questionnaire,
+            'canEdit'       => $questionnaire->user_id === $request->user()->id,
         ]);
     }
 
@@ -95,8 +99,8 @@ class QuestionnaireController extends Controller
         $userId    = $request->user()->id;
         $templates = QuestionnaireTemplate::where('user_id', $userId)->orderBy('name')->get();
 
-        $reports = $questionnaire->patient->reports()
-            ->where('user_id', $userId)
+        $reports = \App\Models\Report::where('user_id', $userId)
+            ->where('patient_id', $questionnaire->patient_id)
             ->orderByDesc('report_date')
             ->get(['id', 'title', 'report_date']);
 
@@ -119,11 +123,14 @@ class QuestionnaireController extends Controller
             'report_id'                 => 'nullable|exists:reports,id',
             'filled_at'                 => 'required|date',
             'answers'                   => 'required|array',
+            'answers.*.question_id'     => 'required|string',
+            'answers.*.answer_id'       => 'required|string',
+            'answers.*.score'           => 'required|numeric',
             'notes'                     => 'nullable|string',
         ]);
 
-        $totalScore = collect($validated['answers'])
-            ->sum(fn ($a) => is_numeric($a['value'] ?? null) ? (int) $a['value'] : 0);
+        $template   = QuestionnaireTemplate::findOrFail($validated['questionnaire_template_id']);
+        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? []);
 
         $questionnaire->update([
             'questionnaire_template_id' => $validated['questionnaire_template_id'],
@@ -147,5 +154,20 @@ class QuestionnaireController extends Controller
 
         return redirect()->route('patients.show', $patientId)
             ->with('success', 'Questionario eliminato.');
+    }
+
+    private function computeScore(array $answers, array $scoring): int
+    {
+        $sum   = collect($answers)->sum('score');
+        $base  = $scoring['base'] ?? 'sum';
+        $count = count($answers);
+        $value = ($base === 'average' && $count > 0) ? $sum / $count : $sum;
+        if (!empty($scoring['multiplier'])) {
+            $value *= (float) $scoring['multiplier'];
+        }
+        if (!empty($scoring['divisor']) && (float) $scoring['divisor'] !== 0.0) {
+            $value /= (float) $scoring['divisor'];
+        }
+        return (int) round($value);
     }
 }

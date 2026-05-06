@@ -48,23 +48,18 @@ function questionnairesForReport(reportId) {
     return (props.patient.questionnaires ?? []).filter(q => q.report_id === reportId);
 }
 
-function scoreClass(q) {
-    const tmpl = q.template;
-    if (!tmpl?.questions) return 'bg-gray-100 text-gray-600';
-    const max = tmpl.questions.reduce((sum, question) => {
-        if (question.type === 'text') return sum;
-        if (question.type === 'yesno') return sum + 1;
-        if (question.type === 'scale') {
-            const m = Math.max(...(question.options?.map(o => o.value) ?? [0]));
-            return sum + m;
-        }
-        return sum;
-    }, 0);
-    if (max === 0) return 'bg-gray-100 text-gray-600';
-    const pct = q.total_score / max;
-    if (pct <= 0.33) return 'bg-green-100 text-green-700';
-    if (pct <= 0.66) return 'bg-amber-100 text-amber-700';
-    return 'bg-red-100 text-red-700';
+function getScoreInfo(q) {
+    const thresholds = q.template?.scoring?.thresholds ?? [];
+    const score      = q.total_score;
+    const match      = thresholds.find(t => score >= t.min && score <= t.max);
+    if (!match) return { label: null, colorClass: 'bg-gray-100 text-gray-600' };
+    const colorMap = {
+        green:  'bg-green-100 text-green-700',
+        yellow: 'bg-yellow-100 text-yellow-700',
+        orange: 'bg-orange-100 text-orange-700',
+        red:    'bg-red-100 text-red-700',
+    };
+    return { label: match.label, colorClass: colorMap[match.color] ?? 'bg-gray-100 text-gray-600' };
 }
 
 const tagColor = (color) => ({ backgroundColor: color + '22', color });
@@ -316,8 +311,9 @@ function deleteDoc(id) {
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 mb-0.5">
                                             <span class="text-xs font-medium text-gray-800">{{ qItem.template?.name }}</span>
-                                            <span :class="[scoreClass(qItem), 'text-xs px-2 py-0.5 rounded-full font-medium']">
+                                            <span :class="[getScoreInfo(qItem).colorClass, 'text-xs px-2 py-0.5 rounded-full font-medium']">
                                                 Score: {{ qItem.total_score }}
+                                                <template v-if="getScoreInfo(qItem).label"> — {{ getScoreInfo(qItem).label }}</template>
                                             </span>
                                         </div>
                                         <div class="text-xs text-gray-400">{{ fmt(qItem.filled_at) }} · {{ qItem.user?.name }}</div>
@@ -344,8 +340,9 @@ function deleteDoc(id) {
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-0.5">
                                         <span class="font-medium text-gray-800 text-sm">{{ entry.item.template?.name }}</span>
-                                        <span :class="[scoreClass(entry.item), 'text-xs px-2 py-0.5 rounded-full font-medium']">
+                                        <span :class="[getScoreInfo(entry.item).colorClass, 'text-xs px-2 py-0.5 rounded-full font-medium']">
                                             Score: {{ entry.item.total_score }}
+                                            <template v-if="getScoreInfo(entry.item).label"> — {{ getScoreInfo(entry.item).label }}</template>
                                         </span>
                                     </div>
                                     <div class="text-xs text-gray-400">{{ fmt(entry.item.filled_at) }} · {{ entry.item.user?.name }}</div>

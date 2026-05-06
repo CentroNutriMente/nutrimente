@@ -31,25 +31,40 @@ class QuestionnaireTemplateController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'                        => 'required|string|max:255',
-            'description'                 => 'nullable|string|max:1000',
-            'questions'                   => 'required|array',
-            'questions.*.text'            => 'required|string',
-            'questions.*.type'            => 'required|in:scale,yesno,text',
-            'questions.*.options'         => 'nullable|array',
-            'questions.*.options.*.label' => 'nullable|string',
-            'questions.*.options.*.value' => 'nullable|integer',
+            'name'                          => 'required|string|max:255',
+            'description'                   => 'nullable|string|max:1000',
+            'questions'                     => 'required|array',
+            'questions.*.text'              => 'required|string',
+            'questions.*.answers'           => 'required|array',
+            'questions.*.answers.*.label'   => 'required|string',
+            'questions.*.answers.*.score'   => 'required|numeric',
+            'scoring'                       => 'nullable|array',
+            'scoring.base'                  => 'nullable|in:sum,average',
+            'scoring.divisor'               => 'nullable|numeric|min:0.01',
+            'scoring.multiplier'            => 'nullable|numeric',
+            'scoring.thresholds'            => 'nullable|array',
+            'scoring.thresholds.*.min'      => 'required_with:scoring.thresholds|numeric',
+            'scoring.thresholds.*.max'      => 'required_with:scoring.thresholds|numeric',
+            'scoring.thresholds.*.label'    => 'required_with:scoring.thresholds|string',
+            'scoring.thresholds.*.color'    => 'required_with:scoring.thresholds|string',
         ]);
 
-        $questions = collect($validated['questions'])->values()->map(fn ($q, $i) => array_merge($q, [
-            'id' => 'q' . ($i + 1),
-        ]))->all();
+        $questions = collect($validated['questions'])->values()->map(fn ($q, $i) => [
+            'id'      => 'q' . ($i + 1),
+            'text'    => $q['text'],
+            'answers' => collect($q['answers'])->values()->map(fn ($a, $ai) => [
+                'id'    => 'a' . ($ai + 1),
+                'label' => $a['label'],
+                'score' => (int) $a['score'],
+            ])->all(),
+        ])->all();
 
         QuestionnaireTemplate::create([
             'user_id'     => $request->user()->id,
             'name'        => $validated['name'],
             'description' => $validated['description'] ?? null,
             'questions'   => $questions,
+            'scoring'     => $validated['scoring'] ?? null,
         ]);
 
         return redirect()->route('questionnaire-templates.index')
@@ -70,24 +85,39 @@ class QuestionnaireTemplateController extends Controller
         abort_if($questionnaireTemplate->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
-            'name'                        => 'required|string|max:255',
-            'description'                 => 'nullable|string|max:1000',
-            'questions'                   => 'required|array',
-            'questions.*.text'            => 'required|string',
-            'questions.*.type'            => 'required|in:scale,yesno,text',
-            'questions.*.options'         => 'nullable|array',
-            'questions.*.options.*.label' => 'nullable|string',
-            'questions.*.options.*.value' => 'nullable|integer',
+            'name'                          => 'required|string|max:255',
+            'description'                   => 'nullable|string|max:1000',
+            'questions'                     => 'required|array',
+            'questions.*.text'              => 'required|string',
+            'questions.*.answers'           => 'required|array',
+            'questions.*.answers.*.label'   => 'required|string',
+            'questions.*.answers.*.score'   => 'required|numeric',
+            'scoring'                       => 'nullable|array',
+            'scoring.base'                  => 'nullable|in:sum,average',
+            'scoring.divisor'               => 'nullable|numeric|min:0.01',
+            'scoring.multiplier'            => 'nullable|numeric',
+            'scoring.thresholds'            => 'nullable|array',
+            'scoring.thresholds.*.min'      => 'required_with:scoring.thresholds|numeric',
+            'scoring.thresholds.*.max'      => 'required_with:scoring.thresholds|numeric',
+            'scoring.thresholds.*.label'    => 'required_with:scoring.thresholds|string',
+            'scoring.thresholds.*.color'    => 'required_with:scoring.thresholds|string',
         ]);
 
-        $questions = collect($validated['questions'])->values()->map(fn ($q, $i) => array_merge($q, [
-            'id' => 'q' . ($i + 1),
-        ]))->all();
+        $questions = collect($validated['questions'])->values()->map(fn ($q, $i) => [
+            'id'      => 'q' . ($i + 1),
+            'text'    => $q['text'],
+            'answers' => collect($q['answers'])->values()->map(fn ($a, $ai) => [
+                'id'    => 'a' . ($ai + 1),
+                'label' => $a['label'],
+                'score' => (int) $a['score'],
+            ])->all(),
+        ])->all();
 
         $questionnaireTemplate->update([
             'name'        => $validated['name'],
             'description' => $validated['description'] ?? null,
             'questions'   => $questions,
+            'scoring'     => $validated['scoring'] ?? null,
         ]);
 
         return redirect()->route('questionnaire-templates.index')

@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class QuestionnaireTemplate extends Model
 {
-    protected $fillable = ['user_id', 'name', 'description', 'questions'];
+    protected $fillable = ['user_id', 'name', 'description', 'questions', 'scoring'];
 
     protected $casts = [
         'questions' => 'array',
+        'scoring'   => 'array',
     ];
 
     public function user(): BelongsTo
