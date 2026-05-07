@@ -301,15 +301,9 @@ function submit() {
 
                 <!-- Section C: Domande -->
                 <div class="bg-white rounded-xl border border-gray-200 p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Domande</h2>
-                        <button type="button" @click="addQuestion"
-                            class="text-xs px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                            + Aggiungi domanda
-                        </button>
-                    </div>
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Domande</h2>
 
-                    <div v-if="form.questions.length === 0" class="text-center text-sm text-gray-400 py-6 border border-dashed border-gray-200 rounded-lg">
+                    <div v-if="form.questions.length === 0" class="text-center text-sm text-gray-400 py-6 border border-dashed border-gray-200 rounded-lg mb-4">
                         Nessuna domanda. Clicca "+ Aggiungi domanda" per iniziare.
                     </div>
 
@@ -405,6 +399,11 @@ function submit() {
                             </div>
                         </div>
                     </div>
+
+                    <button type="button" @click="addQuestion"
+                        class="mt-4 w-full text-xs px-3 py-2 border border-dashed border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
+                        + Aggiungi domanda
+                    </button>
                 </div>
 
                 <!-- Section D: Formula punteggio -->
