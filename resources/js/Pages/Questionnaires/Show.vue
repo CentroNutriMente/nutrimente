@@ -23,10 +23,14 @@ function getAnswerLabel(question, answerId) {
 }
 
 const colorMap = {
-    green:  'bg-green-100 text-green-700',
-    yellow: 'bg-yellow-100 text-yellow-700',
-    orange: 'bg-orange-100 text-orange-700',
-    red:    'bg-red-100 text-red-700',
+    'green-light':  'bg-green-50 text-green-600',
+    'green':        'bg-green-100 text-green-700',
+    'yellow-light': 'bg-yellow-50 text-yellow-600',
+    'yellow':       'bg-yellow-100 text-yellow-700',
+    'orange-light': 'bg-orange-50 text-orange-600',
+    'orange':       'bg-orange-100 text-orange-700',
+    'orange-dark':  'bg-orange-200 text-orange-800',
+    'red':          'bg-red-100 text-red-700',
 };
 
 function computeSectionScores() {

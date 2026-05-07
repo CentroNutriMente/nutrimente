@@ -495,9 +495,13 @@ function submit() {
                                     class="flex-1 min-w-24 border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400" />
                                 <select v-model="t.color"
                                     class="border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400">
+                                    <option value="green-light">Verde chiaro</option>
                                     <option value="green">Verde</option>
+                                    <option value="yellow-light">Giallo chiaro</option>
                                     <option value="yellow">Giallo</option>
+                                    <option value="orange-light">Arancione chiaro</option>
                                     <option value="orange">Arancione</option>
+                                    <option value="orange-dark">Arancione scuro</option>
                                     <option value="red">Rosso</option>
                                 </select>
                                 <button type="button" @click="removeThreshold(ti)"

@@ -65,10 +65,14 @@ function getScoreInfo(q) {
     const match      = thresholds.find(t => score >= t.min && score <= t.max);
     if (!match) return { label: null, colorClass: 'bg-gray-100 text-gray-600' };
     const colorMap = {
-        green:  'bg-green-100 text-green-700',
-        yellow: 'bg-yellow-100 text-yellow-700',
-        orange: 'bg-orange-100 text-orange-700',
-        red:    'bg-red-100 text-red-700',
+        'green-light':  'bg-green-50 text-green-600',
+        'green':        'bg-green-100 text-green-700',
+        'yellow-light': 'bg-yellow-50 text-yellow-600',
+        'yellow':       'bg-yellow-100 text-yellow-700',
+        'orange-light': 'bg-orange-50 text-orange-600',
+        'orange':       'bg-orange-100 text-orange-700',
+        'orange-dark':  'bg-orange-200 text-orange-800',
+        'red':          'bg-red-100 text-red-700',
     };
     return { label: match.label, colorClass: colorMap[match.color] ?? 'bg-gray-100 text-gray-600' };
 }
@@ -124,12 +128,25 @@ function deleteDoc(id) {
 
 // ── Grafici ──────────────────────────────────────────────────────────────────
 const svgBandFill = {
-    green:  'rgba(34,197,94,0.13)',
-    yellow: 'rgba(234,179,8,0.13)',
-    orange: 'rgba(249,115,22,0.13)',
-    red:    'rgba(239,68,68,0.13)',
+    'green-light':  'rgba(34,197,94,0.07)',
+    'green':        'rgba(34,197,94,0.13)',
+    'yellow-light': 'rgba(234,179,8,0.07)',
+    'yellow':       'rgba(234,179,8,0.13)',
+    'orange-light': 'rgba(249,115,22,0.07)',
+    'orange':       'rgba(249,115,22,0.13)',
+    'orange-dark':  'rgba(249,115,22,0.22)',
+    'red':          'rgba(239,68,68,0.13)',
 };
-const svgBandText = { green: '#15803d', yellow: '#854d0e', orange: '#9a3412', red: '#991b1b' };
+const svgBandText = {
+    'green-light':  '#16a34a',
+    'green':        '#15803d',
+    'yellow-light': '#ca8a04',
+    'yellow':       '#854d0e',
+    'orange-light': '#ea580c',
+    'orange':       '#9a3412',
+    'orange-dark':  '#7c2d12',
+    'red':          '#991b1b',
+};
 
 function buildChart(items, thresholds, yMin, yMax) {
     const W = 520, H = 190, ml = 38, mr = 8, mt = 22, mb = 52;
