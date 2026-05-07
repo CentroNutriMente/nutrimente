@@ -112,6 +112,13 @@ function removeAnswer(qi, ai) {
     form.questions[qi].answers.splice(ai, 1);
 }
 
+function moveAnswer(qi, ai, dir) {
+    const answers = form.questions[qi].answers;
+    const target = ai + dir;
+    if (target < 0 || target >= answers.length) return;
+    [answers[ai], answers[target]] = [answers[target], answers[ai]];
+}
+
 const copyMenuOpen = ref(null);
 
 function closeCopyMenu(e) {
@@ -355,6 +362,22 @@ function submit() {
                                             </div>
                                         </div>
                                         <div v-for="(ans, ai) in q.answers" :key="ai" class="flex items-center gap-2">
+                                            <div class="flex flex-col gap-0.5 shrink-0">
+                                                <button type="button" @click="moveAnswer(qi, ai, -1)"
+                                                    :disabled="ai === 0"
+                                                    class="text-gray-300 hover:text-gray-500 transition-colors disabled:opacity-20">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                                                    </svg>
+                                                </button>
+                                                <button type="button" @click="moveAnswer(qi, ai, 1)"
+                                                    :disabled="ai === q.answers.length - 1"
+                                                    class="text-gray-300 hover:text-gray-500 transition-colors disabled:opacity-20">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                             <input v-model="ans.label" type="text" placeholder="Etichetta risposta"
                                                 class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400" />
                                             <input v-model.number="ans.score" type="number" placeholder="0"
