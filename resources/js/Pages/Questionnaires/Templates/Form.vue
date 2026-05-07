@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({ template: Object });
 
@@ -84,12 +84,23 @@ function removeSection(i) {
 
 // Question management
 function addQuestion() {
-    form.questions.push({ text: '', section_index: '', answers: [{ label: '', score: 0 }] });
+    const last = form.questions[form.questions.length - 1];
+    const answers = last
+        ? last.answers.map(a => ({ label: a.label, score: a.score }))
+        : [{ label: '', score: 0 }];
+    form.questions.push({ text: '', section_index: '', answers });
 }
 
 function removeQuestion(qi) {
     if (form.questions.length <= 1) return;
     form.questions.splice(qi, 1);
+}
+
+function copyAnswersFrom(targetQi, sourceQi) {
+    const source = form.questions[sourceQi];
+    if (!source) return;
+    form.questions[targetQi].answers = source.answers.map(a => ({ label: a.label, score: a.score }));
+    copyMenuOpen.value = null;
 }
 
 function addAnswer(qi) {
@@ -100,6 +111,14 @@ function removeAnswer(qi, ai) {
     if (form.questions[qi].answers.length <= 1) return;
     form.questions[qi].answers.splice(ai, 1);
 }
+
+const copyMenuOpen = ref(null);
+
+function closeCopyMenu(e) {
+    if (!e.target.closest('.relative')) copyMenuOpen.value = null;
+}
+onMounted(() => document.addEventListener('click', closeCopyMenu));
+onBeforeUnmount(() => document.removeEventListener('click', closeCopyMenu));
 
 // Threshold management
 function addThreshold() {
@@ -314,8 +333,26 @@ function submit() {
                                     <div class="space-y-2">
                                         <div class="flex items-center justify-between">
                                             <label class="text-xs font-medium text-gray-600">Risposte</label>
-                                            <button type="button" @click="addAnswer(qi)"
-                                                class="text-xs text-purple-600 hover:underline">+ Aggiungi risposta</button>
+                                            <div class="flex items-center gap-3">
+                                                <div class="relative" v-if="form.questions.length > 1">
+                                                    <button type="button" @click="copyMenuOpen = copyMenuOpen === qi ? null : qi"
+                                                        class="text-xs text-gray-400 hover:text-purple-600 transition-colors">
+                                                        Copia da...
+                                                    </button>
+                                                    <div v-if="copyMenuOpen === qi"
+                                                        class="absolute right-0 top-5 z-10 bg-white border border-gray-200 rounded-lg shadow-md py-1 min-w-40">
+                                                        <button v-for="(other, oi) in form.questions" :key="oi"
+                                                            v-show="oi !== qi"
+                                                            type="button"
+                                                            @click="copyAnswersFrom(qi, oi)"
+                                                            class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 text-gray-700 truncate">
+                                                            D{{ oi + 1 }}{{ other.text ? ': ' + other.text.slice(0, 30) + (other.text.length > 30 ? '…' : '') : '' }}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <button type="button" @click="addAnswer(qi)"
+                                                    class="text-xs text-purple-600 hover:underline">+ Aggiungi risposta</button>
+                                            </div>
                                         </div>
                                         <div v-for="(ans, ai) in q.answers" :key="ai" class="flex items-center gap-2">
                                             <input v-model="ans.label" type="text" placeholder="Etichetta risposta"
