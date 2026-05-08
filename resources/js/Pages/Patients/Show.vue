@@ -40,8 +40,10 @@ const unifiedList = computed(() => {
         item: r,
     }));
 
+    const visibleReportIds = new Set((props.patient.reports ?? []).map(r => r.id));
+
     const standaloneQuestionnaires = (props.patient.questionnaires ?? [])
-        .filter(q => !q.report_id)
+        .filter(q => !q.report_id || !visibleReportIds.has(q.report_id))
         .map(q => ({
             type: 'questionnaire',
             date: q.filled_at,

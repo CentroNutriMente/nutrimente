@@ -15,8 +15,7 @@ class QuestionnaireTemplateController extends Controller
         $templates = QuestionnaireTemplate::orderBy('name')->get();
 
         return Inertia::render('Questionnaires/Templates/Index', [
-            'templates'  => $templates,
-            'authUserId' => $request->user()->id,
+            'templates' => $templates,
         ]);
     }
 
@@ -72,8 +71,6 @@ class QuestionnaireTemplateController extends Controller
 
     public function edit(Request $request, QuestionnaireTemplate $questionnaireTemplate): Response
     {
-        abort_if($questionnaireTemplate->user_id !== $request->user()->id, 403);
-
         return Inertia::render('Questionnaires/Templates/Form', [
             'template' => $questionnaireTemplate,
         ]);
@@ -81,7 +78,6 @@ class QuestionnaireTemplateController extends Controller
 
     public function update(Request $request, QuestionnaireTemplate $questionnaireTemplate): RedirectResponse
     {
-        abort_if($questionnaireTemplate->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
             'name'                          => 'required|string|max:255',
@@ -123,10 +119,8 @@ class QuestionnaireTemplateController extends Controller
             ->with('success', 'Modello aggiornato.');
     }
 
-    public function destroy(Request $request, QuestionnaireTemplate $questionnaireTemplate): RedirectResponse
+    public function destroy(QuestionnaireTemplate $questionnaireTemplate): RedirectResponse
     {
-        abort_if($questionnaireTemplate->user_id !== $request->user()->id, 403);
-
         $questionnaireTemplate->delete();
 
         return redirect()->route('questionnaire-templates.index')
