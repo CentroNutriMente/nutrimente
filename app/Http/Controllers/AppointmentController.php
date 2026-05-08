@@ -19,11 +19,12 @@ class AppointmentController extends Controller
     {
         $userId = $request->user()->id;
 
-        $accessiblePatientIds = Patient::where('user_id', $userId)
-            ->orWhereHas('professionals', fn ($q) => $q->where('user_id', $userId))
-            ->pluck('id')
-            ->flip()
-            ->all();
+        $accessiblePatientIds = array_flip(
+            Patient::where('created_by', $userId)
+                ->orWhereHas('professionals', fn ($q) => $q->where('user_id', $userId))
+                ->pluck('id')
+                ->all()
+        );
 
         $appointments = Appointment::with(['patient', 'user'])
             ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
