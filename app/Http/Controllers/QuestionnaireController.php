@@ -19,9 +19,7 @@ class QuestionnaireController extends Controller
         $userId  = $request->user()->id;
         $patient = Patient::findOrFail($request->patient_id);
 
-        $templates = QuestionnaireTemplate::where('user_id', $userId)
-            ->orderBy('name')
-            ->get();
+        $templates = QuestionnaireTemplate::orderBy('name')->get();
 
         $reports = \App\Models\Report::where('user_id', $userId)
             ->where('patient_id', $patient->id)
@@ -80,7 +78,11 @@ class QuestionnaireController extends Controller
 
     public function show(Request $request, Questionnaire $questionnaire): Response
     {
-        abort_if($questionnaire->user_id !== $request->user()->id, 403);
+        $userId  = $request->user()->id;
+        $patient = $questionnaire->patient;
+        $hasAccess = $patient->user_id === $userId
+            || $patient->professionals()->where('user_id', $userId)->exists();
+        abort_if(! $hasAccess, 403);
 
         $questionnaire->load(['template', 'patient', 'report', 'user']);
 
@@ -97,7 +99,7 @@ class QuestionnaireController extends Controller
         $questionnaire->load(['template', 'report']);
 
         $userId    = $request->user()->id;
-        $templates = QuestionnaireTemplate::where('user_id', $userId)->orderBy('name')->get();
+        $templates = QuestionnaireTemplate::orderBy('name')->get();
 
         $reports = \App\Models\Report::where('user_id', $userId)
             ->where('patient_id', $questionnaire->patient_id)

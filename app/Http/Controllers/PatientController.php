@@ -156,13 +156,12 @@ class PatientController extends Controller
                                               ->where('user_id', $userId)
                                               ->orderByDesc('report_date'),
             'questionnaires'   => fn ($q) => $q->with(['template', 'user'])
-                                              ->where('user_id', $userId)
                                               ->orderByDesc('filled_at'),
         ];
 
         $patient->load($relations);
 
-        $canCreateQuestionnaire = QuestionnaireTemplate::where('user_id', $userId)->exists();
+        $canCreateQuestionnaire = QuestionnaireTemplate::exists();
 
         return Inertia::render('Patients/Show', [
             'patient'                => $patient,

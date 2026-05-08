@@ -12,12 +12,11 @@ class QuestionnaireTemplateController extends Controller
 {
     public function index(Request $request): Response
     {
-        $templates = QuestionnaireTemplate::where('user_id', $request->user()->id)
-            ->orderBy('name')
-            ->get();
+        $templates = QuestionnaireTemplate::orderBy('name')->get();
 
         return Inertia::render('Questionnaires/Templates/Index', [
-            'templates' => $templates,
+            'templates'  => $templates,
+            'authUserId' => $request->user()->id,
         ]);
     }
 
