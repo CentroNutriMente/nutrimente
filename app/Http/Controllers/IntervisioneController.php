@@ -93,20 +93,7 @@ class IntervisioneController extends Controller
                 ['intervisione_id' => $intervisione->id]
             ));
 
-        if ($intervisione->scheduled_at) {
-            Appointment::create([
-                'user_id' => $request->user()->id,
-                'patient_id' => $intervisione->patient_id,
-                'type' => 'intervision',
-                'title' => $intervisione->title,
-                'start_at' => $intervisione->scheduled_at,
-                'end_at' => $intervisione->scheduled_at->addHour(),
-                'intervisione_id' => $intervisione->id,
-                'is_shared' => true,
-                'status' => 'scheduled',
-                'color' => '#c084fc',
-            ]);
-        }
+        $this->syncAppointments($intervisione, $ids);
 
         return redirect()->route('intervisioni.show', $intervisione->id)
             ->with('success', 'Intervisione creata.');
@@ -168,31 +155,8 @@ class IntervisioneController extends Controller
             ));
         }
 
-        // Sync the linked appointment
-        $appointment = Appointment::where('intervisione_id', $intervisione->id)->first();
-        if ($intervisione->scheduled_at) {
-            $data = [
-                'title' => $intervisione->title,
-                'start_at' => $intervisione->scheduled_at,
-                'end_at' => $intervisione->scheduled_at->addHour(),
-                'patient_id' => $intervisione->patient_id,
-                'status' => $intervisione->status === 'completed' ? 'completed' : 'scheduled',
-            ];
-            if ($appointment) {
-                $appointment->update($data);
-            } else {
-                Appointment::create([
-                    ...$data,
-                    'user_id' => $intervisione->created_by,
-                    'type' => 'intervision',
-                    'intervisione_id' => $intervisione->id,
-                    'is_shared' => true,
-                    'color' => '#c084fc',
-                ]);
-            }
-        } elseif ($appointment) {
-            $appointment->delete();
-        }
+        $participantIds = $intervisione->participants()->pluck('users.id')->all();
+        $this->syncAppointments($intervisione, $participantIds);
 
         return back()->with('success', 'Intervisione aggiornata.');
     }
@@ -201,5 +165,30 @@ class IntervisioneController extends Controller
     {
         $intervisione->delete();
         return redirect()->route('intervisioni.index')->with('success', 'Intervisione eliminata.');
+    }
+
+    private function syncAppointments(Intervisione $intervisione, array $participantIds): void
+    {
+        Appointment::where('intervisione_id', $intervisione->id)->delete();
+
+        if (! $intervisione->scheduled_at) return;
+
+        $endAt  = $intervisione->scheduled_at->copy()->addHour();
+        $status = $intervisione->status === 'completed' ? 'completed' : 'scheduled';
+
+        foreach ($participantIds as $userId) {
+            Appointment::create([
+                'user_id'         => $userId,
+                'patient_id'      => $intervisione->patient_id,
+                'type'            => 'intervision',
+                'title'           => $intervisione->title,
+                'start_at'        => $intervisione->scheduled_at,
+                'end_at'          => $endAt,
+                'intervisione_id' => $intervisione->id,
+                'is_shared'       => true,
+                'status'          => $status,
+                'color'           => '#c084fc',
+            ]);
+        }
     }
 }
