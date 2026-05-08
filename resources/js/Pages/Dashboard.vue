@@ -112,9 +112,7 @@ const typeLabel = { session: 'Seduta', intervision: 'Intervisione', personal: 'P
                                 <div class="font-medium text-gray-800">
                                     {{ apt.patient ? `${apt.patient.first_name} ${apt.patient.last_name}` : apt.title }}
                                 </div>
-                                <div v-if="apt.patient" class="text-xs text-gray-400">
-                                    {{ apt.patient.first_name }} {{ apt.patient.last_name }}
-                                </div>
+                                <div v-if="apt.room" class="text-xs text-gray-400">{{ apt.room }}</div>
                             </div>
 
                             <!-- Badge tipo -->
@@ -141,16 +139,15 @@ const typeLabel = { session: 'Seduta', intervision: 'Intervisione', personal: 'P
                     </div>
                     <div class="p-4">
                         <div v-if="recentActivity.length === 0" class="py-4 text-center text-gray-400 text-sm">
-                            Nessuna attività oggi.
+                            Nessuna attività negli ultimi 7 giorni.
                         </div>
                         <div v-else class="space-y-3">
-                            <div v-for="act in recentActivity" :key="act.id" class="flex items-start gap-3">
-                                <div class="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+                            <div v-for="(act, i) in recentActivity" :key="i" class="flex items-start gap-3">
+                                <div class="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                                    :class="act.type === 'report' ? 'bg-teal-500' : 'bg-purple-500'"></div>
                                 <div>
-                                    <div class="text-sm font-medium text-gray-800">
-                                        {{ act.patient ? `${act.patient.first_name} ${act.patient.last_name}` : act.title }}
-                                    </div>
-                                    <div class="text-xs text-gray-400">{{ formatDateTime(act.start_at) }}</div>
+                                    <div class="text-sm font-medium text-gray-800">{{ act.label }}</div>
+                                    <div class="text-xs text-gray-400">{{ act.sub }} · {{ formatDateTime(act.at) }}</div>
                                 </div>
                             </div>
                         </div>
