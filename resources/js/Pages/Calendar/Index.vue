@@ -30,6 +30,7 @@ async function fetchEvents(info, successCallback) {
 }
 
 function handleEventClick({ event }) {
+    if (event.extendedProps.is_private) return;
     selectedAppointment.value = {
         id: event.id,
         title: event.title,
@@ -58,6 +59,7 @@ async function deleteAppointment() {
 }
 
 async function handleEventDrop({ event, revert }) {
+    if (event.extendedProps.is_private || !event.extendedProps.is_own) { revert(); return; }
     try {
         await fetch(`/appointments/${event.id}`, {
             method: 'PATCH',
@@ -217,6 +219,7 @@ function filterProfessional() {
                 </dl>
                 <div class="flex gap-2 flex-wrap">
                     <Link
+                        v-if="selectedAppointment.is_own"
                         :href="route('appointments.edit', selectedAppointment.id)"
                         class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 text-center"
                     >Modifica</Link>
@@ -226,6 +229,7 @@ function filterProfessional() {
                         class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 text-center"
                     >Cartella paziente</Link>
                     <button
+                        v-if="selectedAppointment.is_own"
                         @click="deleteAppointment"
                         class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 border border-red-200"
                     >Elimina</button>
