@@ -59,9 +59,10 @@ class AppointmentController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('Calendar/AppointmentForm', [
-            'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+            'patients'      => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
             'professionals' => User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']),
-            'prefill' => $request->only(['patient_id', 'start_at']),
+            'prefill'       => $request->only(['patient_id', 'start_at']),
+            'authUserId'    => $request->user()->id,
         ]);
     }
 
@@ -82,6 +83,11 @@ class AppointmentController extends Controller
 
         $appointment = Appointment::create($validated);
 
+        if ($request->input('return_to') === 'patient' && $appointment->patient_id) {
+            return redirect()->route('patients.show', $appointment->patient_id)
+                ->with('success', 'Appuntamento creato.');
+        }
+
         return redirect()->route('calendar')->with('success', 'Appuntamento creato.');
     }
 
@@ -92,25 +98,30 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function edit(Appointment $appointment): Response
+    public function edit(Request $request, Appointment $appointment): Response
     {
         return Inertia::render('Calendar/AppointmentForm', [
-            'appointment' => $appointment,
-            'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+            'appointment'   => $appointment,
+            'patients'      => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
             'professionals' => User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']),
+            'authUserId'    => $request->user()->id,
+            'returnTo'      => $request->input('return_to'),
         ]);
     }
 
     public function update(Request $request, Appointment $appointment): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'start_at' => 'sometimes|required|date',
-            'end_at' => 'sometimes|required|date|after:start_at',
-            'status' => 'sometimes|in:scheduled,confirmed,cancelled,completed',
-            'room' => 'nullable|string',
+            'title'               => 'sometimes|required|string|max:255',
+            'start_at'            => 'sometimes|required|date',
+            'end_at'              => 'sometimes|required|date|after:start_at',
+            'status'              => 'sometimes|in:scheduled,confirmed,cancelled,completed',
+            'room'                => 'nullable|string',
             'cancellation_reason' => 'nullable|string',
+            'return_to'           => 'nullable|string',
         ]);
+
+        unset($validated['return_to']);
 
         $wasCancelled = $appointment->status !== 'cancelled'
             && ($validated['status'] ?? null) === 'cancelled';
@@ -124,6 +135,11 @@ class AppointmentController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json(['ok' => true]);
+        }
+
+        if ($request->input('return_to') === 'patient' && $appointment->patient_id) {
+            return redirect()->route('patients.show', $appointment->patient_id)
+                ->with('success', 'Appuntamento aggiornato.');
         }
 
         return redirect()->route('calendar')->with('success', 'Appuntamento aggiornato.');

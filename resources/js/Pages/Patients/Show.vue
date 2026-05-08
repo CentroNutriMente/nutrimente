@@ -315,6 +315,7 @@ const chartsData = computed(() => {
                                     <th class="text-left px-4 py-3 font-medium text-gray-600">Titolo</th>
                                     <th class="text-left px-4 py-3 font-medium text-gray-600">Professionista</th>
                                     <th class="text-left px-4 py-3 font-medium text-gray-600">Stato</th>
+                                    <th class="px-4 py-3"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
@@ -326,6 +327,13 @@ const chartsData = computed(() => {
                                         <span :class="['text-xs px-2 py-1 rounded-full font-medium', aptStatusInfo(apt).cls]">
                                             {{ aptStatusInfo(apt).label }}
                                         </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <Link v-if="apt.user?.id === authUserId"
+                                            :href="route('appointments.edit', { appointment: apt.id, return_to: 'patient' })"
+                                            class="text-xs text-purple-600 hover:underline">
+                                            Modifica
+                                        </Link>
                                     </td>
                                 </tr>
                             </tbody>

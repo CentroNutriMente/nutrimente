@@ -3,26 +3,36 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
-    appointment: Object,
-    patients: Array,
+    appointment:  Object,
+    patients:     Array,
     professionals: Array,
-    prefill: Object,
+    prefill:      Object,
+    authUserId:   Number,
+    returnTo:     String,
 });
 
 const isEdit = !!props.appointment;
 
+const fromPatient = !!(props.prefill?.patient_id || (isEdit && props.appointment?.patient_id && props.returnTo === 'patient'));
+const patientId   = props.appointment?.patient_id ?? props.prefill?.patient_id ?? null;
+
 const form = useForm({
-    user_id: props.appointment?.user_id ?? '',
+    user_id:    props.appointment?.user_id ?? (fromPatient ? props.authUserId : '') ?? '',
     patient_id: props.appointment?.patient_id ?? props.prefill?.patient_id ?? '',
-    type: props.appointment?.type ?? 'session',
-    title: props.appointment?.title ?? '',
+    type:       props.appointment?.type ?? 'session',
+    title:      props.appointment?.title ?? '',
     description: props.appointment?.description ?? '',
-    start_at: props.appointment?.start_at?.slice(0, 16) ?? props.prefill?.start_at?.slice(0, 16) ?? '',
-    end_at: props.appointment?.end_at?.slice(0, 16) ?? '',
-    room: props.appointment?.room ?? '',
-    color: props.appointment?.color ?? '',
-    is_shared: props.appointment?.is_shared ?? false,
+    start_at:   props.appointment?.start_at?.slice(0, 16) ?? props.prefill?.start_at?.slice(0, 16) ?? '',
+    end_at:     props.appointment?.end_at?.slice(0, 16) ?? '',
+    room:       props.appointment?.room ?? '',
+    color:      props.appointment?.color ?? '',
+    is_shared:  props.appointment?.is_shared ?? false,
+    return_to:  fromPatient ? 'patient' : '',
 });
+
+const backHref = fromPatient && patientId
+    ? route('patients.show', patientId)
+    : route('calendar');
 
 const submit = () => {
     if (isEdit) {
@@ -44,7 +54,7 @@ const typeOptions = [
     <AppLayout :title="isEdit ? 'Modifica appuntamento' : 'Nuovo appuntamento'">
         <template #header>
             <div class="flex items-center gap-3">
-                <Link :href="route('calendar')" class="text-gray-400 hover:text-gray-600">
+                <Link :href="backHref" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
@@ -125,7 +135,7 @@ const typeOptions = [
                 >
                     {{ form.processing ? 'Salvataggio...' : (isEdit ? 'Aggiorna' : 'Crea appuntamento') }}
                 </button>
-                <Link :href="route('calendar')" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+                <Link :href="backHref" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
                     Annulla
                 </Link>
             </div>
