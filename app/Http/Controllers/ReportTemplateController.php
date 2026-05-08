@@ -13,13 +13,24 @@ class ReportTemplateController extends Controller
 {
     public function index(Request $request): Response
     {
-        $templates = ReportTemplate::where('user_id', $request->user()->id)
+        $templates = ReportTemplate::with('user')
             ->orderByDesc('is_default')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn ($t) => [
+                'id'           => $t->id,
+                'name'         => $t->name,
+                'description'  => $t->description,
+                'header_title' => $t->header_title,
+                'sections'     => $t->sections,
+                'is_default'   => $t->is_default,
+                'user_id'      => $t->user_id,
+                'creator_name' => $t->user?->name,
+            ]);
 
         return Inertia::render('Reports/Templates/Index', [
-            'templates' => $templates,
+            'templates'  => $templates,
+            'authUserId' => $request->user()->id,
         ]);
     }
 
@@ -83,8 +94,6 @@ class ReportTemplateController extends Controller
 
     public function edit(Request $request, ReportTemplate $reportTemplate): Response
     {
-        abort_if($reportTemplate->user_id !== $request->user()->id, 403);
-
         return Inertia::render('Reports/Templates/Form', [
             'template' => $reportTemplate,
         ]);
@@ -92,7 +101,6 @@ class ReportTemplateController extends Controller
 
     public function update(Request $request, ReportTemplate $reportTemplate): RedirectResponse
     {
-        abort_if($reportTemplate->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
             'name'                     => 'required|string|max:255',
@@ -143,9 +151,8 @@ class ReportTemplateController extends Controller
             ->with('success', 'Modello aggiornato.');
     }
 
-    public function destroy(Request $request, ReportTemplate $reportTemplate): RedirectResponse
+    public function destroy(ReportTemplate $reportTemplate): RedirectResponse
     {
-        abort_if($reportTemplate->user_id !== $request->user()->id, 403);
 
         if ($reportTemplate->header_logo) {
             Storage::disk('public')->delete($reportTemplate->header_logo);

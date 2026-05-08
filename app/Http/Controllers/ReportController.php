@@ -34,8 +34,7 @@ class ReportController extends Controller
 
     public function create(Request $request): Response
     {
-        $templates = ReportTemplate::where('user_id', $request->user()->id)
-            ->orderByDesc('is_default')
+        $templates = ReportTemplate::orderByDesc('is_default')
             ->orderBy('name')
             ->get();
 
@@ -43,8 +42,7 @@ class ReportController extends Controller
 
         $selectedTemplate = null;
         if ($request->template_id) {
-            $selectedTemplate = ReportTemplate::where('user_id', $request->user()->id)
-                ->find($request->template_id);
+            $selectedTemplate = ReportTemplate::find($request->template_id);
         } elseif ($templates->isNotEmpty()) {
             $selectedTemplate = $templates->firstWhere('is_default', true) ?? $templates->first();
         }
@@ -104,8 +102,7 @@ class ReportController extends Controller
 
         $report->load(['template']);
 
-        $templates = ReportTemplate::where('user_id', $request->user()->id)
-            ->orderByDesc('is_default')
+        $templates = ReportTemplate::orderByDesc('is_default')
             ->orderBy('name')
             ->get();
 

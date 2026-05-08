@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({ templates: Array });
+const props = defineProps({ templates: Array, authUserId: Number });
 
 const flash = usePage().props.flash;
 
@@ -56,11 +56,15 @@ function destroy(template) {
 
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-0.5">
+                    <div class="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span class="font-semibold text-gray-800 text-sm">{{ tmpl.name }}</span>
                         <span v-if="tmpl.is_default"
                             class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
                             Predefinito
+                        </span>
+                        <span v-if="tmpl.creator_name"
+                            class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                            {{ tmpl.user_id === authUserId ? 'Mio' : tmpl.creator_name }}
                         </span>
                     </div>
                     <p class="text-xs text-gray-500 mb-1">{{ tmpl.header_title }}</p>
