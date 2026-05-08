@@ -17,47 +17,59 @@ class AppointmentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
+        try {
+            $userId = $request->user()->id;
 
-        $accessiblePatientIds = array_flip(
-            Patient::where('created_by', $userId)
-                ->orWhereHas('professionals', fn ($q) => $q->where('user_id', $userId))
-                ->pluck('id')
-                ->all()
-        );
+            $accessiblePatientIds = array_flip(
+                Patient::where('created_by', $userId)
+                    ->orWhereHas('professionals', fn ($q) => $q->where('user_id', $userId))
+                    ->pluck('id')
+                    ->all()
+            );
 
-        $appointments = Appointment::with(['patient', 'user'])
-            ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
-            ->when($request->start && $request->end, fn ($q) => $q
-                ->where('start_at', '<', $request->end)
-                ->where('end_at', '>', $request->start)
-            )
-            ->get()
-            ->map(function ($apt) use ($userId, $accessiblePatientIds) {
-                $isPrivate = $apt->patient_id && ! isset($accessiblePatientIds[$apt->patient_id]);
+            $filterUserId = $request->input('user_id');
 
-                return [
-                    'id'       => $apt->id,
-                    'title'    => $isPrivate
-                        ? 'Occupato'
-                        : ($apt->patient ? "{$apt->patient->last_name} {$apt->patient->first_name}" : $apt->title),
-                    'start'    => $apt->start_at,
-                    'end'      => $apt->end_at,
-                    'color'    => $isPrivate ? '#9ca3af' : ($apt->color ?? $this->colorForType($apt->type)),
-                    'editable' => ! $isPrivate && $apt->user_id === $userId,
-                    'extendedProps' => [
-                        'type'       => $apt->type,
-                        'status'     => $isPrivate ? null : $apt->status,
-                        'room'       => $isPrivate ? null : $apt->room,
-                        'professional' => $apt->user?->name,
-                        'patient_id' => $isPrivate ? null : $apt->patient_id,
-                        'is_private' => $isPrivate,
-                        'is_own'     => $apt->user_id === $userId,
-                    ],
-                ];
-            });
+            $appointments = Appointment::with(['patient', 'user'])
+                ->when($filterUserId, fn ($q) => $q->where('user_id', $filterUserId))
+                ->when($request->input('start') && $request->input('end'), fn ($q) => $q
+                    ->where('start_at', '<', $request->input('end'))
+                    ->where('end_at', '>', $request->input('start'))
+                )
+                ->get()
+                ->map(function ($apt) use ($userId, $accessiblePatientIds) {
+                    $isPrivate = $apt->patient_id && ! isset($accessiblePatientIds[$apt->patient_id]);
 
-        return response()->json($appointments);
+                    return [
+                        'id'       => $apt->id,
+                        'title'    => $isPrivate
+                            ? 'Occupato'
+                            : ($apt->patient ? "{$apt->patient->last_name} {$apt->patient->first_name}" : $apt->title),
+                        'start'    => $apt->start_at,
+                        'end'      => $apt->end_at,
+                        'color'    => $isPrivate ? '#9ca3af' : ($apt->color ?? $this->colorForType($apt->type)),
+                        'editable' => ! $isPrivate && $apt->user_id === $userId,
+                        'extendedProps' => [
+                            'type'         => $apt->type,
+                            'status'       => $isPrivate ? null : $apt->status,
+                            'room'         => $isPrivate ? null : $apt->room,
+                            'professional' => $apt->user?->name,
+                            'patient_id'   => $isPrivate ? null : $apt->patient_id,
+                            'is_private'   => $isPrivate,
+                            'is_own'       => $apt->user_id === $userId,
+                        ],
+                    ];
+                });
+
+            return response()->json($appointments);
+
+        } catch (\Throwable $e) {
+            \Log::error('AppointmentController@index failed: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user' => $request->user()?->id,
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function calendar(Request $request): Response
