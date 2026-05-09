@@ -19,6 +19,10 @@ class QuestionnaireController extends Controller
         $userId  = $request->user()->id;
         $patient = Patient::findOrFail($request->patient_id);
 
+        if ($patient->created_by !== null && $patient->created_by !== $userId) {
+            abort(403, 'Solo il creatore del paziente può somministrare questionari.');
+        }
+
         $templates = QuestionnaireTemplate::orderBy('name')->get();
 
         $reports = \App\Models\Report::where('user_id', $userId)
@@ -58,6 +62,12 @@ class QuestionnaireController extends Controller
             'notes'                     => 'nullable|string',
         ]);
 
+        $patient = Patient::findOrFail($validated['patient_id']);
+        $userId  = $request->user()->id;
+        if ($patient->created_by !== null && $patient->created_by !== $userId) {
+            abort(403);
+        }
+
         $template   = QuestionnaireTemplate::findOrFail($validated['questionnaire_template_id']);
         $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? [], $template->questions ?? []);
 
@@ -80,7 +90,7 @@ class QuestionnaireController extends Controller
     {
         $userId  = $request->user()->id;
         $patient = $questionnaire->patient;
-        $hasAccess = $patient->user_id === $userId
+        $hasAccess = $patient->created_by === $userId
             || $patient->professionals()->where('user_id', $userId)->exists();
         abort_if(! $hasAccess, 403);
 

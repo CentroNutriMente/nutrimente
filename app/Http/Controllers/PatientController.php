@@ -141,8 +141,8 @@ class PatientController extends Controller
     {
         $this->authorizePatient($patient);
 
-        $userId = auth()->id();
-        $canViewReports = true;
+        $userId    = auth()->id();
+        $isCreator = $patient->created_by === $userId;
 
         $relations = [
             'tags',
@@ -152,21 +152,19 @@ class PatientController extends Controller
             'consents',
             'invoices'         => fn ($q) => $q->orderByDesc('issued_at'),
             'consentDocuments' => fn ($q) => $q->whereNull('deleted_at')->orderByDesc('created_at'),
-            'reports'          => fn ($q) => $q->with(['user', 'template'])
-                                              ->where('user_id', $userId)
-                                              ->orderByDesc('report_date'),
-            'questionnaires'   => fn ($q) => $q->with(['template', 'user'])
-                                              ->orderByDesc('filled_at'),
+            'questionnaires'   => fn ($q) => $q->with(['template', 'user'])->orderByDesc('filled_at'),
         ];
+
+        if ($isCreator) {
+            $relations['reports'] = fn ($q) => $q->with(['user', 'template'])->orderByDesc('report_date');
+        }
 
         $patient->load($relations);
 
-        $canCreateQuestionnaire = QuestionnaireTemplate::exists();
-
         return Inertia::render('Patients/Show', [
             'patient'                => $patient,
-            'canViewReports'         => $canViewReports,
-            'canCreateQuestionnaire' => $canCreateQuestionnaire,
+            'isCreator'              => $isCreator,
+            'canCreateQuestionnaire' => $isCreator && QuestionnaireTemplate::exists(),
         ]);
     }
 

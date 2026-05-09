@@ -7,13 +7,13 @@ const authUserId = usePage().props.auth.user.id;
 
 const props = defineProps({
     patient:                Object,
-    canViewReports:         Boolean,
+    isCreator:              Boolean,
     canCreateQuestionnaire: Boolean,
 });
 
-const activeTab = ref(props.canViewReports ? 'cartella' : 'appointments');
+const activeTab = ref('cartella');
 const tabs = [
-    ...(props.canViewReports ? [{ key: 'cartella', label: 'Cartella Clinica' }] : []),
+    { key: 'cartella',     label: 'Cartella Clinica' },
     { key: 'appointments', label: 'Appuntamenti' },
     { key: 'invoices',     label: 'Fatture' },
     { key: 'consents',     label: 'Consensi' },
@@ -227,7 +227,7 @@ const chartsData = computed(() => {
                     <Link :href="route('appointments.create', { patient_id: patient.id })" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                         + Appuntamento
                     </Link>
-                    <Link v-if="canViewReports" :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
+                    <Link v-if="isCreator" :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
                         + Referto
                     </Link>
                     <Link v-if="canCreateQuestionnaire" :href="route('questionnaires.create', { patient_id: patient.id })" class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
@@ -344,10 +344,10 @@ const chartsData = computed(() => {
                 </div>
 
                 <!-- Cartella Clinica -->
-                <div v-if="canViewReports && activeTab === 'cartella'">
+                <div v-if="activeTab === 'cartella'">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cartella Clinica</h3>
-                        <div class="flex gap-2">
+                        <div v-if="isCreator" class="flex gap-2">
                             <Link :href="route('reports.create', { patient_id: patient.id })"
                                 class="text-xs px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
                                 + Nuovo referto
