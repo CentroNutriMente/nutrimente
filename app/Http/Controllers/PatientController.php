@@ -171,6 +171,9 @@ class PatientController extends Controller
     public function edit(Patient $patient): Response
     {
         $this->authorizePatient($patient);
+        if ($patient->created_by !== null && $patient->created_by !== auth()->id()) {
+            abort(403, 'Solo il creatore del paziente può modificarne i dati.');
+        }
 
         $patient->load(['tags', 'creator', 'professionals']);
 
@@ -185,6 +188,9 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient): RedirectResponse
     {
         $this->authorizePatient($patient);
+        if ($patient->created_by !== null && $patient->created_by !== auth()->id()) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'first_name'    => 'required|string|max:100',

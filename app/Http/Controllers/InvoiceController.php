@@ -59,6 +59,10 @@ class InvoiceController extends Controller
         $profile = $user->professionalProfile()->firstOrCreate(['user_id' => $user->id]);
         $patient = Patient::findOrFail($validated['patient_id']);
 
+        if ($patient->created_by !== null && $patient->created_by !== $user->id) {
+            abort(403, 'Solo il creatore del paziente può emettere fatture.');
+        }
+
         $subtotal = collect($validated['lines'])->sum(fn ($l) => $l['quantity'] * $l['unit_price']);
         $marcaDaBollo = Invoice::calculateMarcaDaBollo($subtotal);
         $total = $subtotal + $marcaDaBollo;

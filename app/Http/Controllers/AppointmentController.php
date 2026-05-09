@@ -109,6 +109,13 @@ class AppointmentController extends Controller
             'is_shared' => 'boolean',
         ]);
 
+        if (! empty($validated['patient_id'])) {
+            $patient = Patient::find($validated['patient_id']);
+            if ($patient && $patient->created_by !== null && $patient->created_by !== $request->user()->id) {
+                abort(403, 'Solo il creatore del paziente può creare appuntamenti per questo paziente.');
+            }
+        }
+
         $appointment = Appointment::create($validated);
 
         if ($request->input('return_to') === 'patient' && $appointment->patient_id) {

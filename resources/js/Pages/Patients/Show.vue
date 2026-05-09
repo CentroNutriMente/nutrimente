@@ -12,12 +12,14 @@ const props = defineProps({
 });
 
 const activeTab = ref('cartella');
-const tabs = [
+const tabs = computed(() => [
     { key: 'cartella',     label: 'Cartella Clinica' },
     { key: 'appointments', label: 'Appuntamenti' },
-    { key: 'invoices',     label: 'Fatture' },
-    { key: 'consents',     label: 'Consensi' },
-];
+    ...(props.isCreator ? [
+        { key: 'invoices', label: 'Fatture' },
+        { key: 'consents', label: 'Consensi' },
+    ] : []),
+]);
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
 const fmtDatetime = (d) => d ? new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -223,11 +225,11 @@ const chartsData = computed(() => {
                 <span :class="patient.is_active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'" class="ml-2 text-xs px-2 py-1 rounded-full font-medium">
                     {{ patient.is_active ? 'Attivo' : 'Archiviato' }}
                 </span>
-                <div class="ml-auto flex gap-2">
+                <div v-if="isCreator" class="ml-auto flex gap-2">
                     <Link :href="route('appointments.create', { patient_id: patient.id })" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                         + Appuntamento
                     </Link>
-                    <Link v-if="isCreator" :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
+                    <Link :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
                         + Referto
                     </Link>
                     <Link v-if="canCreateQuestionnaire" :href="route('questionnaires.create', { patient_id: patient.id })" class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
