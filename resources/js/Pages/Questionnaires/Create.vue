@@ -145,30 +145,9 @@ const allAnswered = computed(() =>
         : false
 );
 
-// Group questions by section for display
-const questionGroups = computed(() => {
-    if (!activeTemplate.value) return [];
-    const sections = activeTemplate.value.scoring?.sections ?? [];
-    if (!sections.length) {
-        return [{ section: null, questions: activeTemplate.value.questions }];
-    }
-
-    const groups = sections.map(s => ({ section: s, questions: [] }));
-    const ungrouped = [];
-
-    for (const q of (activeTemplate.value.questions ?? [])) {
-        if (q.section_id) {
-            const g = groups.find(g => g.section.id === q.section_id);
-            if (g) { g.questions.push(q); continue; }
-        }
-        ungrouped.push(q);
-    }
-
-    const result = groups.filter(g => g.questions.length > 0);
-    if (ungrouped.length > 0) {
-        result.push({ section: { id: '__general', name: 'Generale' }, questions: ungrouped });
-    }
-    return result;
+const sectionById = computed(() => {
+    const sections = activeTemplate.value?.scoring?.sections ?? [];
+    return Object.fromEntries(sections.map(s => [s.id, s]));
 });
 
 function submit() {
@@ -180,15 +159,6 @@ function submit() {
 }
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '';
-
-// Question index across groups (for display numbering)
-function questionIndex(groupIndex, questionIndexInGroup) {
-    let count = 0;
-    for (let i = 0; i < groupIndex; i++) {
-        count += questionGroups.value[i].questions.length;
-    }
-    return count + questionIndexInGroup + 1;
-}
 </script>
 
 <template>
@@ -264,36 +234,34 @@ function questionIndex(groupIndex, questionIndexInGroup) {
                         </div>
                     </div>
 
-                    <div class="space-y-6">
-                        <div v-for="(group, gi) in questionGroups" :key="group.section?.id ?? 'flat'">
-                            <h3 v-if="group.section" class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-                                {{ group.section.name }}
-                            </h3>
+                    <div class="space-y-4">
+                        <div v-for="(q, qi) in activeTemplate.questions" :key="q.id"
+                            class="border border-gray-100 rounded-lg p-4">
+                            <div class="flex items-start justify-between gap-2 mb-3">
+                                <p class="text-sm font-semibold text-gray-800">
+                                    <span class="text-purple-500 mr-1">{{ qi + 1 }}.</span>
+                                    {{ q.text }}
+                                </p>
+                                <span v-if="q.section_id && sectionById[q.section_id]"
+                                    class="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full shrink-0 font-medium whitespace-nowrap">
+                                    {{ sectionById[q.section_id].name }}
+                                </span>
+                            </div>
 
-                            <div class="space-y-4">
-                                <div v-for="(q, qi) in group.questions" :key="q.id"
-                                    class="border border-gray-100 rounded-lg p-4">
-                                    <p class="text-sm font-semibold text-gray-800 mb-3">
-                                        <span class="text-purple-500 mr-1">{{ questionIndex(gi, qi) }}.</span>
-                                        {{ q.text }}
-                                    </p>
-
-                                    <div class="space-y-2">
-                                        <label v-for="ans in q.answers" :key="ans.id"
-                                            class="flex items-center gap-3 cursor-pointer group">
-                                            <input
-                                                type="radio"
-                                                :name="`q_${q.id}`"
-                                                :value="ans.id"
-                                                :checked="getAnswer(q.id)?.answer_id === ans.id"
-                                                @change="setAnswer(q.id, ans.id, ans.score)"
-                                                class="text-purple-600 focus:ring-purple-400"
-                                            />
-                                            <span class="text-sm text-gray-700 group-hover:text-gray-900 flex-1">{{ ans.label }}</span>
-                                            <span class="text-xs text-gray-400">({{ ans.score }})</span>
-                                        </label>
-                                    </div>
-                                </div>
+                            <div class="space-y-2">
+                                <label v-for="ans in q.answers" :key="ans.id"
+                                    class="flex items-center gap-3 cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        :name="`q_${q.id}`"
+                                        :value="ans.id"
+                                        :checked="getAnswer(q.id)?.answer_id === ans.id"
+                                        @change="setAnswer(q.id, ans.id, ans.score)"
+                                        class="text-purple-600 focus:ring-purple-400"
+                                    />
+                                    <span class="text-sm text-gray-700 group-hover:text-gray-900 flex-1">{{ ans.label }}</span>
+                                    <span class="text-xs text-gray-400">({{ ans.score }})</span>
+                                </label>
                             </div>
                         </div>
                     </div>

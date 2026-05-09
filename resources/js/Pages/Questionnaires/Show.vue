@@ -76,6 +76,10 @@ function getScoreInfo() {
 
 const scoreInfo = getScoreInfo();
 
+const sectionById = Object.fromEntries(
+    (tmpl?.scoring?.sections ?? []).map(s => [s.id, s])
+);
+
 function destroy() {
     if (!confirm('Eliminare questo questionario?')) return;
     router.delete(route('questionnaires.destroy', q.id));
@@ -181,10 +185,16 @@ function destroy() {
                 <div class="space-y-4">
                     <div v-for="(question, qi) in tmpl?.questions ?? []" :key="question.id"
                         class="border border-gray-100 rounded-lg p-4">
-                        <p class="text-sm font-medium text-gray-800 mb-3">
-                            <span class="text-purple-500 font-semibold mr-1">{{ qi + 1 }}.</span>
-                            {{ question.text }}
-                        </p>
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <p class="text-sm font-medium text-gray-800">
+                                <span class="text-purple-500 font-semibold mr-1">{{ qi + 1 }}.</span>
+                                {{ question.text }}
+                            </p>
+                            <span v-if="question.section_id && sectionById[question.section_id]"
+                                class="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full shrink-0 font-medium whitespace-nowrap">
+                                {{ sectionById[question.section_id].name }}
+                            </span>
+                        </div>
 
                         <div class="space-y-1.5">
                             <div v-for="ans in question.answers" :key="ans.id"
