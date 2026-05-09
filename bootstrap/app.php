@@ -23,5 +23,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, \Illuminate\Http\Request $request) {
+            $status = $response->getStatusCode();
+            if (in_array($status, [403, 404, 500, 503]) && ! $request->is('api/*') && ! $request->expectsJson()) {
+                return \Inertia\Inertia::render('Error', ['status' => $status])
+                    ->toResponse($request)
+                    ->setStatusCode($status);
+            }
+            return $response;
+        });
     })->create();
