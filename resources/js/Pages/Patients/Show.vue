@@ -212,33 +212,54 @@ const chartsData = computed(() => {
 <template>
     <AppLayout :title="`${patient.last_name} ${patient.first_name}`">
         <template #header>
-            <div class="flex items-center gap-3">
-                <Link :href="route('patients.index')" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </Link>
-                <div>
-                    <h1 class="text-xl font-semibold text-gray-800">{{ patient.last_name }} {{ patient.first_name }}</h1>
-                    <p class="text-sm text-gray-400">CF: {{ patient.codice_fiscale ?? '—' }}</p>
+            <div class="w-full">
+                <div class="flex items-center gap-3">
+                    <Link :href="route('patients.index')" class="text-gray-400 hover:text-gray-600 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </Link>
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-xl font-semibold text-gray-800 truncate">{{ patient.last_name }} {{ patient.first_name }}</h1>
+                        <p class="text-sm text-gray-400">CF: {{ patient.codice_fiscale ?? '—' }}</p>
+                    </div>
+                    <span :class="patient.is_active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'" class="shrink-0 text-xs px-2 py-1 rounded-full font-medium">
+                        {{ patient.is_active ? 'Attivo' : 'Archiviato' }}
+                    </span>
+                    <!-- Bottoni azione — visibili solo su sm+ -->
+                    <div v-if="isCreator" class="hidden sm:flex gap-2 ml-2 shrink-0">
+                        <Link :href="route('appointments.create', { patient_id: patient.id })" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                            + Appuntamento
+                        </Link>
+                        <Link :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
+                            + Referto
+                        </Link>
+                        <Link v-if="canCreateQuestionnaire" :href="route('questionnaires.create', { patient_id: patient.id })" class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+                            + Questionario
+                        </Link>
+                        <Link :href="route('invoices.create', { patient_id: patient.id })" class="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700">
+                            + Fattura
+                        </Link>
+                        <Link :href="route('patients.edit', patient.id)" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+                            Modifica
+                        </Link>
+                    </div>
                 </div>
-                <span :class="patient.is_active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'" class="ml-2 text-xs px-2 py-1 rounded-full font-medium">
-                    {{ patient.is_active ? 'Attivo' : 'Archiviato' }}
-                </span>
-                <div v-if="isCreator" class="ml-auto flex gap-2">
-                    <Link :href="route('appointments.create', { patient_id: patient.id })" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                <!-- Bottoni azione — versione mobile, sotto il nome -->
+                <div v-if="isCreator" class="flex flex-wrap gap-2 mt-3 sm:hidden">
+                    <Link :href="route('appointments.create', { patient_id: patient.id })" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700">
                         + Appuntamento
                     </Link>
-                    <Link :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">
+                    <Link :href="route('reports.create', { patient_id: patient.id })" class="px-3 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium hover:bg-teal-700">
                         + Referto
                     </Link>
-                    <Link v-if="canCreateQuestionnaire" :href="route('questionnaires.create', { patient_id: patient.id })" class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+                    <Link v-if="canCreateQuestionnaire" :href="route('questionnaires.create', { patient_id: patient.id })" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700">
                         + Questionario
                     </Link>
-                    <Link :href="route('invoices.create', { patient_id: patient.id })" class="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700">
+                    <Link :href="route('invoices.create', { patient_id: patient.id })" class="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-medium hover:bg-amber-700">
                         + Fattura
                     </Link>
-                    <Link :href="route('patients.edit', patient.id)" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+                    <Link :href="route('patients.edit', patient.id)" class="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50">
                         Modifica
                     </Link>
                 </div>
@@ -294,14 +315,14 @@ const chartsData = computed(() => {
             <!-- Main tabs -->
             <div class="lg:col-span-3">
                 <!-- Tab header -->
-                <div class="flex gap-1 bg-white rounded-xl border border-gray-200 p-1 mb-4">
+                <div class="flex gap-1 bg-white rounded-xl border border-gray-200 p-1 mb-4 overflow-x-auto">
                     <button
                         v-for="tab in tabs"
                         :key="tab.key"
                         @click="activeTab = tab.key"
                         :class="[
                             activeTab === tab.key ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100',
-                            'px-4 py-2 rounded-lg text-sm font-medium transition-colors'
+                            'px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0'
                         ]"
                     >{{ tab.label }}</button>
                 </div>
@@ -312,12 +333,13 @@ const chartsData = computed(() => {
                         Nessun appuntamento registrato.
                     </div>
                     <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead class="bg-gray-50 border-b border-gray-100">
                                 <tr>
                                     <th class="text-left px-4 py-3 font-medium text-gray-600">Data</th>
                                     <th class="text-left px-4 py-3 font-medium text-gray-600">Titolo</th>
-                                    <th class="text-left px-4 py-3 font-medium text-gray-600">Professionista</th>
+                                    <th class="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Professionista</th>
                                     <th class="text-left px-4 py-3 font-medium text-gray-600">Stato</th>
                                     <th class="px-4 py-3"></th>
                                 </tr>
@@ -326,7 +348,7 @@ const chartsData = computed(() => {
                                 <tr v-for="apt in patient.appointments" :key="apt.id">
                                     <td class="px-4 py-3 text-gray-500">{{ fmtDatetime(apt.start_at) }}</td>
                                     <td class="px-4 py-3 font-medium text-gray-800">{{ apt.title }}</td>
-                                    <td class="px-4 py-3 text-gray-500">{{ apt.user?.name }}</td>
+                                    <td class="px-4 py-3 text-gray-500 hidden sm:table-cell">{{ apt.user?.name }}</td>
                                     <td class="px-4 py-3">
                                         <span :class="['text-xs px-2 py-1 rounded-full font-medium', aptStatusInfo(apt).cls]">
                                             {{ aptStatusInfo(apt).label }}
@@ -343,6 +365,7 @@ const chartsData = computed(() => {
                             </tbody>
                         </table>
                     </div>
+                </div>
                 </div>
 
                 <!-- Cartella Clinica -->

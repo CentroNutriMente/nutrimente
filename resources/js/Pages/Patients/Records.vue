@@ -66,7 +66,7 @@ const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
                     <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Nuova scheda clinica</h2>
 
                     <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
                                 <select v-model="form.category"
@@ -83,7 +83,7 @@ const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-gray-500 mb-1">Titolo *</label>
                                 <input v-model="form.title" type="text" placeholder="es. Seduta n.3 – elaborazione trauma"

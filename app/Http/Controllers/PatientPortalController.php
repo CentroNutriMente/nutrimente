@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Mail\AppointmentCancelledByPatientMail;
+use App\Mail\BookingRequestMail;
 use App\Models\Appointment;
+use App\Models\BookingRequest;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,6 +35,13 @@ class PatientPortalController extends Controller
             ])
             ->first();
 
+        // Resolve the booking slug for the primary professional (creator)
+        $bookingSlug = null;
+        if ($patient?->created_by) {
+            $creator = User::with('professionalProfile')->find($patient->created_by);
+            $bookingSlug = $creator?->professionalProfile?->slug;
+        }
+
         // Which GDPR documents are physically available on disk
         $gdprAvailable = [];
         foreach (self::GDPR_DOCS as $slug => $filename) {
@@ -43,6 +53,7 @@ class PatientPortalController extends Controller
         return Inertia::render('PatientPortal/Dashboard', [
             'patient'        => $patient,
             'gdprAvailable'  => $gdprAvailable,
+            'bookingSlug'    => $bookingSlug,
         ]);
     }
 
@@ -67,5 +78,45 @@ class PatientPortalController extends Controller
         }
 
         return back()->with('success', 'Appuntamento disdetto.');
+    }
+
+    public function requestAppointment(): RedirectResponse
+    {
+        $user = auth()->user();
+
+        $patient = Patient::where('email', $user->email)->first();
+        abort_if(! $patient || ! $patient->created_by, 422, 'Nessun professionista associato.');
+
+        $creator = User::with('professionalProfile')->find($patient->created_by);
+        abort_if(! $creator || ! $creator->professionalProfile, 422, 'Professionista non trovato.');
+
+        $validated = request()->validate([
+            'requested_date' => 'required|date|after_or_equal:today',
+            'requested_time' => 'required|date_format:H:i',
+            'notes'          => 'nullable|string|max:1000',
+        ]);
+
+        $booking = BookingRequest::create([
+            'professional_id'  => $creator->id,
+            'patient_name'     => $patient->first_name,
+            'patient_surname'  => $patient->last_name,
+            'patient_email'    => $patient->email,
+            'patient_phone'    => $patient->phone,
+            'notes'            => $validated['notes'] ?? null,
+            'requested_date'   => $validated['requested_date'],
+            'requested_time'   => $validated['requested_time'],
+            'status'           => 'pending',
+            'confirm_token'    => Str::random(48),
+            'reject_token'     => Str::random(48),
+            'invite_token'     => Str::random(48),
+        ]);
+
+        try {
+            Mail::to($creator->email)->send(new BookingRequestMail($booking->load('professional.professionalProfile')));
+        } catch (\Exception $e) {
+            \Log::error('BookingRequest (portal) mail failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Richiesta inviata! Il tuo professionista ti contatterà a breve per confermare.');
     }
 }

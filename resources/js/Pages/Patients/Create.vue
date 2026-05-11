@@ -68,7 +68,7 @@ const otherProfessionals = props.professionals.filter(p => p.id !== props.authId
             <!-- Dati anagrafici -->
             <div class="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 class="font-semibold text-gray-700 mb-4">Dati anagrafici</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
                         <input v-model="form.first_name" type="text" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
@@ -107,7 +107,7 @@ const otherProfessionals = props.professionals.filter(p => p.id !== props.authId
             <!-- Contatti -->
             <div class="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 class="font-semibold text-gray-700 mb-4">Contatti</h2>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input v-model="form.email" type="email" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
@@ -116,7 +116,7 @@ const otherProfessionals = props.professionals.filter(p => p.id !== props.authId
                         <label class="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
                         <input v-model="form.phone" type="tel" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
-                    <div class="col-span-2">
+                    <div class="sm:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Indirizzo</label>
                         <input v-model="form.address" type="text" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>

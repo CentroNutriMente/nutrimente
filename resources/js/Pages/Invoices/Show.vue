@@ -43,9 +43,9 @@ function cancel() {
 <template>
     <AppLayout :title="`Fattura ${inv.invoice_code}`">
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <Link :href="route('invoices.index')" class="text-gray-400 hover:text-gray-600">
+                    <Link :href="route('invoices.index')" class="text-gray-400 hover:text-gray-600 shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
@@ -57,18 +57,18 @@ function cancel() {
                         </span>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <a :href="route('invoices.pdf', inv.id)" target="_blank"
-                        class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
+                        class="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
                         Scarica PDF
                     </a>
                     <template v-if="canEdit">
                         <button v-if="inv.status === 'issued'" @click="markPaid"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
+                            class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
                             Segna pagata
                         </button>
                         <button v-if="inv.status !== 'cancelled'" @click="cancel"
-                            class="px-4 py-2 text-red-400 hover:text-red-600 text-sm hover:underline transition-colors">
+                            class="px-3 py-1.5 text-red-400 hover:text-red-600 text-sm hover:underline transition-colors">
                             Annulla
                         </button>
                     </template>
@@ -80,7 +80,7 @@ function cancel() {
 
             <!-- Intestazione fattura -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <div class="grid grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <!-- Emittente -->
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Emittente</p>

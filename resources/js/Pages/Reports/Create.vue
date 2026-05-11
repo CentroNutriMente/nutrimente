@@ -140,8 +140,8 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
                 <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                     <h2 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Dati referto</h2>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-medium text-gray-500 mb-1">Paziente *</label>
                             <select v-model="form.patient_id"
                                 :disabled="isEdit"

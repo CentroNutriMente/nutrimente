@@ -57,17 +57,18 @@ const fmtEur = (v) => `€ ${Number(v).toLocaleString('it-IT', { minimumFraction
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">N. Fattura</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Paziente</th>
-                        <th class="text-left px-4 py-3 font-medium text-gray-600">Data</th>
-                        <th class="text-right px-4 py-3 font-medium text-gray-600">Imponibile</th>
-                        <th class="text-right px-4 py-3 font-medium text-gray-600">Bollo</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Data</th>
+                        <th class="text-right px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Imponibile</th>
+                        <th class="text-right px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Bollo</th>
                         <th class="text-right px-4 py-3 font-medium text-gray-600">Totale</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Stato</th>
-                        <th class="text-left px-4 py-3 font-medium text-gray-600">STS</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">STS</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
@@ -78,9 +79,9 @@ const fmtEur = (v) => `€ ${Number(v).toLocaleString('it-IT', { minimumFraction
                     <tr v-for="inv in invoices.data" :key="inv.id" class="hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-3 font-mono text-xs font-medium text-gray-700">{{ inv.invoice_code }}</td>
                         <td class="px-4 py-3 font-medium text-gray-800">{{ inv.patient?.last_name }} {{ inv.patient?.first_name }}</td>
-                        <td class="px-4 py-3 text-gray-500">{{ fmt(inv.issued_at) }}</td>
-                        <td class="px-4 py-3 text-right text-gray-700">{{ fmtEur(inv.subtotal) }}</td>
-                        <td class="px-4 py-3 text-right text-gray-500">
+                        <td class="px-4 py-3 text-gray-500 hidden sm:table-cell">{{ fmt(inv.issued_at) }}</td>
+                        <td class="px-4 py-3 text-right text-gray-700 hidden md:table-cell">{{ fmtEur(inv.subtotal) }}</td>
+                        <td class="px-4 py-3 text-right text-gray-500 hidden md:table-cell">
                             <span v-if="inv.marca_da_bollo > 0" class="text-amber-600">{{ fmtEur(inv.marca_da_bollo) }}</span>
                             <span v-else class="text-gray-300">—</span>
                         </td>
@@ -90,17 +91,20 @@ const fmtEur = (v) => `€ ${Number(v).toLocaleString('it-IT', { minimumFraction
                                 {{ statusLabel[inv.status] }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 hidden sm:table-cell">
                             <span v-if="inv.sts_sent" class="text-xs text-purple-600 font-medium">Inviata</span>
                             <span v-else class="text-xs text-gray-400">—</span>
                         </td>
-                        <td class="px-4 py-3 text-right flex gap-2 justify-end">
-                            <Link :href="route('invoices.show', inv.id)" class="text-xs text-purple-600 hover:underline">Apri</Link>
-                            <a :href="route('invoices.pdf', inv.id)" target="_blank" class="text-xs text-gray-400 hover:underline">PDF</a>
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex gap-2 justify-end">
+                                <Link :href="route('invoices.show', inv.id)" class="text-xs text-purple-600 hover:underline">Apri</Link>
+                                <a :href="route('invoices.pdf', inv.id)" target="_blank" class="text-xs text-gray-400 hover:underline hidden sm:inline">PDF</a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            </div>
 
             <div v-if="invoices.last_page > 1" class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
                 <span class="text-xs text-gray-400">{{ invoices.from }}–{{ invoices.to }} di {{ invoices.total }}</span>

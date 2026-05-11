@@ -69,21 +69,22 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
 
         <!-- Tabella -->
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Paziente</th>
-                        <th class="text-left px-4 py-3 font-medium text-gray-600">Codice Fiscale</th>
-                        <th class="text-left px-4 py-3 font-medium text-gray-600">Contatto</th>
-                        <th class="text-left px-4 py-3 font-medium text-gray-600">Tag</th>
-                        <th class="text-left px-4 py-3 font-medium text-gray-600">Creato da</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Codice Fiscale</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Contatto</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Tag</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Creato da</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600">Stato</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     <tr v-if="patients.data.length === 0">
-                        <td colspan="6" class="px-4 py-10 text-center text-gray-400">Nessun paziente trovato.</td>
+                        <td colspan="7" class="px-4 py-10 text-center text-gray-400">Nessun paziente trovato.</td>
                     </tr>
                     <tr
                         v-for="patient in patients.data"
@@ -98,12 +99,12 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                                 {{ new Date(patient.date_of_birth).toLocaleDateString('it-IT') }}
                             </div>
                         </td>
-                        <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ patient.codice_fiscale ?? '—' }}</td>
-                        <td class="px-4 py-3 text-gray-500">
+                        <td class="px-4 py-3 text-gray-500 font-mono text-xs hidden sm:table-cell">{{ patient.codice_fiscale ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-500 hidden md:table-cell">
                             <div>{{ patient.email ?? '' }}</div>
                             <div>{{ patient.phone ?? '' }}</div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 hidden md:table-cell">
                             <div class="flex flex-wrap gap-1">
                                 <span
                                     v-if="patient.diagnosis"
@@ -117,7 +118,7 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                                 >{{ tag.name }}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 hidden md:table-cell">
                             <span v-if="patient.creator" class="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">
                                 {{ patient.creator.name }}
                             </span>
@@ -130,11 +131,12 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                         </td>
                         <td class="px-4 py-3 text-right">
                             <Link :href="route('patients.show', patient.id)" class="text-xs text-purple-600 hover:underline mr-3">Apri</Link>
-                            <Link :href="route('patients.edit', patient.id)" class="text-xs text-gray-400 hover:underline">Modifica</Link>
+                            <Link :href="route('patients.edit', patient.id)" class="text-xs text-gray-400 hover:underline hidden sm:inline">Modifica</Link>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            </div>
 
             <!-- Paginazione -->
             <div v-if="patients.last_page > 1" class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">

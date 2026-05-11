@@ -30,6 +30,7 @@ Route::get('/prenota/{slug}/rifiuta/{token}', [BookingController::class, 'reject
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'require.patient'])->group(function () {
     Route::get('/mia-area', [\App\Http\Controllers\PatientPortalController::class, 'dashboard'])->name('patient.dashboard');
     Route::post('/mia-area/appointments/{appointment}/cancel', [\App\Http\Controllers\PatientPortalController::class, 'cancelAppointment'])->name('patient.appointment.cancel');
+    Route::post('/mia-area/richiedi-appuntamento', [\App\Http\Controllers\PatientPortalController::class, 'requestAppointment'])->name('patient.appointment.request');
 });
 
 Route::get('/', function () {

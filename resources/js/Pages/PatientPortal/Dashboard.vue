@@ -5,7 +5,24 @@ import { usePage, useForm } from '@inertiajs/vue3';
 const props = defineProps({
     patient:       Object,
     gdprAvailable: Array,
+    bookingSlug:   String,
 });
+
+// ── Booking modal ──────────────────────────────────────────────────────────
+const showBookingModal = ref(false);
+const bookingForm = useForm({
+    requested_date: '',
+    requested_time: '',
+    notes: '',
+});
+function openBookingModal() { showBookingModal.value = true; }
+function closeBookingModal() { showBookingModal.value = false; bookingForm.reset(); }
+function submitBooking() {
+    bookingForm.post(route('patient.appointment.request'), {
+        onSuccess: () => closeBookingModal(),
+    });
+}
+const minDate = new Date().toISOString().split('T')[0];
 
 const user = usePage().props.auth.user;
 const activeTab = ref('appointments');
@@ -100,15 +117,15 @@ const invoiceStatusClass  = {
         <!-- Header -->
         <header class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
             <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-                <a href="/prenota" class="flex items-center gap-2">
+                <a href="/mia-area" class="flex items-center gap-2">
                     <img src="/logo.jpeg" alt="NutriMente" class="h-10 w-auto" />
                 </a>
                 <div class="flex items-center gap-4">
                     <span class="text-sm text-gray-500 hidden sm:block">{{ user.name }}</span>
-                    <a href="/prenota"
+                    <button @click="openBookingModal"
                         class="text-sm text-purple-600 hover:text-purple-700 font-medium hidden sm:block">
                         + Prenota
-                    </a>
+                    </button>
                     <form method="POST" action="/logout">
                         <input type="hidden" name="_token" :value="$page.props.csrf_token" />
                         <button type="submit"
@@ -119,6 +136,17 @@ const invoiceStatusClass  = {
                 </div>
             </div>
         </header>
+
+        <!-- Flash success -->
+        <div v-if="$page.props.flash?.success"
+            class="max-w-5xl mx-auto px-4 pt-4">
+            <div class="bg-green-50 border border-green-200 text-green-800 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                {{ $page.props.flash.success }}
+            </div>
+        </div>
 
         <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
@@ -135,10 +163,10 @@ const invoiceStatusClass  = {
                     Il tuo account non è ancora collegato ad una cartella clinica.
                     Prenota il tuo primo appuntamento per iniziare.
                 </p>
-                <a href="/prenota"
+                <button @click="openBookingModal"
                     class="inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
                     Prenota un appuntamento
-                </a>
+                </button>
             </div>
 
             <template v-else>
@@ -149,10 +177,10 @@ const invoiceStatusClass  = {
                         <h1 class="text-2xl font-bold text-gray-900">Ciao, {{ patient.first_name }}!</h1>
                         <p class="text-sm text-gray-400 mt-0.5">La tua area personale NutriMente</p>
                     </div>
-                    <a href="/prenota"
+                    <button @click="openBookingModal"
                         class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
                         + Nuovo appuntamento
-                    </a>
+                    </button>
                 </div>
 
                 <!-- Tabs -->
@@ -234,10 +262,10 @@ const invoiceStatusClass  = {
                             <div v-if="!upcomingAppointments.length"
                                 class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
                                 <p class="text-sm text-gray-400 mb-4">Nessun appuntamento in programma.</p>
-                                <a href="/prenota"
+                                <button @click="openBookingModal"
                                     class="text-sm text-purple-600 font-medium hover:underline">
                                     Prenota ora →
-                                </a>
+                                </button>
                             </div>
                             <div v-else class="space-y-3">
                                 <div v-for="apt in upcomingAppointments" :key="apt.id"
@@ -544,5 +572,54 @@ const invoiceStatusClass  = {
                 © {{ new Date().getFullYear() }} Centro NutriMente — Area riservata pazienti
             </div>
         </footer>
+
+        <!-- Booking modal -->
+        <div v-if="showBookingModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" @click.self="closeBookingModal">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <h2 class="font-semibold text-gray-800">Richiedi un appuntamento</h2>
+                    <button @click="closeBookingModal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form @submit.prevent="submitBooking" class="p-6 space-y-4">
+                    <p class="text-sm text-gray-500">Indica la data e l'orario che preferisci. Il tuo professionista ti contatterà per confermare.</p>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data preferita *</label>
+                        <input v-model="bookingForm.requested_date" type="date" :min="minDate"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        <p v-if="bookingForm.errors.requested_date" class="text-red-500 text-xs mt-1">{{ bookingForm.errors.requested_date }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Orario preferito *</label>
+                        <input v-model="bookingForm.requested_time" type="time"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        <p v-if="bookingForm.errors.requested_time" class="text-red-500 text-xs mt-1">{{ bookingForm.errors.requested_time }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Note (facoltativo)</label>
+                        <textarea v-model="bookingForm.notes" rows="3" placeholder="Es. preferenza di orario, richieste particolari..."
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"></textarea>
+                    </div>
+
+                    <div class="flex gap-3 pt-1">
+                        <button type="submit" :disabled="bookingForm.processing"
+                            class="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50">
+                            {{ bookingForm.processing ? 'Invio...' : 'Invia richiesta' }}
+                        </button>
+                        <button type="button" @click="closeBookingModal"
+                            class="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+                            Annulla
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </template>

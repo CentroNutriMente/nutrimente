@@ -94,7 +94,7 @@ function renderEventContent(arg) {
 
 const calendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-    initialView: 'timeGridWeek',
+    initialView: typeof window !== 'undefined' && window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek',
     locale: itLocale,
     headerToolbar: {
         left: 'prev,next today',
@@ -140,9 +140,9 @@ function filterProfessional() {
 <template>
     <AppLayout title="Calendario">
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <h1 class="text-xl font-semibold text-gray-800">Calendario condiviso</h1>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-2">
                     <select
                         v-model="selectedProfessional"
                         @change="filterProfessional"
@@ -153,14 +153,14 @@ function filterProfessional() {
                     </select>
                     <Link
                         :href="route('appointments.create')"
-                        class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 whitespace-nowrap"
                     >+ Appuntamento</Link>
                 </div>
             </div>
         </template>
 
         <!-- Legenda tipi -->
-        <div class="flex gap-4 mb-4">
+        <div class="flex flex-wrap gap-3 mb-4">
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
                 <span class="w-3 h-3 rounded-full inline-block" style="background:#7c3aed"></span> Seduta
             </div>

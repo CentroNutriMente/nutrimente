@@ -54,8 +54,8 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
                 <!-- Intestazione -->
                 <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                     <h2 class="font-semibold text-gray-700">Intestazione fattura</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Paziente *</label>
                             <select v-model="form.patient_id" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 <option value="">Seleziona paziente...</option>

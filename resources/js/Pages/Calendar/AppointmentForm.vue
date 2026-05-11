@@ -67,7 +67,7 @@ const typeOptions = [
 
         <form @submit.prevent="submit" class="max-w-2xl space-y-5">
             <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
                         <select v-model="form.type" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
@@ -98,7 +98,7 @@ const typeOptions = [
                     <p v-if="form.errors.title" class="text-red-500 text-xs mt-1">{{ form.errors.title }}</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Inizio *</label>
                         <input v-model="form.start_at" type="datetime-local" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
