@@ -41,8 +41,8 @@ class PatientPortalController extends Controller
         }
 
         return Inertia::render('PatientPortal/Dashboard', [
-            'patient'       => $patient,
-            'gdpr_available' => $gdprAvailable,
+            'patient'        => $patient,
+            'gdprAvailable'  => $gdprAvailable,
         ]);
     }
 

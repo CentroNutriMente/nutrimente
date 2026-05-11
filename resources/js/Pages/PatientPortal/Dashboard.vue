@@ -343,63 +343,145 @@ const invoiceStatusClass  = {
                 </div>
 
                 <!-- ── TAB: CONSENSI ──────────────────────────────────────── -->
-                <div v-if="activeTab === 'consents'" class="space-y-8">
+                <div v-if="activeTab === 'consents'" class="space-y-6 max-w-3xl">
 
-                    <!-- Normative GDPR -->
-                    <div>
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Informative e normative</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Privacy Policy -->
-                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    <!-- ── Informativa Privacy ───────────────────────────────── -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                                    <svg class="w-4.5 h-4.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
                                     </svg>
                                 </div>
-                                <div class="flex-1">
-                                    <div class="font-semibold text-gray-800 text-sm mb-1">Privacy Policy</div>
-                                    <p class="text-xs text-gray-400 mb-3">Informativa sul trattamento dei dati personali ai sensi del GDPR.</p>
-                                    <a v-if="gdprAvailable.some(d => d.slug === 'privacy-policy')"
-                                        :href="route('gdpr.download', 'privacy-policy')"
-                                        class="inline-flex items-center gap-1 text-xs text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors font-medium">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                        </svg>
-                                        Scarica PDF
-                                    </a>
-                                    <span v-else class="text-xs text-gray-300 italic">Non disponibile</span>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-sm">Informativa Privacy</h3>
+                                    <p class="text-xs text-gray-400">Ai sensi degli artt. 13–14 del Regolamento UE 2016/679 (GDPR)</p>
                                 </div>
                             </div>
+                            <a v-if="gdprAvailable.some(d => d.slug === 'privacy-policy')"
+                                :href="route('gdpr.download', 'privacy-policy')"
+                                class="inline-flex items-center gap-1.5 text-xs text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors font-medium shrink-0">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Scarica PDF
+                            </a>
+                        </div>
 
-                            <!-- Consenso informato -->
-                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-                                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="font-semibold text-gray-800 text-sm mb-1">Consenso Informato</div>
-                                    <p class="text-xs text-gray-400 mb-3">Modulo di consenso al trattamento clinico e ai servizi del centro.</p>
-                                    <a v-if="gdprAvailable.some(d => d.slug === 'consenso-informato')"
-                                        :href="route('gdpr.download', 'consenso-informato')"
-                                        class="inline-flex items-center gap-1 text-xs text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors font-medium">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                        </svg>
-                                        Scarica PDF
-                                    </a>
-                                    <span v-else class="text-xs text-gray-300 italic">Non disponibile</span>
-                                </div>
+                        <div class="px-6 py-5 text-sm text-gray-600 space-y-4 leading-relaxed">
+                            <p class="text-xs text-gray-400 italic">Titolare del trattamento: <strong class="text-gray-600 not-italic">Centro NutriMente</strong> — per informazioni: info@nutrimente.it</p>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">1. Finalità e base giuridica del trattamento</h4>
+                                <p class="text-xs text-gray-600">I dati personali da Lei forniti sono trattati per le seguenti finalità:</p>
+                                <ul class="list-disc list-inside text-xs text-gray-600 mt-1 space-y-0.5 ml-2">
+                                    <li>Erogazione di servizi di consulenza nutrizionale e supporto psicologico (base: esecuzione del contratto, art. 6 co. 1 lett. b e art. 9 co. 2 lett. h GDPR);</li>
+                                    <li>Gestione degli appuntamenti, delle cartelle cliniche e dei referti clinici;</li>
+                                    <li>Adempimento di obblighi legali, fiscali e contabili (art. 6 co. 1 lett. c GDPR);</li>
+                                    <li>Tutela della salute e sicurezza del paziente in situazioni di emergenza (art. 9 co. 2 lett. c GDPR).</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">2. Categorie di dati trattati</h4>
+                                <p class="text-xs text-gray-600">Vengono trattati: dati anagrafici e di contatto (nome, cognome, data di nascita, codice fiscale, email, telefono, indirizzo); <strong>dati sanitari</strong> (anamnesi, referti clinici, piani nutrizionali, valutazioni psicologiche, questionari somministrati); dati relativi agli appuntamenti e alla fatturazione. I dati sanitari sono trattati con le misure di sicurezza adeguate previste dall'art. 9 GDPR.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">3. Modalità del trattamento e conservazione</h4>
+                                <p class="text-xs text-gray-600">Il trattamento avviene mediante sistemi informatici con accesso protetto, nel rispetto dei principi di riservatezza, integrità e disponibilità. I dati sanitari sono conservati per <strong>10 anni</strong> dalla conclusione del rapporto professionale, come previsto dalla normativa sanitaria vigente. I dati fiscali sono conservati per <strong>10 anni</strong> ai sensi del D.P.R. 600/1973.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">4. Comunicazione e trasferimento dei dati</h4>
+                                <p class="text-xs text-gray-600">I dati non sono ceduti a terzi per finalità commerciali. Possono essere comunicati a: altri professionisti del Centro coinvolti nel percorso di cura; soggetti incaricati del trattamento (es. fornitori di software gestionale); autorità competenti ove richiesto per legge. Nessun dato è trasferito fuori dall'Unione Europea.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">5. Diritti dell'interessato</h4>
+                                <p class="text-xs text-gray-600">In qualità di interessato, Lei ha il diritto di:</p>
+                                <ul class="list-disc list-inside text-xs text-gray-600 mt-1 space-y-0.5 ml-2">
+                                    <li><strong>Accesso</strong> (art. 15): ottenere conferma e copia dei dati trattati;</li>
+                                    <li><strong>Rettifica</strong> (art. 16): correggere dati inesatti o incompleti;</li>
+                                    <li><strong>Cancellazione</strong> (art. 17): richiedere la cancellazione, nei limiti consentiti dalla legge;</li>
+                                    <li><strong>Limitazione</strong> (art. 18): limitare il trattamento in determinate circostanze;</li>
+                                    <li><strong>Portabilità</strong> (art. 20): ricevere i dati in formato strutturato e leggibile da dispositivo automatico;</li>
+                                    <li><strong>Opposizione</strong> (art. 21): opporsi al trattamento per motivi legati alla propria situazione particolare;</li>
+                                    <li><strong>Revoca del consenso</strong> (art. 7): revocare il consenso in qualsiasi momento, senza pregiudicare la liceità del trattamento precedente.</li>
+                                </ul>
+                                <p class="text-xs text-gray-600 mt-1.5">Per esercitare i diritti, scrivere a: <span class="text-blue-600">info@nutrimente.it</span>. È inoltre possibile presentare reclamo al Garante per la Protezione dei Dati Personali (www.garanteprivacy.it).</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Consensi registrati -->
+                    <!-- ── Consenso Informato ─────────────────────────────────── -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+                                    <svg class="w-4.5 h-4.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-sm">Consenso Informato al Trattamento</h3>
+                                    <p class="text-xs text-gray-400">Modulo informativo sui servizi clinici erogati dal Centro</p>
+                                </div>
+                            </div>
+                            <a v-if="gdprAvailable.some(d => d.slug === 'consenso-informato')"
+                                :href="route('gdpr.download', 'consenso-informato')"
+                                class="inline-flex items-center gap-1.5 text-xs text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors font-medium shrink-0">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Scarica PDF
+                            </a>
+                        </div>
+
+                        <div class="px-6 py-5 text-sm text-gray-600 space-y-4 leading-relaxed">
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">1. Descrizione del servizio</h4>
+                                <p class="text-xs text-gray-600">Il Centro NutriMente eroga servizi integrati di <strong>consulenza nutrizionale</strong> e <strong>supporto psicologico</strong>. I professionisti del Centro — tra cui nutrizionisti, psicologi e dietisti — operano in modo coordinato per offrire un percorso di cura personalizzato. I servizi includono: valutazione iniziale, definizione del piano alimentare e/o del percorso psicologico, somministrazione di questionari clinici validati, produzione di referti e rivalutazioni periodiche.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">2. Modalità del trattamento clinico</h4>
+                                <p class="text-xs text-gray-600">Il percorso di cura può svolgersi in presenza o in modalità telematica, nel rispetto delle linee guida professionali vigenti. Il professionista raccoglierà informazioni relative allo stato di salute, alle abitudini alimentari, allo stile di vita e, ove pertinente, al benessere psicologico. Queste informazioni sono necessarie per una valutazione clinica appropriata e per l'elaborazione di un piano personalizzato.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">3. Riservatezza e segreto professionale</h4>
+                                <p class="text-xs text-gray-600">Tutti i professionisti del Centro sono vincolati al segreto professionale ai sensi dell'art. 622 c.p. e delle rispettive deontologie di categoria (Codice Deontologico degli Psicologi — art. 11; Codice Deontologico dei Biologi Nutrizionisti). Le informazioni condivise nel corso delle sedute sono riservate e non possono essere divulgate a terzi senza il consenso esplicito del paziente, salvo i casi previsti dalla legge (es. obbligo di referto, tutela di terzi in pericolo imminente).</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">4. Collaborazione tra professionisti</h4>
+                                <p class="text-xs text-gray-600">Con il presente consenso, il paziente autorizza la condivisione delle informazioni cliniche essenziali tra i professionisti del Centro coinvolti nel proprio percorso di cura, ai soli fini terapeutici e nel rispetto del principio di minimizzazione dei dati. Il paziente potrà revocare tale autorizzazione in qualsiasi momento, comunicandolo per iscritto al Centro.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">5. Diritto alla revoca e alla interruzione del percorso</h4>
+                                <p class="text-xs text-gray-600">Il paziente ha il diritto di interrompere il percorso in qualsiasi momento, senza necessità di fornire motivazione, dandone comunicazione al professionista. La revoca del consenso non pregiudica la liceità del trattamento effettuato in precedenza. In caso di interruzione, i dati clinici già raccolti saranno conservati per i periodi previsti dalla normativa applicabile.</p>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wide mb-1.5">6. Utilizzo di questionari e strumenti di valutazione</h4>
+                                <p class="text-xs text-gray-600">Nel corso del percorso clinico possono essere somministrati questionari standardizzati e validati (es. scale di valutazione psicologica, strumenti di screening nutrizionale). I risultati sono utilizzati esclusivamente a fini clinici e sono parte integrante della cartella del paziente. Non vengono condivisi al di fuori del team di cura senza consenso esplicito.</p>
+                            </div>
+
+                            <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                                <p class="text-xs text-purple-700 leading-relaxed">
+                                    <strong>Dichiarazione di consenso:</strong> Accedendo ai servizi del Centro NutriMente e confermando la presa visione del presente documento, il paziente dichiara di aver letto e compreso l'informativa, di acconsentire al trattamento dei propri dati sanitari per le finalità descritte e di aver ricevuto risposta a eventuali domande poste al professionista.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Consensi firmati ──────────────────────────────────── -->
                     <div v-if="patient.consents?.length">
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Consensi firmati</h3>
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Consensi registrati</h3>
                         <div class="space-y-2">
                             <div v-for="c in patient.consents" :key="c.id"
                                 class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
@@ -422,14 +504,10 @@ const invoiceStatusClass  = {
                         </div>
                     </div>
 
-                    <!-- Documenti firmati allegati -->
-                    <div>
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Documenti allegati</h3>
-                        <div v-if="!patient.consent_documents?.length"
-                            class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-                            <p class="text-sm text-gray-400">Nessun documento allegato dal tuo professionista.</p>
-                        </div>
-                        <div v-else class="space-y-3">
+                    <!-- ── Documenti allegati ─────────────────────────────────── -->
+                    <div v-if="patient.consent_documents?.length">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Documenti allegati dal professionista</h3>
+                        <div class="space-y-3">
                             <div v-for="doc in patient.consent_documents" :key="doc.id"
                                 class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
@@ -455,6 +533,7 @@ const invoiceStatusClass  = {
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </template>
