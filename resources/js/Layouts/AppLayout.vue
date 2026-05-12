@@ -92,6 +92,10 @@ function notificationTarget(n) {
         });
     }
 
+    if (n.type === 'appointment_cancelled' && n.data?.patient_id) {
+        return route('patients.show', n.data.patient_id);
+    }
+
     return null;
 }
 
@@ -104,17 +108,19 @@ function openNotification(n) {
 }
 
 const notifIcon = {
-    message:      'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-    task_assigned:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-    task_due:     'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-    intervisione: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+    message:               'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+    task_assigned:         'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+    task_due:              'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+    intervisione:          'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+    appointment_cancelled: 'M6 18L18 6M6 6l12 12',
 };
 
 const notifColor = {
-    message:      'text-blue-500 bg-blue-50',
-    task_assigned:'text-purple-500 bg-purple-50',
-    task_due:     'text-amber-500 bg-amber-50',
-    intervisione: 'text-green-500 bg-green-50',
+    message:               'text-blue-500 bg-blue-50',
+    task_assigned:         'text-purple-500 bg-purple-50',
+    task_due:              'text-amber-500 bg-amber-50',
+    intervisione:          'text-green-500 bg-green-50',
+    appointment_cancelled: 'text-red-500 bg-red-50',
 };
 
 onMounted(() => {

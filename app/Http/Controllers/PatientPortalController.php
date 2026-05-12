@@ -6,6 +6,7 @@ use App\Mail\AppointmentCancelledByPatientMail;
 use App\Mail\BookingRequestMail;
 use App\Models\Appointment;
 use App\Models\BookingRequest;
+use App\Models\Notification;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -69,6 +70,16 @@ class PatientPortalController extends Controller
         $patientName = "{$patient->first_name} {$patient->last_name}";
 
         $appointment->update(['status' => 'cancelled']);
+
+        $when = $appointment->start_at->format('d/m/Y \a\l\l\e H:i');
+
+        Notification::send(
+            $appointment->user->id,
+            'appointment_cancelled',
+            "Appuntamento disdetto da {$patientName}",
+            "Seduta del {$when} è stata annullata dal paziente.",
+            ['appointment_id' => $appointment->id, 'patient_id' => $patient->id]
+        );
 
         try {
             Mail::to($appointment->user->email)
