@@ -58,6 +58,7 @@ const calendarCells = computed(() => {
 const appointmentDayKeys = computed(() => {
     const keys = new Set();
     (props.patient?.appointments ?? []).forEach(a => {
+        if (a.status === 'cancelled') return;
         const d = new Date(a.start_at);
         if (d >= today) keys.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
     });

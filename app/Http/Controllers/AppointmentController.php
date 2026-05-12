@@ -39,15 +39,19 @@ class AppointmentController extends Controller
                 ->map(function ($apt) use ($userId, $accessiblePatientIds) {
                     $isPrivate = $apt->patient_id && ! isset($accessiblePatientIds[$apt->patient_id]);
 
+                    $isCancelled = $apt->status === 'cancelled';
+                    $baseTitle   = $isPrivate
+                        ? 'Occupato'
+                        : ($apt->patient ? "{$apt->patient->last_name} {$apt->patient->first_name}" : $apt->title);
+
                     return [
                         'id'       => $apt->id,
-                        'title'    => $isPrivate
-                            ? 'Occupato'
-                            : ($apt->patient ? "{$apt->patient->last_name} {$apt->patient->first_name}" : $apt->title),
+                        'title'    => $isCancelled ? "✕ {$baseTitle}" : $baseTitle,
                         'start'    => $apt->start_at,
                         'end'      => $apt->end_at,
-                        'color'    => $isPrivate ? '#9ca3af' : ($apt->color ?? $this->colorForType($apt->type)),
-                        'editable' => ! $isPrivate && $apt->user_id === $userId,
+                        'color'    => $isCancelled ? '#d1d5db' : ($isPrivate ? '#9ca3af' : ($apt->color ?? $this->colorForType($apt->type))),
+                        'textColor'=> $isCancelled ? '#6b7280' : '#ffffff',
+                        'editable' => ! $isPrivate && ! $isCancelled && $apt->user_id === $userId,
                         'extendedProps' => [
                             'type'         => $apt->type,
                             'status'       => $isPrivate ? null : $apt->status,
