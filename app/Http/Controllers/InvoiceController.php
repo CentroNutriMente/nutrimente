@@ -33,7 +33,10 @@ class InvoiceController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
-        $profile = $user->professionalProfile()->firstOrCreate(['user_id' => $user->id]);
+        $profile = $user->professionalProfile()->firstOrCreate(
+            ['user_id' => $user->id],
+            ['category' => 'professionista']
+        );
 
         return Inertia::render('Invoices/Create', [
             'patients'   => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name', 'codice_fiscale']),
@@ -56,7 +59,10 @@ class InvoiceController extends Controller
         ]);
 
         $user = $request->user();
-        $profile = $user->professionalProfile()->firstOrCreate(['user_id' => $user->id]);
+        $profile = $user->professionalProfile()->firstOrCreate(
+            ['user_id' => $user->id],
+            ['category' => 'professionista']
+        );
         $patient = Patient::findOrFail($validated['patient_id']);
 
         if ($patient->created_by !== null && $patient->created_by !== $user->id) {
