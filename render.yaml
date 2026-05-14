@@ -1,0 +1,84 @@
+services:
+  - type: web
+    name: nutrimente
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /login
+    envVars:
+      - key: APP_NAME
+        value: NutriMente
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_LOCALE
+        value: it
+      - key: APP_FALLBACK_LOCALE
+        value: it
+      - key: APP_FAKER_LOCALE
+        value: it_IT
+      - key: APP_MAINTENANCE_DRIVER
+        value: file
+      - key: BCRYPT_ROUNDS
+        value: 12
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_STACK
+        value: single
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: db.quuhzpnjfqgygeozuqbp.supabase.co
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        value: postgres
+      - key: DB_SSLMODE
+        value: require
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: BROADCAST_CONNECTION
+        value: log
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp-mail.outlook.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: centronutrimentehub@outlook.com
+      - key: MAIL_FROM_ADDRESS
+        value: centronutrimentehub@outlook.com
+      - key: MAIL_FROM_NAME
+        value: Centro NutriMente
+      # Secrets — set manually in Render dashboard
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        sync: false
+      - key: AWS_BUCKET
+        sync: false
