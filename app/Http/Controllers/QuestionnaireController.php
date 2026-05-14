@@ -19,7 +19,9 @@ class QuestionnaireController extends Controller
         $userId  = $request->user()->id;
         $patient = Patient::findOrFail($request->patient_id);
 
-        if ($patient->created_by !== null && (int) $patient->created_by !== $userId) {
+        if (! $request->user()->hasRole('admin')
+            && $patient->created_by !== null
+            && (int) $patient->created_by !== $userId) {
             abort(403, 'Solo il creatore del paziente può somministrare questionari.');
         }
 
@@ -64,7 +66,9 @@ class QuestionnaireController extends Controller
 
         $patient = Patient::findOrFail($validated['patient_id']);
         $userId  = $request->user()->id;
-        if ($patient->created_by !== null && (int) $patient->created_by !== $userId) {
+        if (! auth()->user()->hasRole('admin')
+            && $patient->created_by !== null
+            && (int) $patient->created_by !== $userId) {
             abort(403);
         }
 

@@ -65,7 +65,9 @@ class InvoiceController extends Controller
         );
         $patient = Patient::findOrFail($validated['patient_id']);
 
-        if ($patient->created_by !== null && $patient->created_by !== $user->id) {
+        if (! $user->hasRole('admin')
+            && $patient->created_by !== null
+            && (int) $patient->created_by !== $user->id) {
             abort(403, 'Solo il creatore del paziente può emettere fatture.');
         }
 

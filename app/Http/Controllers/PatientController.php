@@ -21,6 +21,8 @@ class PatientController extends Controller
     /** Professionals the current user is allowed to see. */
     private function visibleScope($query): void
     {
+        if (auth()->user()->hasRole('admin')) return;
+
         $userId = auth()->id();
         $query->where(function ($q) use ($userId) {
             $q->whereNull('created_by')                                    // legacy records
@@ -31,6 +33,8 @@ class PatientController extends Controller
 
     private function authorizePatient(Patient $patient): void
     {
+        if (auth()->user()->hasRole('admin')) return;
+
         // Legacy patients (no creator) remain visible to all.
         if ($patient->created_by === null) return;
 
@@ -142,7 +146,7 @@ class PatientController extends Controller
         $this->authorizePatient($patient);
 
         $userId    = auth()->id();
-        $isCreator = $patient->created_by === $userId;
+        $isCreator = auth()->user()->hasRole('admin') || $patient->created_by === $userId;
 
         $relations = [
             'tags',
@@ -171,7 +175,9 @@ class PatientController extends Controller
     public function edit(Patient $patient): Response
     {
         $this->authorizePatient($patient);
-        if ($patient->created_by !== null && $patient->created_by !== auth()->id()) {
+        if (! auth()->user()->hasRole('admin')
+            && $patient->created_by !== null
+            && (int) $patient->created_by !== auth()->id()) {
             abort(403, 'Solo il creatore del paziente può modificarne i dati.');
         }
 
@@ -188,7 +194,9 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient): RedirectResponse
     {
         $this->authorizePatient($patient);
-        if ($patient->created_by !== null && $patient->created_by !== auth()->id()) {
+        if (! auth()->user()->hasRole('admin')
+            && $patient->created_by !== null
+            && (int) $patient->created_by !== auth()->id()) {
             abort(403);
         }
 

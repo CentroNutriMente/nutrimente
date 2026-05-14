@@ -115,7 +115,9 @@ class AppointmentController extends Controller
 
         if (! empty($validated['patient_id'])) {
             $patient = Patient::find($validated['patient_id']);
-            if ($patient && $patient->created_by !== null && $patient->created_by !== $request->user()->id) {
+            if (! $request->user()->hasRole('admin')
+                && $patient && $patient->created_by !== null
+                && (int) $patient->created_by !== $request->user()->id) {
                 abort(403, 'Solo il creatore del paziente può creare appuntamenti per questo paziente.');
             }
         }
