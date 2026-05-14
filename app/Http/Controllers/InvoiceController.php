@@ -75,46 +75,54 @@ class InvoiceController extends Controller
         $marcaDaBollo = Invoice::calculateMarcaDaBollo($subtotal);
         $total = $subtotal + $marcaDaBollo;
 
-        DB::transaction(function () use ($user, $profile, $patient, $validated, $subtotal, $marcaDaBollo, $total) {
-            $year = now()->year;
-            $number = $profile->nextInvoiceNumber();
+        try {
+            DB::transaction(function () use ($user, $profile, $patient, $validated, $subtotal, $marcaDaBollo, $total) {
+                $year = now()->year;
+                $number = $profile->nextInvoiceNumber();
 
-            $invoice = Invoice::create([
-                'user_id' => $user->id,
-                'patient_id' => $patient->id,
-                'appointment_id' => $validated['appointment_id'] ?? null,
-                'invoice_number' => $number,
-                'invoice_year' => $year,
-                'invoice_code' => "{$number}/{$year}",
-                'issuer_name' => $user->name,
-                'issuer_partita_iva' => $profile?->partita_iva,
-                'issuer_codice_fiscale' => $profile?->codice_fiscale,
-                'issuer_address' => $profile?->address,
-                'issuer_regime_fiscale' => $profile?->regime_fiscale ?? 'ordinario',
-                'client_name' => $patient->full_name,
-                'client_codice_fiscale' => $patient->codice_fiscale,
-                'client_address' => trim(collect([$patient->address, $patient->cap, $patient->city])->filter()->implode(', ')),
-                'client_phone' => $patient->phone,
-                'client_email' => $patient->email,
-                'subtotal' => $subtotal,
-                'marca_da_bollo' => $marcaDaBollo,
-                'total' => $total,
-                'payment_method' => $validated['payment_method'] ?? null,
-                'issued_at' => $validated['issued_at'],
-                'status' => 'issued',
-            ]);
-
-            foreach ($validated['lines'] as $line) {
-                $invoice->lines()->create([
-                    'description' => $line['description'],
-                    'quantity' => $line['quantity'],
-                    'unit_price' => $line['unit_price'],
-                    'total' => $line['quantity'] * $line['unit_price'],
+                $invoice = Invoice::create([
+                    'user_id' => $user->id,
+                    'patient_id' => $patient->id,
+                    'appointment_id' => $validated['appointment_id'] ?? null,
+                    'invoice_number' => $number,
+                    'invoice_year' => $year,
+                    'invoice_code' => "{$number}/{$year}",
+                    'issuer_name' => $user->name,
+                    'issuer_partita_iva' => $profile?->partita_iva,
+                    'issuer_codice_fiscale' => $profile?->codice_fiscale,
+                    'issuer_address' => $profile?->address,
+                    'issuer_regime_fiscale' => $profile?->regime_fiscale ?? 'ordinario',
+                    'client_name' => $patient->full_name,
+                    'client_codice_fiscale' => $patient->codice_fiscale,
+                    'client_address' => trim(collect([$patient->address, $patient->cap, $patient->city])->filter()->implode(', ')),
+                    'client_phone' => $patient->phone,
+                    'client_email' => $patient->email,
+                    'subtotal' => $subtotal,
+                    'marca_da_bollo' => $marcaDaBollo,
+                    'total' => $total,
+                    'payment_method' => $validated['payment_method'] ?? null,
+                    'issued_at' => $validated['issued_at'],
+                    'status' => 'issued',
                 ]);
-            }
 
-            return $invoice;
-        });
+                foreach ($validated['lines'] as $line) {
+                    $invoice->lines()->create([
+                        'description' => $line['description'],
+                        'quantity' => $line['quantity'],
+                        'unit_price' => $line['unit_price'],
+                        'total' => $line['quantity'] * $line['unit_price'],
+                    ]);
+                }
+
+                return $invoice;
+            });
+        } catch (\Throwable $e) {
+            \Log::error('InvoiceController@store: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return back()->with('error', '[DEBUG] ' . $e->getMessage() . ' — ' . basename($e->getFile()) . ':' . $e->getLine());
+        }
 
         return redirect()->route('invoices.index')->with('success', 'Fattura emessa.');
     }

@@ -49,6 +49,10 @@ const paymentMethods = ['contanti', 'bonifico', 'pos', 'assegno'];
             </div>
         </template>
 
+        <div v-if="$page.props.flash?.error" class="mb-4 max-w-5xl bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+            {{ $page.props.flash.error }}
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl">
             <div class="lg:col-span-2 space-y-5">
                 <!-- Intestazione -->
