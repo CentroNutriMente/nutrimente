@@ -42,9 +42,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             // Unread notification count included in every Inertia response so
             // the bell badge is correct on first render, before any AJAX polling.
-            'notif_unread' => $user
-                ? Notification::where('user_id', $user->id)->whereNull('read_at')->count()
-                : 0,
+            'notif_unread' => $user ? rescue(
+                fn () => Notification::where('user_id', $user->id)->whereNull('read_at')->count(),
+                0, false
+            ) : 0,
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error'   => $request->session()->get('error'),
