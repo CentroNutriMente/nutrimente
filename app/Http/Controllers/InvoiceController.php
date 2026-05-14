@@ -117,11 +117,8 @@ class InvoiceController extends Controller
                 return $invoice;
             });
         } catch (\Throwable $e) {
-            \Log::error('InvoiceController@store: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return back()->with('error', '[DEBUG] ' . $e->getMessage() . ' — ' . basename($e->getFile()) . ':' . $e->getLine());
+            \Log::error('InvoiceController@store: ' . $e->getMessage());
+            return back()->with('error', 'Errore durante la creazione della fattura. Riprova.');
         }
 
         return redirect()->route('invoices.index')->with('success', 'Fattura emessa.');

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Invoice;
 
 class ProfessionalProfile extends Model
 {
@@ -29,7 +30,12 @@ class ProfessionalProfile extends Model
 
     public function nextInvoiceNumber(): int
     {
-        $this->increment('invoice_counter');
-        return $this->invoice_counter;
+        $year = now()->year;
+        $maxExisting = Invoice::where('user_id', $this->user_id)
+            ->where('invoice_year', $year)
+            ->max('invoice_number') ?? 0;
+        $next = max($this->invoice_counter, $maxExisting) + 1;
+        $this->update(['invoice_counter' => $next]);
+        return $next;
     }
 }
