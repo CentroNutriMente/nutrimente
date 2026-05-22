@@ -24,6 +24,7 @@ class BookingController extends Controller
     {
         $professionals = User::with(['professionalProfile', 'roles'])
             ->whereHas('professionalProfile', fn ($q) => $q->where('is_bookable', true))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'admin'))
             ->get()
             ->map(fn ($u) => [
                 'id'         => $u->id,
