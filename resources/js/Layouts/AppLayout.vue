@@ -18,6 +18,7 @@ onMounted(() => {
 const navItems = [
     { name: 'Dashboard',      href: 'dashboard',          icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z' },
     { name: 'Calendario',     href: 'calendar',            icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { name: 'Richieste',      href: 'contact-requests.inbox', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
     { name: 'Pazienti',       href: 'patients.index',      icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
     { name: 'Gestione Referti', href: 'report-templates.index', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
     { name: 'Gestione Questionari', href: 'questionnaire-templates.index', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
@@ -96,6 +97,10 @@ function notificationTarget(n) {
         return route('patients.show', n.data.patient_id);
     }
 
+    if (['contact_request_new', 'contact_request_assigned', 'contact_request_rejected'].includes(n.type)) {
+        return route('contact-requests.inbox');
+    }
+
     return null;
 }
 
@@ -113,6 +118,9 @@ const notifIcon = {
     task_due:              'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
     intervisione:          'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
     appointment_cancelled: 'M6 18L18 6M6 6l12 12',
+    contact_request_new:       'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+    contact_request_assigned:  'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+    contact_request_rejected:  'M6 18L18 6M6 6l12 12',
 };
 
 const notifColor = {
@@ -121,6 +129,9 @@ const notifColor = {
     task_due:              'text-amber-500 bg-amber-50',
     intervisione:          'text-green-500 bg-green-50',
     appointment_cancelled: 'text-red-500 bg-red-50',
+    contact_request_new:       'text-purple-500 bg-purple-50',
+    contact_request_assigned:  'text-blue-500 bg-blue-50',
+    contact_request_rejected:  'text-amber-500 bg-amber-50',
 };
 
 onMounted(() => {

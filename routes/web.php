@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\ContactRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\BookingController;
@@ -19,12 +20,14 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Pagina pubblica di booking
-Route::get('/prenota', [BookingController::class, 'index'])->name('booking.index');
-Route::get('/prenota/{slug}', [BookingController::class, 'show'])->name('booking.show');
-Route::post('/prenota/{slug}', [BookingController::class, 'store'])->name('booking.store');
-Route::get('/prenota/{slug}/conferma/{token}', [BookingController::class, 'confirm'])->name('booking.confirm');
-Route::get('/prenota/{slug}/rifiuta/{token}', [BookingController::class, 'reject'])->name('booking.reject');
+// Scheda Primo Contatto — intake pubblico (sostituisce il vecchio booking per professionista)
+Route::get('/prenota', [ContactRequestController::class, 'create'])->name('booking.index');
+Route::post('/prenota', [ContactRequestController::class, 'store'])->name('contact-requests.store');
+
+// Vecchie rotte per-professionista deprecate → reindirizzano alla scheda
+Route::get('/prenota/{slug}', fn () => redirect()->route('booking.index'));
+Route::get('/prenota/{slug}/conferma/{token}', fn () => redirect()->route('booking.index'));
+Route::get('/prenota/{slug}/rifiuta/{token}', fn () => redirect()->route('booking.index'));
 
 // Area personale paziente (solo utenti con ruolo patient)
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'require.patient'])->group(function () {
@@ -111,6 +114,12 @@ Route::middleware([
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
+    // Inbox richieste di primo contatto (triage)
+    Route::get('richieste', [ContactRequestController::class, 'inbox'])->name('contact-requests.inbox');
+    Route::post('richieste/{contactRequest}/assign', [ContactRequestController::class, 'assign'])->name('contact-requests.assign');
+    Route::post('richieste/{contactRequest}/accept', [ContactRequestController::class, 'accept'])->name('contact-requests.accept');
+    Route::post('richieste/{contactRequest}/reject', [ContactRequestController::class, 'reject'])->name('contact-requests.reject');
 
     // Workspace – task list
     Route::get('workspace', [TaskController::class, 'index'])->name('workspace.index');

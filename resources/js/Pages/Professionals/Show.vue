@@ -205,9 +205,9 @@ function removeSlot(slotId) {
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Fasce orarie disponibili</h2>
-                    <a v-if="slug" :href="`/prenota/${slug}`" target="_blank"
+                    <a href="/prenota" target="_blank"
                         class="text-xs text-purple-600 hover:underline">
-                        Pagina pubblica →
+                        Scheda primo contatto →
                     </a>
                 </div>
 
