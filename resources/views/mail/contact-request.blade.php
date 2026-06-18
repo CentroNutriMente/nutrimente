@@ -5,9 +5,8 @@
         'miodottore'  => 'MioDottore',
     ];
     $contactLabels = [
-        'whatsapp_tel_mail' => 'WhatsApp / Telefono / Mail',
-        'social'            => 'Social',
-        'miodottore'        => 'MioDottore',
+        'whatsapp' => 'WhatsApp',
+        'telefono' => 'Telefono',
     ];
     $dayLabels = ['lun' => 'Lun', 'mar' => 'Mar', 'mer' => 'Mer', 'gio' => 'Gio', 'ven' => 'Ven', 'sab' => 'Sab'];
     $slotsByDay = [];
@@ -19,14 +18,16 @@
 <x-mail::message>
 # Nuova richiesta di primo contatto
 
-È arrivata una nuova **Scheda Primo Contatto**.
+Ciao **{{ $contact->professional->name ?? '' }}**,
+
+hai ricevuto una nuova **Scheda Primo Contatto**.
 
 **Nome:** {{ $contact->fullName() }}
 **Email:** {{ $contact->email }}
 **Telefono:** {{ $contact->phone ?? '—' }}
 
 **Come ci ha trovato:** {{ collect($contact->how_found ?? [])->map(fn ($v) => $howFoundLabels[$v] ?? $v)->implode(', ') ?: '—' }}
-**Modalità di contatto preferita:** {{ collect($contact->contact_method ?? [])->map(fn ($v) => $contactLabels[$v] ?? $v)->implode(', ') ?: '—' }}
+**Come preferisce essere ricontattato:** {{ collect($contact->contact_method ?? [])->map(fn ($v) => $contactLabels[$v] ?? $v)->implode(', ') ?: '—' }}
 
 **Disponibilità indicata:**
 @forelse($slotsByDay as $day => $hours)

@@ -72,7 +72,7 @@ const props = defineProps({ professionals: Array });
         <!-- Professionals -->
         <main class="max-w-3xl mx-auto px-4 py-14">
             <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">Il nostro team</h2>
-            <p class="text-center text-gray-400 text-sm mb-10">Scegli il professionista e prenota direttamente online.</p>
+            <p class="text-center text-gray-400 text-sm mb-10">Scegli il professionista e compila la scheda di primo contatto.</p>
 
             <div v-if="professionals.length === 0" class="text-center text-gray-400 py-16">
                 Nessun professionista disponibile al momento.
@@ -105,7 +105,7 @@ const props = defineProps({ professionals: Array });
                         <div class="text-sm text-purple-600 font-medium mb-3">{{ p.category }}</div>
                         <p v-if="p.bio" class="text-sm text-gray-500 leading-relaxed line-clamp-3">{{ p.bio }}</p>
                         <span class="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 group-hover:underline mt-3">
-                            Scopri e prenota
+                            Scopri e richiedi un contatto
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>

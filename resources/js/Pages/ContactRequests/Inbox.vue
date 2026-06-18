@@ -4,9 +4,7 @@ import { ref, computed } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
-    requests:   Array,
-    colleagues: Array,
-    is_triage:  Boolean,
+    requests: Array,
 });
 
 const HOW_FOUND_LABELS = {
@@ -15,18 +13,16 @@ const HOW_FOUND_LABELS = {
     miodottore:  'MioDottore',
 };
 const CONTACT_LABELS = {
-    whatsapp_tel_mail: 'WhatsApp / Tel / Mail',
-    social:            'Social',
-    miodottore:        'MioDottore',
+    whatsapp: 'WhatsApp',
+    telefono: 'Telefono',
 };
 const DAY_LABELS = { lun: 'Lun', mar: 'Mar', mer: 'Mer', gio: 'Gio', ven: 'Ven', sab: 'Sab' };
 const DAY_ISO    = { lun: 1, mar: 2, mer: 3, gio: 4, ven: 5, sab: 6 };
 
 const STATUS = {
-    pending:  { label: 'Da smistare',  cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-    assigned: { label: 'Assegnata',    cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-    accepted: { label: 'Accettata',    cls: 'bg-green-50 text-green-700 border-green-200' },
-    rejected: { label: 'Rifiutata',    cls: 'bg-gray-100 text-gray-500 border-gray-200' },
+    pending:  { label: 'Da gestire', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+    accepted: { label: 'Accettata',  cls: 'bg-green-50 text-green-700 border-green-200' },
+    rejected: { label: 'Rifiutata',  cls: 'bg-gray-100 text-gray-500 border-gray-200' },
 };
 
 function labelHowFound(c) {
@@ -47,13 +43,6 @@ function availabilityByDay(c) {
     }));
 }
 
-// ── Assign (Sara only) ──────────────────────────────────────────────────────
-const assignTarget = ref({}); // { [requestId]: colleagueId }
-function assign(c) {
-    const to = assignTarget.value[c.id];
-    if (!to) return;
-    router.post(route('contact-requests.assign', c.id), { assigned_to: to }, { preserveScroll: true });
-}
 function reject(c) {
     router.post(route('contact-requests.reject', c.id), {}, { preserveScroll: true });
 }
@@ -116,7 +105,7 @@ function submitAccept() {
 
                 <div class="grid sm:grid-cols-2 gap-x-6 gap-y-1 mt-3 text-sm">
                     <p><span class="text-gray-400">Come ci ha trovato:</span> {{ labelHowFound(c) }}</p>
-                    <p><span class="text-gray-400">Contatto:</span> {{ labelContact(c) }}</p>
+                    <p><span class="text-gray-400">Ricontatto preferito:</span> {{ labelContact(c) }}</p>
                 </div>
 
                 <div class="mt-3">
@@ -132,39 +121,19 @@ function submitAccept() {
 
                 <p v-if="c.notes" class="mt-3 text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2">{{ c.notes }}</p>
 
-                <p class="mt-3 text-xs text-gray-400">
-                    Ricevuta {{ c.created_at }}
-                    <span v-if="c.assignee && c.status === 'assigned'"> · assegnata a <strong>{{ c.assignee }}</strong></span>
-                    <span v-if="c.accepted_by"> · accettata da <strong>{{ c.accepted_by }}</strong></span>
-                </p>
+                <p class="mt-3 text-xs text-gray-400">Ricevuta {{ c.created_at }}</p>
 
                 <!-- Actions -->
                 <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4"
-                    v-if="['pending', 'assigned'].includes(c.status)">
-
+                    v-if="c.status === 'pending'">
                     <button @click="openAccept(c)"
                         class="text-sm font-semibold text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded-xl transition-colors">
                         Accetta e fissa
                     </button>
-
-                    <!-- Colleague can decline their assigned request -->
-                    <button v-if="!is_triage && c.status === 'assigned'" @click="reject(c)"
+                    <button @click="reject(c)"
                         class="text-sm font-medium text-gray-600 hover:text-red-600 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors">
                         Rifiuta
                     </button>
-
-                    <!-- Triage can route to a colleague -->
-                    <div v-if="is_triage" class="flex items-center gap-2 ml-auto">
-                        <select v-model="assignTarget[c.id]"
-                            class="text-sm rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
-                            <option :value="undefined" disabled>Smista a…</option>
-                            <option v-for="col in colleagues" :key="col.id" :value="col.id">{{ col.name }}</option>
-                        </select>
-                        <button @click="assign(c)" :disabled="!assignTarget[c.id]"
-                            class="text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 disabled:opacity-50 px-4 py-2 rounded-xl transition-colors">
-                            {{ c.status === 'assigned' ? 'Ri-smista' : 'Smista' }}
-                        </button>
-                    </div>
                 </div>
 
                 <Link v-else-if="c.status === 'accepted' && c.patient_id" :href="route('patients.show', c.patient_id)"

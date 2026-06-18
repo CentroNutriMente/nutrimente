@@ -20,12 +20,12 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Scheda Primo Contatto — intake pubblico (sostituisce il vecchio booking per professionista)
-Route::get('/prenota', [ContactRequestController::class, 'create'])->name('booking.index');
-Route::post('/prenota', [ContactRequestController::class, 'store'])->name('contact-requests.store');
+// Scheda Primo Contatto — il cliente sceglie il professionista e compila la scheda
+Route::get('/prenota', [ContactRequestController::class, 'index'])->name('booking.index');
+Route::get('/prenota/{slug}', [ContactRequestController::class, 'create'])->name('contact-requests.create');
+Route::post('/prenota/{slug}', [ContactRequestController::class, 'store'])->name('contact-requests.store');
 
-// Vecchie rotte per-professionista deprecate → reindirizzano alla scheda
-Route::get('/prenota/{slug}', fn () => redirect()->route('booking.index'));
+// Vecchie rotte di booking deprecate → reindirizzano alla selezione professionista
 Route::get('/prenota/{slug}/conferma/{token}', fn () => redirect()->route('booking.index'));
 Route::get('/prenota/{slug}/rifiuta/{token}', fn () => redirect()->route('booking.index'));
 
@@ -115,9 +115,8 @@ Route::middleware([
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 
-    // Inbox richieste di primo contatto (triage)
+    // Inbox richieste di primo contatto (ogni professionista vede le proprie)
     Route::get('richieste', [ContactRequestController::class, 'inbox'])->name('contact-requests.inbox');
-    Route::post('richieste/{contactRequest}/assign', [ContactRequestController::class, 'assign'])->name('contact-requests.assign');
     Route::post('richieste/{contactRequest}/accept', [ContactRequestController::class, 'accept'])->name('contact-requests.accept');
     Route::post('richieste/{contactRequest}/reject', [ContactRequestController::class, 'reject'])->name('contact-requests.reject');
 

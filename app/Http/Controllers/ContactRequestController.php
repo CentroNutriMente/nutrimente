@@ -8,6 +8,7 @@ use App\Models\Appointment;
 use App\Models\ContactRequest;
 use App\Models\Notification;
 use App\Models\Patient;
+use App\Models\ProfessionalProfile;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -22,18 +23,63 @@ class ContactRequestController extends Controller
 {
     // Fixed option sets mirrored on the public form.
     private const HOW_FOUND      = ['passaparola', 'social', 'miodottore'];
-    private const CONTACT_METHOD = ['whatsapp_tel_mail', 'social', 'miodottore'];
+    private const CONTACT_METHOD = ['whatsapp', 'telefono'];
     private const DAYS           = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
 
-    // ── Public: Scheda Primo Contatto ──────────────────────────────────────────
+    // ── Public: choose a professional ──────────────────────────────────────────
 
-    public function create(): Response
+    public function index(): Response
     {
-        return Inertia::render('Booking/PrimoContatto');
+        $professionals = User::with(['professionalProfile', 'roles'])
+            ->whereHas('professionalProfile', fn ($q) => $q->where('is_bookable', true))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'admin'))
+            ->get()
+            ->map(fn ($u) => [
+                'id'         => $u->id,
+                'name'       => $u->name,
+                'slug'       => $u->professionalProfile?->slug,
+                'role'       => $u->getRoleNames()->first(),
+                'category'   => $u->professionalProfile?->category,
+                'title'      => $u->professionalProfile?->title,
+                'bio'        => $u->professionalProfile?->bio
+                    ? Str::limit($u->professionalProfile->bio, 200)
+                    : null,
+                'photo'      => $u->profile_photo_url,
+                'is_founder' => (bool) $u->professionalProfile?->is_founder,
+            ])
+            ->sortByDesc('is_founder')
+            ->values();
+
+        return Inertia::render('Booking/Index', compact('professionals'));
     }
 
-    public function store(Request $request): RedirectResponse
+    // ── Public: Scheda Primo Contatto for a given professional ──────────────────
+
+    public function create(string $slug): Response
     {
+        $profile = ProfessionalProfile::where('slug', $slug)
+            ->where('is_bookable', true)
+            ->with('user')
+            ->firstOrFail();
+
+        return Inertia::render('Booking/PrimoContatto', [
+            'professional' => [
+                'name'     => $profile->user->name,
+                'slug'     => $slug,
+                'title'    => $profile->title,
+                'category' => $profile->category,
+                'photo'    => $profile->user->profile_photo_url,
+            ],
+        ]);
+    }
+
+    public function store(Request $request, string $slug): RedirectResponse
+    {
+        $profile = ProfessionalProfile::where('slug', $slug)
+            ->where('is_bookable', true)
+            ->with('user')
+            ->firstOrFail();
+
         $validated = $request->validate([
             'name'             => 'required|string|max:100',
             'surname'          => 'required|string|max:100',
@@ -50,116 +96,56 @@ class ContactRequestController extends Controller
 
         $contact = ContactRequest::create([
             ...$validated,
-            'status'        => 'pending',
-            'confirm_token' => Str::random(48),
+            'professional_id' => $profile->user_id,
+            'status'          => 'pending',
+            'confirm_token'   => Str::random(48),
         ]);
 
-        // Route to the triage hub (Sara): in-app notification + email.
-        if ($triage = ContactRequest::triageUser()) {
-            Notification::send(
-                $triage->id,
-                'contact_request_new',
-                'Nuova richiesta di primo contatto',
-                "{$contact->fullName()} ha inviato una scheda di primo contatto.",
-                ['contact_request_id' => $contact->id],
-            );
+        // Notify the chosen professional: in-app notification + email.
+        Notification::send(
+            $profile->user_id,
+            'contact_request_new',
+            'Nuova richiesta di primo contatto',
+            "{$contact->fullName()} ti ha inviato una scheda di primo contatto.",
+            ['contact_request_id' => $contact->id],
+        );
 
-            try {
-                Mail::to($triage->email)->send(new NewContactRequestMail($contact));
-            } catch (\Exception $e) {
-                \Log::error('NewContactRequest mail failed: ' . $e->getMessage());
-            }
+        try {
+            Mail::to($profile->user->email)->send(new NewContactRequestMail($contact->load('professional')));
+        } catch (\Exception $e) {
+            \Log::error('NewContactRequest mail failed: ' . $e->getMessage());
         }
 
-        return back()->with('success', 'Richiesta inviata! Ti contatteremo a breve per fissare il primo colloquio.');
+        return back()->with('success', 'Richiesta inviata! Il professionista ti contatterà a breve per fissare il primo colloquio.');
     }
 
-    // ── Professional inbox ─────────────────────────────────────────────────────
+    // ── Professional inbox: only own requests ───────────────────────────────────
 
     public function inbox(Request $request): Response
     {
-        $user     = $request->user();
-        $isTriage = $this->isTriage($user);
-
-        $query = ContactRequest::with(['assignee', 'acceptedBy', 'patient'])
+        $requests = ContactRequest::with(['patient'])
+            ->where('professional_id', $request->user()->id)
             ->orderByRaw("CASE status
                 WHEN 'pending' THEN 0
-                WHEN 'assigned' THEN 1
-                WHEN 'accepted' THEN 2
-                WHEN 'rejected' THEN 3
-                ELSE 4 END")
-            ->orderByDesc('created_at');
-
-        if ($isTriage) {
-            // Triage hub sees every still-open request, plus its own resolved history.
-            $query->where(fn ($q) => $q
-                ->whereIn('status', ['pending', 'assigned'])
-                ->orWhere('accepted_by', $user->id));
-        } else {
-            // Colleagues only see what was routed to them, or that they handled.
-            $query->where(fn ($q) => $q
-                ->where(fn ($q) => $q->where('assigned_to', $user->id)->where('status', 'assigned'))
-                ->orWhere('accepted_by', $user->id));
-        }
-
-        $requests = $query->get()->map(fn ($c) => $this->present($c));
-
-        // Colleagues Sara can route a request to.
-        $colleagues = $isTriage
-            ? User::whereHas('professionalProfile')
-                ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'admin'))
-                ->where('id', '!=', $user->id)
-                ->orderBy('name')
-                ->get()
-                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
-                ->values()
-            : [];
+                WHEN 'accepted' THEN 1
+                WHEN 'rejected' THEN 2
+                ELSE 3 END")
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($c) => $this->present($c));
 
         return Inertia::render('ContactRequests/Inbox', [
-            'requests'   => $requests,
-            'colleagues' => $colleagues,
-            'is_triage'  => $isTriage,
+            'requests' => $requests,
         ]);
     }
 
-    // ── Sara routes a request to a colleague ────────────────────────────────────
-
-    public function assign(Request $request, ContactRequest $contactRequest): RedirectResponse
-    {
-        abort_unless($this->isTriage($request->user()), 403);
-        abort_unless(in_array($contactRequest->status, ['pending', 'assigned']), 422);
-
-        $validated = $request->validate([
-            'assigned_to' => [
-                'required',
-                Rule::exists('users', 'id'),
-                Rule::notIn([$request->user()->id]),
-            ],
-        ]);
-
-        $contactRequest->update([
-            'status'      => 'assigned',
-            'assigned_to' => $validated['assigned_to'],
-        ]);
-
-        Notification::send(
-            $validated['assigned_to'],
-            'contact_request_assigned',
-            'Richiesta di primo contatto assegnata',
-            "{$contactRequest->fullName()} ti è stato assegnato per il primo colloquio.",
-            ['contact_request_id' => $contactRequest->id],
-        );
-
-        return back()->with('success', 'Richiesta smistata al collega.');
-    }
-
-    // ── A colleague (or Sara) accepts and fixes the appointment ─────────────────
+    // ── Professional accepts and fixes the appointment ──────────────────────────
 
     public function accept(Request $request, ContactRequest $contactRequest): RedirectResponse
     {
         $user = $request->user();
-        abort_unless($this->canHandle($user, $contactRequest), 403);
-        abort_unless(in_array($contactRequest->status, ['pending', 'assigned']), 422);
+        abort_unless($contactRequest->professional_id === $user->id, 403);
+        abort_unless($contactRequest->status === 'pending', 422);
 
         $validated = $request->validate([
             'date' => 'required|date|after_or_equal:today',
@@ -167,7 +153,7 @@ class ContactRequestController extends Controller
         ]);
 
         // Soft-check the chosen slot falls within the client's stated availability.
-        $slot = strtolower(self::DAYS[Carbon::parse($validated['date'])->isoWeekday() - 1] ?? '')
+        $slot = (self::DAYS[Carbon::parse($validated['date'])->isoWeekday() - 1] ?? '')
             . '|' . $validated['time'];
         if (! empty($contactRequest->availability) && ! in_array($slot, $contactRequest->availability)) {
             return back()->withErrors(['time' => 'Lo slot scelto non rientra nelle disponibilità indicate dal cliente.']);
@@ -222,42 +208,19 @@ class ContactRequestController extends Controller
         return back()->with('success', 'Appuntamento fissato e cliente avvisato.');
     }
 
-    // ── A colleague declines: request bounces back to the triage hub ────────────
+    // ── Professional declines the request ───────────────────────────────────────
 
     public function reject(Request $request, ContactRequest $contactRequest): RedirectResponse
     {
-        $user = $request->user();
-        abort_unless($contactRequest->assigned_to === $user->id && $contactRequest->status === 'assigned', 403);
+        abort_unless($contactRequest->professional_id === $request->user()->id, 403);
+        abort_unless($contactRequest->status === 'pending', 422);
 
-        $contactRequest->update([
-            'status'      => 'pending',
-            'assigned_to' => null,
-        ]);
+        $contactRequest->update(['status' => 'rejected']);
 
-        if ($triage = ContactRequest::triageUser()) {
-            Notification::send(
-                $triage->id,
-                'contact_request_rejected',
-                'Richiesta di primo contatto rifiutata',
-                "{$user->name} ha rifiutato la richiesta di {$contactRequest->fullName()}.",
-                ['contact_request_id' => $contactRequest->id],
-            );
-        }
-
-        return back()->with('success', 'Richiesta rifiutata e rimandata allo smistamento.');
+        return back()->with('success', 'Richiesta rifiutata.');
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────
-
-    private function isTriage(User $user): bool
-    {
-        return ContactRequest::triageUser()?->id === $user->id;
-    }
-
-    private function canHandle(User $user, ContactRequest $contact): bool
-    {
-        return $this->isTriage($user) || $contact->assigned_to === $user->id;
-    }
 
     private function present(ContactRequest $c): array
     {
@@ -272,9 +235,6 @@ class ContactRequestController extends Controller
             'availability'   => $c->availability ?? [],
             'notes'          => $c->notes,
             'status'         => $c->status,
-            'assigned_to'    => $c->assigned_to,
-            'assignee'       => $c->assignee?->name,
-            'accepted_by'    => $c->acceptedBy?->name,
             'patient_id'     => $c->patient_id,
             'created_at'     => $c->created_at->diffForHumans(),
         ];

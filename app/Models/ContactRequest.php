@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ContactRequest extends Model
 {
     protected $fillable = [
-        'name', 'surname', 'phone', 'email',
+        'professional_id', 'name', 'surname', 'phone', 'email',
         'how_found', 'contact_method', 'availability', 'notes',
-        'status', 'assigned_to', 'accepted_by',
+        'status', 'accepted_by',
         'patient_id', 'appointment_id', 'confirm_token',
     ];
 
@@ -20,9 +20,9 @@ class ContactRequest extends Model
         'availability'   => 'array',
     ];
 
-    public function assignee(): BelongsTo
+    public function professional(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(User::class, 'professional_id');
     }
 
     public function acceptedBy(): BelongsTo
@@ -43,17 +43,5 @@ class ContactRequest extends Model
     public function fullName(): string
     {
         return trim("{$this->name} {$this->surname}");
-    }
-
-    /**
-     * The triage hub user: every incoming first-contact request lands in their
-     * inbox. Resolved as the founder, with a fallback on the well-known slug.
-     */
-    public static function triageUser(): ?User
-    {
-        $profile = ProfessionalProfile::where('is_founder', true)->first()
-            ?? ProfessionalProfile::where('slug', 'sara-alessandri')->first();
-
-        return $profile?->user;
     }
 }

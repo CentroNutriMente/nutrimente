@@ -1,6 +1,8 @@
 <script setup>
 import { useForm, usePage } from '@inertiajs/vue3';
 
+const props = defineProps({ professional: Object });
+
 const page = usePage();
 
 const HOW_FOUND = [
@@ -10,9 +12,8 @@ const HOW_FOUND = [
 ];
 
 const CONTACT_METHOD = [
-    { value: 'whatsapp_tel_mail', label: 'WhatsApp / Telefono / Mail' },
-    { value: 'social',            label: 'Social' },
-    { value: 'miodottore',        label: 'MioDottore' },
+    { value: 'whatsapp', label: 'WhatsApp' },
+    { value: 'telefono', label: 'Telefono' },
 ];
 
 const DAYS  = [
@@ -46,7 +47,7 @@ function slotKey(day, hour) { return `${day}|${hour}`; }
 function hasSlot(day, hour) { return form.availability.includes(slotKey(day, hour)); }
 
 function submit() {
-    form.post('/prenota', {
+    form.post(`/prenota/${props.professional.slug}`, {
         onSuccess: () => {
             form.reset();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -79,12 +80,20 @@ function submit() {
 
         <!-- Hero -->
         <header class="bg-white border-b border-gray-100">
-            <div class="max-w-3xl mx-auto px-4 py-12 flex flex-col items-center text-center gap-4">
-                <img src="/logo.jpeg" alt="NutriMente" class="h-28 w-auto mb-2" />
+            <div class="max-w-3xl mx-auto px-4 py-10 flex flex-col items-center text-center gap-4">
+                <a href="/prenota" class="self-start text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Tutti i professionisti
+                </a>
+                <img v-if="professional?.photo" :src="professional.photo" :alt="professional.name"
+                    class="w-24 h-24 rounded-full object-cover ring-2 ring-purple-100" />
                 <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Scheda Primo Contatto</h1>
                 <p class="text-gray-500 max-w-xl leading-relaxed">
-                    Lasciaci i tuoi dati e le tue disponibilità: un professionista del centro ti
-                    contatterà a breve per fissare il primo colloquio.
+                    Compila la scheda per richiedere un primo colloquio con
+                    <span class="font-semibold text-gray-700">{{ professional?.title ? professional.title + ' ' : '' }}{{ professional?.name }}</span><span v-if="professional?.category"> · {{ professional.category }}</span>.
+                    Verrai ricontattato a breve per fissare l'appuntamento.
                 </p>
             </div>
         </header>
@@ -146,13 +155,14 @@ function submit() {
                     </section>
 
                     <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Modalità di contatto</h2>
+                        <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Come preferisci essere ricontattato?</h2>
                         <div class="space-y-2.5">
                             <label v-for="o in CONTACT_METHOD" :key="o.value"
                                 class="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
-                                <input type="checkbox" :checked="form.contact_method.includes(o.value)"
-                                    @change="toggle('contact_method', o.value)"
-                                    class="rounded border-gray-300 text-purple-600 focus:ring-purple-400" />
+                                <input type="radio" name="contact_method" :value="o.value"
+                                    :checked="form.contact_method[0] === o.value"
+                                    @change="form.contact_method = [o.value]"
+                                    class="border-gray-300 text-purple-600 focus:ring-purple-400" />
                                 {{ o.label }}
                             </label>
                         </div>
