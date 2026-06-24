@@ -106,6 +106,18 @@ function submit() {
                 {{ page.props.flash.success }}
             </div>
 
+            <!-- Sezione dedicata: gruppi di aiuto e sostegno -->
+            <a href="/iscrizione-gruppo"
+                class="group mb-6 flex items-center gap-4 rounded-2xl border border-purple-100 bg-purple-50/60 px-5 py-4 hover:bg-purple-50 transition-colors">
+                <span class="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0 text-purple-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a6 6 0 0 1 12 0M15 14a6 6 0 0 1 6 6"/></svg>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-semibold text-gray-800">Interessato a un gruppo di aiuto e sostegno?</div>
+                    <div class="text-xs text-gray-500">Gestione ansia, supporto caregiver, alimentazione consapevole. Iscriviti qui →</div>
+                </div>
+            </a>
+
             <form @submit.prevent="submit" class="space-y-8">
 
                 <!-- Dati anagrafici -->

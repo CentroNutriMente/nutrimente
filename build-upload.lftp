@@ -1,0 +1,12 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:max-retries 40
+set net:timeout 60
+set net:reconnect-interval-base 3
+set xfer:clobber on
+# Carica gli asset compilati per primi, poi il manifest per ultimo (così non c'è
+# un istante in cui manifest.json punta a file non ancora caricati).
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

@@ -29,6 +29,11 @@ Route::post('/prenota/{slug}', [ContactRequestController::class, 'store'])->name
 Route::get('/prenota/{slug}/conferma/{token}', fn () => redirect()->route('booking.index'));
 Route::get('/prenota/{slug}/rifiuta/{token}', fn () => redirect()->route('booking.index'));
 
+// Iscrizione pubblica ai Gruppi di aiuto e sostegno (form + QR del volantino)
+Route::get('/iscrizione-gruppo', [\App\Http\Controllers\GroupEnrollmentController::class, 'create'])->name('groups.public.create');
+Route::post('/iscrizione-gruppo', [\App\Http\Controllers\GroupEnrollmentController::class, 'store'])->name('groups.public.store');
+Route::get('/g/{token}', [\App\Http\Controllers\GroupEnrollmentController::class, 'show'])->name('groups.public.show');
+
 // Area personale paziente (solo utenti con ruolo patient)
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'require.patient'])->group(function () {
     Route::get('/mia-area', [\App\Http\Controllers\PatientPortalController::class, 'dashboard'])->name('patient.dashboard');
@@ -47,6 +52,16 @@ Route::middleware([
 ])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Gruppi di aiuto e sostegno
+    Route::resource('groups', \App\Http\Controllers\GroupController::class)->except(['edit']);
+    Route::post('groups/{group}/participants', [\App\Http\Controllers\GroupController::class, 'addParticipant'])->name('groups.participants.store');
+    Route::put('groups/{group}/participants/{participant}', [\App\Http\Controllers\GroupController::class, 'updateParticipant'])->name('groups.participants.update');
+    Route::delete('groups/{group}/participants/{participant}', [\App\Http\Controllers\GroupController::class, 'removeParticipant'])->name('groups.participants.destroy');
+    Route::post('groups/{group}/enrollments/{enrollment}/approve', [\App\Http\Controllers\GroupController::class, 'approveEnrollment'])->name('groups.enrollments.approve');
+    Route::post('groups/{group}/enrollments/{enrollment}/reject', [\App\Http\Controllers\GroupController::class, 'rejectEnrollment'])->name('groups.enrollments.reject');
+    Route::get('groups/{group}/export', [\App\Http\Controllers\GroupController::class, 'exportParticipants'])->name('groups.export');
+    Route::get('groups/{group}/flyer', [\App\Http\Controllers\GroupController::class, 'flyer'])->name('groups.flyer');
 
     // Pazienti
     Route::resource('patients', PatientController::class);
