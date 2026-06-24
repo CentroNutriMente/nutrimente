@@ -26,7 +26,45 @@ class ContactRequestController extends Controller
     private const CONTACT_METHOD = ['whatsapp', 'telefono'];
     private const DAYS           = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
 
-    // ── Public: choose a professional ──────────────────────────────────────────
+    // ── Public: Sara-focused landing page (site home) ───────────────────────────
+
+    public function home()
+    {
+        // Authenticated users skip the landing and go to their area.
+        if (auth()->check()) {
+            $professionalRoles = ['admin', 'psicologo', 'nutrizionista', 'osteopata', 'collaboratore'];
+
+            return auth()->user()->hasAnyRole($professionalRoles)
+                ? redirect()->route('dashboard')
+                : redirect()->route('patient.dashboard');
+        }
+
+        $profile = ProfessionalProfile::where('is_founder', true)
+            ->with('user')
+            ->firstOrFail();
+
+        // curriculum is not cast on the model — decode defensively.
+        $curriculum = is_array($profile->curriculum)
+            ? $profile->curriculum
+            : (json_decode($profile->curriculum ?? '[]', true) ?: []);
+
+        return Inertia::render('Landing', [
+            'sara' => [
+                'name'                     => $profile->user->name,
+                'title'                    => $profile->title,
+                'category'                 => $profile->category,
+                'bio'                      => $profile->bio,
+                'photo'                    => $profile->user->profile_photo_url,
+                'slug'                     => $profile->slug,
+                'phone'                    => $profile->phone,
+                'session_duration_minutes' => $profile->session_duration_minutes,
+                'session_price'            => $profile->session_price,
+                'areas'                    => $curriculum['aree'] ?? [],
+            ],
+        ]);
+    }
+
+    // ── Public: choose a professional (Centro NutriMente team page, kept for later) ──
 
     public function index(): Response
     {

@@ -1,0 +1,12 @@
+set ssl:verify-certificate no
+set ftp:passive-mode true
+set net:max-retries 40
+set net:timeout 60
+set net:reconnect-interval-base 3
+set net:reconnect-interval-multiplier 1
+set xfer:clobber on
+cd www.saraalessandripsicologa.it
+put /Users/alfonso/nutrimente/nutrimente/aruba-upload/nm_part3.zip
+put /Users/alfonso/nutrimente/nutrimente/aruba-upload/nm_part5.zip
+ls -l nm_part3.zip nm_part5.zip
+bye

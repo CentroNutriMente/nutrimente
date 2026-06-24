@@ -36,15 +36,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/mia-area/richiedi-appuntamento', [\App\Http\Controllers\PatientPortalController::class, 'requestAppointment'])->name('patient.appointment.request');
 });
 
-Route::get('/', function () {
-    if (auth()->check()) {
-        $professionalRoles = ['admin', 'psicologo', 'nutrizionista', 'osteopata', 'collaboratore'];
-        return auth()->user()->hasAnyRole($professionalRoles)
-            ? redirect()->route('dashboard')
-            : redirect()->route('patient.dashboard');
-    }
-    return redirect()->route('booking.index');
-});
+// Home = Sara-focused landing page (Centro NutriMente team page kept at /prenota for later).
+Route::get('/', [ContactRequestController::class, 'home'])->name('home');
 
 Route::middleware([
     'auth:sanctum',

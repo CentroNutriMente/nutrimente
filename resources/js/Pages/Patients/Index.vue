@@ -27,10 +27,10 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
 </script>
 
 <template>
-    <AppLayout title="Pazienti">
+    <AppLayout title="Clienti">
         <template #header>
             <div class="flex items-center justify-between">
-                <h1 class="text-xl font-semibold text-gray-800">Pazienti</h1>
+                <h1 class="text-xl font-semibold text-gray-800">Clienti</h1>
                 <Link
                     :href="route('patients.create')"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
@@ -141,7 +141,7 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
             <!-- Paginazione -->
             <div v-if="patients.last_page > 1" class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
                 <span class="text-xs text-gray-400">
-                    {{ patients.from }}–{{ patients.to }} di {{ patients.total }} pazienti
+                    {{ patients.from }}–{{ patients.to }} di {{ patients.total }} clienti
                 </span>
                 <div class="flex gap-1">
                     <Link

@@ -81,11 +81,11 @@ function submit() {
         <!-- Hero -->
         <header class="bg-white border-b border-gray-100">
             <div class="max-w-3xl mx-auto px-4 py-10 flex flex-col items-center text-center gap-4">
-                <a href="/prenota" class="self-start text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
+                <a href="/" class="self-start text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
-                    Tutti i professionisti
+                    Torna alla home
                 </a>
                 <img v-if="professional?.photo" :src="professional.photo" :alt="professional.name"
                     class="w-24 h-24 rounded-full object-cover ring-2 ring-purple-100" />

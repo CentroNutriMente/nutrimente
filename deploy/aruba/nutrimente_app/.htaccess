@@ -1,0 +1,25 @@
+# Lock down the Laravel framework folder.
+# Nothing in here (.env, app code, vendor, storage, logs) should EVER be
+# served over HTTP. Requests are routed through the web-root index.php only.
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+# Apache 2.2 (fallback)
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+
+# Belt-and-suspenders: never serve the environment file
+<Files ".env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>

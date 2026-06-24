@@ -25,7 +25,9 @@ class TaskController extends Controller
 
         $tasks = Task::with('createdBy')
             ->whereIn('user_id', $professionals->pluck('id'))
-            ->orderByRaw("completed_at IS NOT NULL, priority DESC, due_date ASC NULLS LAST, created_at ASC")
+            // `due_date IS NULL` emulates Postgres `NULLS LAST` portably (MySQL has no
+            // NULLS LAST): non-null due dates sort 0 (first), nulls sort 1 (last).
+            ->orderByRaw("completed_at IS NOT NULL, priority DESC, due_date IS NULL, due_date ASC, created_at ASC")
             ->get()
             ->map(fn ($t) => [
                 'id'           => $t->id,

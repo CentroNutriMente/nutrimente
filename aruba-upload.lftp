@@ -1,0 +1,10 @@
+set ssl:verify-certificate no
+set ftp:passive-mode true
+set net:max-retries 5
+set net:timeout 40
+set net:reconnect-interval-base 5
+mirror -R --ignore-time --parallel=2 /Users/alfonso/nutrimente/nutrimente/aruba-upload/nutrimente_app www.saraalessandripsicologa.it/nutrimente_app
+mirror -R --ignore-time --parallel=2 /Users/alfonso/nutrimente/nutrimente/aruba-upload/docroot www.saraalessandripsicologa.it
+chmod -R 775 www.saraalessandripsicologa.it/nutrimente_app/storage
+chmod -R 775 www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache
+bye

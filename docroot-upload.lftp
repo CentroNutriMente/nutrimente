@@ -1,0 +1,9 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:max-retries 40
+set net:timeout 60
+set net:reconnect-interval-base 3
+set xfer:clobber on
+mirror -R --ignore-time --parallel=1 /Users/alfonso/nutrimente/nutrimente/aruba-upload/docroot www.saraalessandripsicologa.it
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye
