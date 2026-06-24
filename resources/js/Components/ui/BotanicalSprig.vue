@@ -1,7 +1,7 @@
 <script setup>
-// Piccolo rametto line-art da affiancare ai titoli (mockup: 🌿 accanto al saluto).
+// Piccolo rametto line-art da affiancare ai titoli.
 defineProps({
-    klass: { type: String, default: 'w-8 h-8 text-sage-400' },
+    klass: { type: String, default: 'w-8 h-8 text-sage' },
 });
 </script>
 

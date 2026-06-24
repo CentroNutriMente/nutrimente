@@ -1,0 +1,13 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:max-retries 40
+set net:timeout 60
+set net:reconnect-interval-base 3
+set xfer:clobber on
+
+# Ricarica l'autoloader Composer rigenerato SENZA dipendenze dev (fix del 500).
+# Sovrascrive installed.json/installed.php/autoload_*.php sul server.
+mirror -R --ignore-time --parallel=1 --no-perms /Users/alfonso/nutrimente/nutrimente/vendor/composer www.saraalessandripsicologa.it/nutrimente_app/vendor/composer
+
+ls -l www.saraalessandripsicologa.it/nutrimente_app/vendor/composer/installed.json
+bye

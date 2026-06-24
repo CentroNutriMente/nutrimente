@@ -115,11 +115,11 @@ const notifIcon = {
 
 const notifColor = {
     message:               'text-blue-500 bg-blue-50',
-    task_assigned:         'text-sage-600 bg-sage-100',
+    task_assigned:         'text-sage bg-sageLight',
     task_due:              'text-amber-500 bg-amber-50',
-    intervisione:          'text-sage-600 bg-sage-100',
+    intervisione:          'text-sage bg-sageLight',
     appointment_cancelled: 'text-red-500 bg-red-50',
-    contact_request_new:       'text-lavender-600 bg-lavender-100',
+    contact_request_new:       'text-lavender bg-lavenderLight',
     contact_request_assigned:  'text-blue-500 bg-blue-50',
     contact_request_rejected:  'text-amber-500 bg-amber-50',
 };
@@ -138,24 +138,24 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-cream-100 flex">
+    <div class="min-h-screen bg-cream flex">
         <Head :title="title" />
         <Banner />
 
         <!-- Overlay mobile -->
-        <div v-if="sidebarOpen" class="fixed inset-0 bg-stone-900/30 z-30 md:hidden" @click="sidebarOpen = false" />
+        <div v-if="sidebarOpen" class="fixed inset-0 bg-ink/30 z-30 md:hidden" @click="sidebarOpen = false" />
 
         <!-- Sidebar -->
         <aside
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-            class="fixed md:relative z-40 w-64 flex flex-col bg-cream-50 border-r border-cream-200 h-full min-h-screen transition-transform duration-200 shrink-0"
+            class="fixed md:relative z-40 w-64 flex flex-col bg-cream border-r border-line h-full min-h-screen transition-transform duration-200 shrink-0"
         >
             <!-- Logo / wordmark -->
             <div class="px-6 pt-7 pb-5">
                 <Link :href="route('dashboard')" class="flex flex-col items-center text-center gap-1">
-                    <BotanicalSprig klass="w-7 h-7 text-sage-400" />
-                    <div class="font-serif text-2xl leading-none text-stone-800 lowercase tracking-wide">nutrimente</div>
-                    <div class="text-[9px] text-stone-400 uppercase tracking-[0.18em] leading-tight mt-0.5">
+                    <BotanicalSprig klass="w-7 h-7 text-sage" />
+                    <div class="font-serif text-2xl leading-none text-ink lowercase tracking-wide">nutrimente</div>
+                    <div class="text-[9px] text-inkSoft uppercase tracking-[0.18em] leading-tight mt-0.5">
                         Studio di nutrizione<br>e psicologia
                     </div>
                 </Link>
@@ -170,8 +170,8 @@ onUnmounted(() => {
                     @click="closeSidebar"
                     :class="[
                         isActive(item.match)
-                            ? 'bg-sage-100 text-sage-700 font-semibold'
-                            : 'text-stone-500 hover:bg-cream-200 hover:text-stone-700',
+                            ? 'bg-sageLight text-sage font-semibold'
+                            : 'text-inkSoft hover:bg-cream hover:text-ink',
                         'flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm transition-colors'
                     ]"
                 >
@@ -184,7 +184,7 @@ onUnmounted(() => {
                 <!-- Altro -->
                 <button
                     @click="moreOpen = !moreOpen"
-                    class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm text-stone-400 hover:bg-cream-200 hover:text-stone-600 transition-colors"
+                    class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm text-inkSoft hover:bg-cream hover:text-ink transition-colors"
                 >
                     <svg class="w-[18px] h-[18px] shrink-0 transition-transform" :class="moreOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -198,24 +198,24 @@ onUnmounted(() => {
                         :href="route(item.href)"
                         @click="closeSidebar"
                         :class="[
-                            isActive(item.match) ? 'text-sage-700 font-medium' : 'text-stone-400 hover:text-stone-600',
-                            'block px-3.5 py-2 rounded-xl text-[13px] transition-colors hover:bg-cream-200'
+                            isActive(item.match) ? 'text-sage font-medium' : 'text-inkSoft hover:text-ink',
+                            'block px-3.5 py-2 rounded-xl text-[13px] transition-colors hover:bg-cream'
                         ]"
                     >{{ item.name }}</Link>
                 </div>
             </nav>
 
             <!-- User -->
-            <div class="border-t border-cream-200 p-3">
+            <div class="border-t border-line p-3">
                 <div class="flex items-center gap-2.5">
-                    <Link :href="route('profile.show')" @click="closeSidebar" class="flex items-center gap-2.5 flex-1 min-w-0 px-1.5 py-1.5 rounded-2xl hover:bg-cream-200 transition-colors">
+                    <Link :href="route('profile.show')" @click="closeSidebar" class="flex items-center gap-2.5 flex-1 min-w-0 px-1.5 py-1.5 rounded-2xl hover:bg-cream transition-colors">
                         <img class="w-9 h-9 rounded-full object-cover shrink-0 ring-2 ring-white" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name" />
                         <div class="text-left min-w-0">
-                            <div class="text-sm font-semibold text-stone-700 truncate">{{ $page.props.auth.user.name }}</div>
-                            <div class="text-[11px] text-stone-400 truncate">Nutrimente</div>
+                            <div class="text-sm font-semibold text-ink truncate">{{ $page.props.auth.user.name }}</div>
+                            <div class="text-[11px] text-inkSoft truncate">Nutrimente</div>
                         </div>
                     </Link>
-                    <button @click="logout" title="Esci" class="p-2 rounded-xl text-stone-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0">
+                    <button @click="logout" title="Esci" class="p-2 rounded-xl text-inkSoft hover:bg-red-50 hover:text-red-500 transition-colors shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />
                         </svg>
@@ -228,7 +228,7 @@ onUnmounted(() => {
         <div class="flex-1 flex flex-col min-w-0">
             <!-- Top bar: hamburger (mobile) + slot header + bell -->
             <header class="px-4 md:px-8 pt-4 md:pt-6 flex items-start gap-3">
-                <button class="md:hidden p-2 -ml-1 rounded-xl text-stone-500 hover:bg-cream-200 transition-colors shrink-0" @click="sidebarOpen = !sidebarOpen">
+                <button class="md:hidden p-2 -ml-1 rounded-xl text-inkSoft hover:bg-cream transition-colors shrink-0" @click="sidebarOpen = !sidebarOpen">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
@@ -239,33 +239,33 @@ onUnmounted(() => {
 
                 <!-- Bell -->
                 <div class="relative shrink-0" data-bell>
-                    <button @click.stop="toggleBell" class="relative p-2.5 rounded-2xl text-stone-500 bg-white border border-cream-200 shadow-soft hover:text-sage-600 transition-colors" title="Notifiche">
+                    <button @click.stop="toggleBell" class="relative p-2.5 rounded-2xl text-inkSoft bg-white border border-line hover:text-sage transition-colors" title="Notifiche">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
                         </svg>
-                        <span v-if="unreadCount > 0" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-peach-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+                        <span v-if="unreadCount > 0" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-blushDeep text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
                     </button>
 
-                    <div v-if="bellOpen" class="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl border border-cream-200 shadow-xl z-50 overflow-hidden" data-bell>
-                        <div class="flex items-center justify-between px-4 py-3 border-b border-cream-100">
-                            <span class="text-sm font-semibold text-stone-800">Notifiche</span>
-                            <button v-if="notifications.some(n => !n.read)" @click="markAllRead" class="text-xs text-sage-600 hover:underline">Segna tutte lette</button>
+                    <div v-if="bellOpen" class="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl border border-line shadow-xl z-50 overflow-hidden" data-bell>
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-line">
+                            <span class="text-sm font-semibold text-ink">Notifiche</span>
+                            <button v-if="notifications.some(n => !n.read)" @click="markAllRead" class="text-xs text-sage hover:underline">Segna tutte lette</button>
                         </div>
-                        <div class="max-h-96 overflow-y-auto divide-y divide-cream-100">
-                            <div v-if="notifications.length === 0" class="px-4 py-8 text-center text-sm text-stone-400">Nessuna notifica</div>
+                        <div class="max-h-96 overflow-y-auto divide-y divide-line">
+                            <div v-if="notifications.length === 0" class="px-4 py-8 text-center text-sm text-inkSoft">Nessuna notifica</div>
                             <div v-for="n in notifications" :key="n.id" @click="openNotification(n)"
-                                :class="['flex items-start gap-3 px-4 py-3 transition-colors', n.read ? 'bg-white' : 'bg-lavender-50', notificationTarget(n) ? 'cursor-pointer hover:bg-cream-100' : '']">
-                                <div :class="['w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5', notifColor[n.type] ?? 'text-stone-400 bg-cream-200']">
+                                :class="['flex items-start gap-3 px-4 py-3 transition-colors', n.read ? 'bg-white' : 'bg-lavenderLight', notificationTarget(n) ? 'cursor-pointer hover:bg-cream' : '']">
+                                <div :class="['w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5', notifColor[n.type] ?? 'text-inkSoft bg-cream']">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                                         <path stroke-linecap="round" stroke-linejoin="round" :d="notifIcon[n.type] ?? notifIcon.task_assigned" />
                                     </svg>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-semibold text-stone-800 leading-snug">{{ n.title }}</p>
-                                    <p v-if="n.body" class="text-xs text-stone-500 mt-0.5 line-clamp-2">{{ n.body }}</p>
-                                    <p class="text-[11px] text-stone-400 mt-1">{{ n.created_at }}</p>
+                                    <p class="text-xs font-semibold text-ink leading-snug">{{ n.title }}</p>
+                                    <p v-if="n.body" class="text-xs text-inkSoft mt-0.5 line-clamp-2">{{ n.body }}</p>
+                                    <p class="text-[11px] text-inkSoft mt-1">{{ n.created_at }}</p>
                                 </div>
-                                <div v-if="!n.read" class="w-2 h-2 bg-lavender-400 rounded-full shrink-0 mt-1.5" />
+                                <div v-if="!n.read" class="w-2 h-2 bg-lavender rounded-full shrink-0 mt-1.5" />
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,34 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:max-retries 40
+set net:timeout 60
+set net:reconnect-interval-base 3
+set xfer:clobber on
+
+# ── 1. Asset compilati (frontend) ────────────────────────────────────────────
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+
+# ── 2. Pacchetti vendor nuovi (QR) + autoload rigenerato ─────────────────────
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/vendor/endroid www.saraalessandripsicologa.it/nutrimente_app/vendor/endroid
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/vendor/bacon   www.saraalessandripsicologa.it/nutrimente_app/vendor/bacon
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/vendor/dasprid www.saraalessandripsicologa.it/nutrimente_app/vendor/dasprid
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/vendor/composer www.saraalessandripsicologa.it/nutrimente_app/vendor/composer
+
+# ── 3. File PHP nuovi/modificati ─────────────────────────────────────────────
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/DashboardController.php       -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/DashboardController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php           -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupEnrollmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupEnrollmentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Group.php                  -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Group.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupParticipant.php       -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupParticipant.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupEnrollmentRequest.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupEnrollmentRequest.php
+put /Users/alfonso/nutrimente/nutrimente/config/groups.php                     -o www.saraalessandripsicologa.it/nutrimente_app/config/groups.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php                        -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/app.blade.php         -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/app.blade.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/group-flyer.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_24_120000_create_support_groups_table.php           -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_24_120000_create_support_groups_table.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_24_120100_create_group_participants_table.php        -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_24_120100_create_group_participants_table.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_24_120200_create_group_enrollment_requests_table.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_24_120200_create_group_enrollment_requests_table.php
+
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

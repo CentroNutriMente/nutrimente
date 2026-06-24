@@ -1,14 +1,16 @@
 <script setup>
 defineProps({
-    // tono: sage | lavender | peach | neutral
+    // tono: sage | lavender | blush | neutral
     tone: { type: String, default: 'neutral' },
 });
 
+// Badge/contatori secondari: default su bg-cream + text-inkSoft, pillola
 const tones = {
-    sage:    'bg-sage-100 text-sage-700',
-    lavender:'bg-lavender-100 text-lavender-600',
-    peach:   'bg-peach-100 text-peach-500',
-    neutral: 'bg-cream-200 text-stone-500',
+    sage:     'bg-sageLight text-sage',
+    lavender: 'bg-lavenderLight text-lavender',
+    blush:    'bg-blush text-blushDeep',
+    peach:    'bg-blush text-blushDeep',
+    neutral:  'bg-cream text-inkSoft',
 };
 </script>
 
