@@ -22,6 +22,14 @@ class GroupEnrollmentController extends Controller
         ]);
     }
 
+    // Pagina conclusiva di conferma dopo l'invio della richiesta.
+    public function done(Request $request): Response
+    {
+        return Inertia::render('Booking/GroupEnrollmentDone', [
+            'name' => $request->session()->get('enrolled_name'),
+        ]);
+    }
+
     // Form pre-compilato dal QR del volantino (token del gruppo).
     public function show(string $token): Response
     {
@@ -59,7 +67,9 @@ class GroupEnrollmentController extends Controller
             'status'          => 'da_contattare',
         ]);
 
-        return back()->with('flash', ['banner' => 'Richiesta inviata! Ti ricontatteremo a breve.']);
+        $firstName = trim(explode(' ', $validated['name'])[0]);
+
+        return redirect()->route('groups.public.done')->with('enrolled_name', $firstName);
     }
 
     private function openGroups(): array

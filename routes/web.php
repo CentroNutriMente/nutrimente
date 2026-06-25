@@ -32,6 +32,7 @@ Route::get('/prenota/{slug}/rifiuta/{token}', fn () => redirect()->route('bookin
 // Iscrizione pubblica ai Gruppi di aiuto e sostegno (form + QR del volantino)
 Route::get('/iscrizione-gruppo', [\App\Http\Controllers\GroupEnrollmentController::class, 'create'])->name('groups.public.create');
 Route::post('/iscrizione-gruppo', [\App\Http\Controllers\GroupEnrollmentController::class, 'store'])->name('groups.public.store');
+Route::get('/iscrizione-gruppo/grazie', [\App\Http\Controllers\GroupEnrollmentController::class, 'done'])->name('groups.public.done');
 Route::get('/g/{token}', [\App\Http\Controllers\GroupEnrollmentController::class, 'show'])->name('groups.public.show');
 
 // Area personale paziente (solo utenti con ruolo patient)
