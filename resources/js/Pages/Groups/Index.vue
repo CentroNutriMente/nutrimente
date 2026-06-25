@@ -8,7 +8,6 @@ import { ref } from 'vue';
 
 const props = defineProps({
     groups: Array,
-    categories: Array,
     filters: Object,
     statuses: Array,
 });
@@ -75,6 +74,7 @@ const statusLabel = { attivo: 'Attivo', in_partenza: 'In partenza', concluso: 'C
                             <IconCircle :icon="leafIcon" :tone="g.tone" size="lg" />
                         </div>
                         <h3 class="font-serif text-xl text-ink">{{ g.name }}</h3>
+                        <p v-if="g.edition" class="text-xs text-inkMuted italic mt-0.5">{{ g.edition }}</p>
                         <p class="text-sm text-inkSoft mt-2 leading-relaxed line-clamp-3">{{ g.description }}</p>
                         <div class="flex items-center gap-3 mt-4 text-xs text-inkSoft">
                             <span>{{ g.enrolled }} iscritti / {{ g.capacity }} posti</span>

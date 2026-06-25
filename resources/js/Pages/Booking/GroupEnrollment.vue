@@ -6,7 +6,6 @@ import { computed } from 'vue';
 
 const props = defineProps({
     groups: Array,
-    categories: Array,
     preselect: Object,
     source: String,
 });
@@ -17,8 +16,6 @@ const flash = computed(() => page.props.flash?.banner);
 const HOW_HEARD = [
     'Passaparola', 'Social', 'MioDottore', 'Sito web', 'Volantino / QR', 'Altro',
 ];
-
-const catLabel = (key) => props.categories.find(c => c.key === key)?.label ?? key;
 
 const form = useForm({
     nome: '',
@@ -115,7 +112,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                     <label class="block text-sm font-medium text-ink mb-1.5">Gruppo di interesse</label>
                     <select v-model="form.group_id" :class="inputCls">
                         <option :value="null">Seleziona un gruppo…</option>
-                        <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }} — {{ catLabel(g.category) }}</option>
+                        <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}{{ g.edition ? ' — ' + g.edition : '' }}</option>
                     </select>
                     <p v-if="form.errors.group_id" class="text-xs text-red-500 mt-1">{{ form.errors.group_id }}</p>
                 </div>

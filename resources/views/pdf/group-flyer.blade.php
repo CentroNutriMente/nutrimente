@@ -1,7 +1,6 @@
 @php
-    $tone = $category['tone'] ?? 'sage';
-    $accent = $tone === 'lavender' ? '#9079BB' : ($tone === 'peach' ? '#BE7B4A' : '#7C8A5E');
-    $soft   = $tone === 'lavender' ? '#EBE5F4' : ($tone === 'peach' ? '#F6E4D2' : '#E4E8D8');
+    $accent = $tone === 'lavender' ? '#9079BB' : ($tone === 'blush' ? '#BE7B4A' : '#7C8A5E');
+    $soft   = $tone === 'lavender' ? '#EBE5F4' : ($tone === 'blush' ? '#F6E4D2' : '#E4E8D8');
 @endphp
 <!DOCTYPE html>
 <html lang="it">
@@ -33,7 +32,7 @@
         <div class="wash">
             <div class="eyebrow">Gruppi di aiuto e sostegno</div>
             <div class="title">{{ $group->name }}</div>
-            <div class="cat">{{ $category['label'] ?? '' }}</div>
+            @if($group->edition)<div class="cat">{{ $group->edition }}</div>@endif
         </div>
 
         @if($group->description)

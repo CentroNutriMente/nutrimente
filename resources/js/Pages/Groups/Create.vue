@@ -1,19 +1,17 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Card from '@/Components/ui/Card.vue';
-import IconCircle from '@/Components/ui/IconCircle.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
-    categories: Array,
     leaders: Array,
     cadences: Array,
     modalities: Array,
 });
 
 const form = useForm({
-    category: props.categories[0]?.key ?? 'ansia',
     name: '',
+    edition: '',
     description: '',
     leader_user_id: props.leaders[0]?.id ?? null,
     cadence: props.cadences[0] ?? 'settimanale',
@@ -24,7 +22,6 @@ const form = useForm({
     status: 'attivo',
 });
 
-const leafIcon = 'M12 3c1.5 2 4 3.5 4 7a4 4 0 1 1-8 0c0-3.5 2.5-5 4-7Z';
 const submit = () => form.post(route('groups.store'));
 const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm text-sm text-ink focus:border-sage focus:ring-sageLight';
 </script>
@@ -40,25 +37,17 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
             <h1 class="font-serif text-3xl text-ink mb-6">Nuovo gruppo</h1>
 
             <form @submit.prevent="submit" class="space-y-5">
-                <!-- Categoria -->
-                <Card>
-                    <label class="block text-sm font-medium text-ink mb-3">Categoria</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <button type="button" v-for="c in categories" :key="c.key" @click="form.category = c.key"
-                            :class="['flex flex-col items-center gap-2 p-4 rounded-ctrl border-2 transition-colors text-center',
-                                form.category === c.key ? 'border-sage bg-sageLight' : 'border-line hover:border-sage']">
-                            <IconCircle :icon="leafIcon" :tone="c.tone" />
-                            <span class="text-sm font-medium text-ink">{{ c.label }}</span>
-                        </button>
-                    </div>
-                    <p v-if="form.errors.category" class="text-xs text-red-500 mt-2">{{ form.errors.category }}</p>
-                </Card>
-
                 <Card class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-ink mb-1.5">Nome del gruppo *</label>
-                        <input v-model="form.name" type="text" :class="inputCls" placeholder="Es. Gestione Ansia — gruppo del martedì" />
-                        <p v-if="form.errors.name" class="text-xs text-red-500 mt-1">{{ form.errors.name }}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-ink mb-1.5">Titolo del gruppo *</label>
+                            <input v-model="form.name" type="text" :class="inputCls" placeholder="Es. Gruppo supporto endometriosi e adenomiosi" />
+                            <p v-if="form.errors.name" class="text-xs text-red-500 mt-1">{{ form.errors.name }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-ink mb-1.5">Edizione</label>
+                            <input v-model="form.edition" type="text" :class="inputCls" placeholder="Edizione 1 2026" />
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-ink mb-1.5">Descrizione</label>
@@ -67,7 +56,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-ink mb-1.5">Conduttore</label>
+                            <label class="block text-sm font-medium text-ink mb-1.5">Conduttrice</label>
                             <select v-model="form.leader_user_id" :class="inputCls">
                                 <option :value="null">—</option>
                                 <option v-for="l in leaders" :key="l.id" :value="l.id">{{ l.name }}</option>

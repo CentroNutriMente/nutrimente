@@ -10,8 +10,9 @@ const props = defineProps({
     group: Object,
     participants: Array,
     requests: Array,
+    meetings: Array,
+    materials: Array,
     patientsOptions: Array,
-    categories: Array,
     leaders: Array,
     cadences: Array,
     modalities: Array,
@@ -33,6 +34,8 @@ const pStatusTone = { confermata: 'sage', in_attesa: 'peach', pagato: 'lavender'
 const pStatusLabel = { confermata: 'Confermata', in_attesa: 'In attesa', pagato: 'Pagato' };
 
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+const fmtDateTime = (iso) => iso ? new Date(iso).toLocaleString('it-IT', { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '—';
+const fmtBytes = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 
 // ── Filtro partecipanti ──
 const search = ref('');
@@ -61,10 +64,27 @@ const removeParticipant = (p) => { if (confirm(`Rimuovere ${p.name}?`)) router.d
 const approve = (r) => router.post(route('groups.enrollments.approve', [props.group.id, r.id]), {}, { preserveScroll: true });
 const reject = (r) => router.post(route('groups.enrollments.reject', [props.group.id, r.id]), {}, { preserveScroll: true });
 
+// ── Incontri ──
+const meetForm = useForm({ title: '', scheduled_at: '', duration_minutes: 60, notes: '' });
+const submitMeeting = () => meetForm.post(route('groups.meetings.store', props.group.id), {
+    preserveScroll: true,
+    onSuccess: () => meetForm.reset(),
+});
+const deleteMeeting = (m) => { if (confirm('Eliminare questo incontro?')) router.delete(route('groups.meetings.destroy', [props.group.id, m.id]), { preserveScroll: true }); };
+
+// ── Materiali ──
+const matForm = useForm({ label: '', file: null });
+const submitMaterial = () => matForm.post(route('groups.materials.store', props.group.id), {
+    forceFormData: true,
+    preserveScroll: true,
+    onSuccess: () => matForm.reset(),
+});
+const deleteMaterial = (m) => { if (confirm('Eliminare questo materiale?')) router.delete(route('groups.materials.destroy', [props.group.id, m.id]), { preserveScroll: true }); };
+
 // ── Impostazioni (modifica) ──
 const settings = useForm({
-    category: props.group.category,
     name: props.group.name,
+    edition: props.group.edition,
     description: props.group.description,
     leader_user_id: props.group.leader_user_id,
     cadence: props.group.cadence,
@@ -104,6 +124,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                         <h1 class="font-serif text-2xl text-ink">{{ group.name }}</h1>
                         <PillBadge :tone="group.tone">{{ statusLabel[group.status] }}</PillBadge>
                     </div>
+                    <p v-if="group.edition" class="text-sm text-inkMuted italic mt-0.5">{{ group.edition }}</p>
                     <p class="text-sm text-inkSoft mt-1.5 leading-relaxed">{{ group.description }}</p>
                 </div>
                 <button @click="tab = 'impostazioni'" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-ctrl border border-line text-sm text-ink hover:bg-cream transition-colors shrink-0">
@@ -114,7 +135,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
 
             <!-- Meta -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-5 pt-5 border-t border-line">
-                <div><div class="text-xs text-inkSoft">Conduttore</div><div class="text-sm font-medium text-ink mt-0.5">{{ group.leader || '—' }}</div></div>
+                <div><div class="text-xs text-inkSoft">Conduttrice</div><div class="text-sm font-medium text-ink mt-0.5">{{ group.leader || '—' }}</div></div>
                 <div><div class="text-xs text-inkSoft">Periodicità</div><div class="text-sm font-medium text-ink mt-0.5 capitalize">{{ group.cadence || '—' }}</div></div>
                 <div><div class="text-xs text-inkSoft">Prossimo incontro</div><div class="text-sm font-medium text-ink mt-0.5">{{ fmtDate(group.next_meeting_at) }}</div></div>
                 <div><div class="text-xs text-inkSoft">Modalità</div><div class="text-sm font-medium text-ink mt-0.5">{{ group.modality === 'online' ? 'Online' : 'In presenza' }}</div></div>
@@ -186,9 +207,12 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                         </thead>
                         <tbody class="divide-y divide-line">
                             <tr v-for="p in filtered" :key="p.id" class="hover:bg-cream">
-                                <td class="px-5 py-3 font-medium text-ink">
-                                    {{ p.name }}
-                                    <span v-if="p.is_patient" class="ml-1 text-[10px] text-sage">• paziente</span>
+                                <td class="px-5 py-3 font-medium">
+                                    <Link v-if="p.patient_id" :href="route('patients.show', p.patient_id)" class="text-ink hover:text-sage hover:underline inline-flex items-center gap-1">
+                                        {{ p.name }}
+                                        <svg class="w-3 h-3 text-inkMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                    </Link>
+                                    <span v-else class="text-ink">{{ p.name }}</span>
                                 </td>
                                 <td class="px-5 py-3 text-inkSoft">{{ p.email || '—' }}</td>
                                 <td class="px-5 py-3 text-inkSoft">{{ p.phone || '—' }}</td>
@@ -255,17 +279,113 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
             </Card>
         </div>
 
-        <!-- Tab: Incontri / Materiali (placeholder) -->
-        <Card v-show="tab === 'incontri'" class="text-center py-16 text-inkSoft">Pianificazione incontri in arrivo.</Card>
-        <Card v-show="tab === 'materiali'" class="text-center py-16 text-inkSoft">Materiali condivisi in arrivo.</Card>
+        <!-- Tab: Incontri -->
+        <div v-show="tab === 'incontri'" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <Card :padded="false" class="lg:col-span-2">
+                <div class="px-5 pt-5 pb-3">
+                    <h3 class="font-serif text-lg text-ink">Incontri programmati</h3>
+                </div>
+                <div class="divide-y divide-line">
+                    <div v-for="m in meetings" :key="m.id" class="flex items-center gap-4 px-5 py-3">
+                        <IconCircle icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" tone="sage" size="sm" />
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-ink capitalize">{{ fmtDateTime(m.datetime) }}</div>
+                            <div class="text-xs text-inkSoft">{{ m.duration }} min<span v-if="m.title"> · {{ m.title }}</span></div>
+                        </div>
+                        <button @click="deleteMeeting(m)" class="text-inkSoft hover:text-red-500 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-7 0h8l-1 12a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1L7 7Z"/></svg>
+                        </button>
+                    </div>
+                    <div v-if="meetings.length === 0" class="px-5 py-10 text-center text-inkSoft text-sm">Nessun incontro programmato.</div>
+                </div>
+            </Card>
+
+            <Card>
+                <h3 class="font-serif text-lg text-ink mb-4">Nuovo incontro</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-inkSoft mb-1">Data e ora</label>
+                        <input v-model="meetForm.scheduled_at" type="datetime-local" :class="inputCls" />
+                        <p v-if="meetForm.errors.scheduled_at" class="text-xs text-red-500 mt-1">{{ meetForm.errors.scheduled_at }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-inkSoft mb-1">Durata (minuti)</label>
+                        <input v-model="meetForm.duration_minutes" type="number" min="5" max="600" step="5" :class="inputCls" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-inkSoft mb-1">Titolo (opzionale)</label>
+                        <input v-model="meetForm.title" type="text" :class="inputCls" placeholder="Es. Incontro introduttivo" />
+                    </div>
+                    <button @click="submitMeeting" :disabled="meetForm.processing" class="w-full px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium disabled:opacity-60">
+                        Aggiungi incontro
+                    </button>
+                </div>
+            </Card>
+        </div>
+
+        <!-- Tab: Materiali -->
+        <div v-show="tab === 'materiali'" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <Card :padded="false" class="lg:col-span-2">
+                <div class="px-5 pt-5 pb-3">
+                    <h3 class="font-serif text-lg text-ink">Materiali condivisi</h3>
+                    <p class="text-xs text-inkSoft mt-0.5">PDF, slide, esercizi, dispense, note cliniche…</p>
+                </div>
+                <div class="divide-y divide-line">
+                    <div v-for="m in materials" :key="m.id" class="flex items-center gap-4 px-5 py-3">
+                        <IconCircle icon="M7 3 H14 L19 8 V21 H7 Z M14 3 V8 H19 M10 13 H16 M10 17 H16" tone="lavender" size="sm" />
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-ink truncate">{{ m.name }}</div>
+                            <div class="text-xs text-inkSoft"><span v-if="m.label" class="text-sage">{{ m.label }} · </span>{{ fmtBytes(m.size) }} · {{ m.date }}<span v-if="m.by"> · {{ m.by }}</span></div>
+                        </div>
+                        <a :href="route('groups.materials.download', [group.id, m.id])" class="text-inkSoft hover:text-sage transition-colors" title="Scarica">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+                        </a>
+                        <button @click="deleteMaterial(m)" class="text-inkSoft hover:text-red-500 transition-colors" title="Elimina">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-7 0h8l-1 12a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1L7 7Z"/></svg>
+                        </button>
+                    </div>
+                    <div v-if="materials.length === 0" class="px-5 py-10 text-center text-inkSoft text-sm">Nessun materiale caricato.</div>
+                </div>
+            </Card>
+
+            <Card>
+                <h3 class="font-serif text-lg text-ink mb-4">Carica documento</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-inkSoft mb-1">Tipo (opzionale)</label>
+                        <select v-model="matForm.label" :class="inputCls">
+                            <option value="">—</option>
+                            <option>PDF</option><option>Slide</option><option>Esercizi</option>
+                            <option>Dispense</option><option>Note cliniche</option><option>Fatture</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-inkSoft mb-1">File</label>
+                        <input type="file" @input="matForm.file = $event.target.files[0]"
+                               class="block w-full text-sm text-inkSoft file:mr-3 file:py-2 file:px-3 file:rounded-ctrl file:border-0 file:bg-sageLight file:text-sage file:text-sm file:font-medium" />
+                        <p v-if="matForm.errors.file" class="text-xs text-red-500 mt-1">{{ matForm.errors.file }}</p>
+                        <p v-if="matForm.progress" class="text-xs text-inkSoft mt-1">{{ matForm.progress.percentage }}%</p>
+                    </div>
+                    <button @click="submitMaterial" :disabled="matForm.processing || !matForm.file" class="w-full px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium disabled:opacity-60">
+                        Carica
+                    </button>
+                </div>
+            </Card>
+        </div>
 
         <!-- Tab: Impostazioni -->
         <div v-show="tab === 'impostazioni'" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <Card class="lg:col-span-2 space-y-4">
                 <h3 class="font-serif text-lg text-ink">Impostazioni gruppo</h3>
-                <div>
-                    <label class="block text-sm font-medium text-ink mb-1.5">Nome</label>
-                    <input v-model="settings.name" type="text" :class="inputCls" />
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-ink mb-1.5">Titolo</label>
+                        <input v-model="settings.name" type="text" :class="inputCls" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-ink mb-1.5">Edizione</label>
+                        <input v-model="settings.edition" type="text" :class="inputCls" placeholder="Edizione 1 2026" />
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-ink mb-1.5">Descrizione</label>
@@ -273,15 +393,11 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-ink mb-1.5">Categoria</label>
-                        <select v-model="settings.category" :class="inputCls"><option v-for="c in categories" :key="c.key" :value="c.key">{{ c.label }}</option></select>
-                    </div>
-                    <div>
                         <label class="block text-sm font-medium text-ink mb-1.5">Stato</label>
                         <select v-model="settings.status" :class="inputCls"><option v-for="s in statuses" :key="s" :value="s">{{ statusLabel[s] }}</option></select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-ink mb-1.5">Conduttore</label>
+                        <label class="block text-sm font-medium text-ink mb-1.5">Conduttrice</label>
                         <select v-model="settings.leader_user_id" :class="inputCls"><option :value="null">—</option><option v-for="l in leaders" :key="l.id" :value="l.id">{{ l.name }}</option></select>
                     </div>
                     <div>

@@ -91,7 +91,7 @@ class DashboardController extends Controller
             ->map(fn (Group $g) => [
                 'id'       => $g->id,
                 'name'     => $g->name,
-                'tone'     => $g->categoryConfig()['tone'],
+                'tone'     => $g->tone,
                 'enrolled' => $g->participants_count,
                 'capacity' => $g->capacity,
             ]);

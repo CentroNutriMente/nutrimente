@@ -16,10 +16,9 @@ class GroupEnrollmentController extends Controller
     public function create(): Response
     {
         return Inertia::render('Booking/GroupEnrollment', [
-            'groups'     => $this->openGroups(),
-            'categories' => $this->categories(),
-            'preselect'  => null,
-            'source'     => 'form',
+            'groups'    => $this->openGroups(),
+            'preselect' => null,
+            'source'    => 'form',
         ]);
     }
 
@@ -29,10 +28,9 @@ class GroupEnrollmentController extends Controller
         $group = Group::where('public_token', $token)->firstOrFail();
 
         return Inertia::render('Booking/GroupEnrollment', [
-            'groups'     => $this->openGroups(),
-            'categories' => $this->categories(),
-            'preselect'  => ['id' => $group->id, 'name' => $group->name, 'category' => $group->category],
-            'source'     => 'qr',
+            'groups'    => $this->openGroups(),
+            'preselect' => ['id' => $group->id, 'name' => $group->name, 'edition' => $group->edition],
+            'source'    => 'qr',
         ]);
     }
 
@@ -49,14 +47,8 @@ class GroupEnrollmentController extends Controller
             'source'          => ['nullable', Rule::in(['form', 'qr'])],
         ]);
 
-        $category = null;
-        if (! empty($validated['group_id'])) {
-            $category = Group::find($validated['group_id'])?->category;
-        }
-
         GroupEnrollmentRequest::create([
             'group_id'        => $validated['group_id'] ?? null,
-            'category'        => $category,
             'name'            => $validated['name'],
             'email'           => $validated['email'],
             'phone'           => $validated['phone'],
@@ -74,18 +66,11 @@ class GroupEnrollmentController extends Controller
     {
         return Group::whereIn('status', ['attivo', 'in_partenza'])
             ->orderBy('name')
-            ->get(['id', 'name', 'category'])
+            ->get(['id', 'name', 'edition'])
             ->map(fn ($g) => [
-                'id'       => $g->id,
-                'name'     => $g->name,
-                'category' => $g->category,
+                'id'      => $g->id,
+                'name'    => $g->name,
+                'edition' => $g->edition,
             ])->all();
-    }
-
-    private function categories(): array
-    {
-        return collect(config('groups.categories'))
-            ->map(fn ($c, $key) => array_merge($c, ['key' => $key]))
-            ->values()->all();
     }
 }

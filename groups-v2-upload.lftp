@@ -1,0 +1,20 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupEnrollmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupEnrollmentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/DashboardController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/DashboardController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Group.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Group.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupMeeting.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupMeeting.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupMaterial.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupMaterial.php
+put /Users/alfonso/nutrimente/nutrimente/config/groups.php -o www.saraalessandripsicologa.it/nutrimente_app/config/groups.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/group-flyer.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_130000_add_edition_to_support_groups.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_130000_add_edition_to_support_groups.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_130100_create_group_meetings_table.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_130100_create_group_meetings_table.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_130200_create_group_materials_table.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_130200_create_group_materials_table.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\GroupEnrollmentRequest;
+use App\Models\GroupMaterial;
+use App\Models\GroupMeeting;
 use App\Models\GroupParticipant;
 use App\Models\Patient;
 use App\Models\User;
@@ -15,6 +17,7 @@ use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -23,13 +26,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GroupController extends Controller
 {
-    private function categories(): array
-    {
-        return collect(config('groups.categories'))
-            ->map(fn ($c, $key) => array_merge($c, ['key' => $key]))
-            ->values()->all();
-    }
-
     public function index(Request $request): Response
     {
         $filter = $request->query('status', 'tutti'); // tutti|attivo|in_partenza|concluso
@@ -45,17 +41,15 @@ class GroupController extends Controller
             ->map(fn (Group $g) => $this->present($g));
 
         return Inertia::render('Groups/Index', [
-            'groups'     => $groups,
-            'categories' => $this->categories(),
-            'filters'    => ['status' => $filter, 'q' => $search],
-            'statuses'   => config('groups.statuses'),
+            'groups'   => $groups,
+            'filters'  => ['status' => $filter, 'q' => $search],
+            'statuses' => config('groups.statuses'),
         ]);
     }
 
     public function create(): Response
     {
         return Inertia::render('Groups/Create', [
-            'categories' => $this->categories(),
             'leaders'    => $this->leaders(),
             'cadences'   => config('groups.cadences'),
             'modalities' => config('groups.modalities'),
@@ -77,8 +71,9 @@ class GroupController extends Controller
         $group->load([
             'leader:id,name',
             'participants' => fn ($q) => $q->orderBy('name'),
-            'participants.patient:id,first_name,last_name',
             'enrollmentRequests' => fn ($q) => $q->whereNotIn('status', ['confermata', 'rifiutata'])->orderByDesc('created_at'),
+            'meetings',
+            'materials.uploadedBy:id,name',
         ]);
 
         $patients = Patient::orderBy('last_name')->orderBy('first_name')
@@ -93,12 +88,12 @@ class GroupController extends Controller
         return Inertia::render('Groups/Show', [
             'group'        => $this->present($group, true),
             'participants' => $group->participants->map(fn (GroupParticipant $p) => [
-                'id'     => $p->id,
-                'name'   => $p->name,
-                'email'  => $p->email,
-                'phone'  => $p->phone,
-                'status' => $p->status,
-                'is_patient' => ! is_null($p->patient_id),
+                'id'         => $p->id,
+                'name'       => $p->name,
+                'email'      => $p->email,
+                'phone'      => $p->phone,
+                'status'     => $p->status,
+                'patient_id' => $p->patient_id,
             ]),
             'requests' => $group->enrollmentRequests->map(fn (GroupEnrollmentRequest $r) => [
                 'id'     => $r->id,
@@ -108,8 +103,22 @@ class GroupController extends Controller
                 'status' => $r->status,
                 'date'   => $r->created_at->format('d/m/Y'),
             ]),
+            'meetings' => $group->meetings->map(fn (GroupMeeting $m) => [
+                'id'       => $m->id,
+                'title'    => $m->title,
+                'datetime' => $m->scheduled_at->toISOString(),
+                'duration' => $m->duration_minutes,
+                'notes'    => $m->notes,
+            ]),
+            'materials' => $group->materials->map(fn (GroupMaterial $m) => [
+                'id'      => $m->id,
+                'label'   => $m->label,
+                'name'    => $m->original_name,
+                'size'    => $m->size,
+                'by'      => $m->uploadedBy?->name,
+                'date'    => $m->created_at->format('d/m/Y'),
+            ]),
             'patientsOptions'      => $patients,
-            'categories'           => $this->categories(),
             'leaders'              => $this->leaders(),
             'cadences'             => config('groups.cadences'),
             'modalities'           => config('groups.modalities'),
@@ -148,11 +157,9 @@ class GroupController extends Controller
         $proIds = array_filter([$group->leader_user_id]);
 
         if (! empty($validated['patient_id'])) {
-            // Paziente esistente: associa al professionista del gruppo, nessun duplicato.
             $patient = Patient::findOrFail($validated['patient_id']);
             $patient->professionals()->syncWithoutDetaching($proIds);
         } else {
-            // Contatto esterno: crea (o ritrova) la scheda + account portale.
             $patient = $registrar->findOrCreate([
                 'first_name'     => $validated['first_name'] ?? '',
                 'last_name'      => $validated['last_name'] ?? '',
@@ -198,7 +205,6 @@ class GroupController extends Controller
     {
         abort_unless($enrollment->group_id === $group->id, 404);
 
-        // Crea (o ritrova) la scheda anagrafica + account portale dai dati della richiesta.
         [$first, $last] = PatientRegistrar::splitName($enrollment->name);
         $patient = $registrar->findOrCreate([
             'first_name'     => $first,
@@ -230,6 +236,69 @@ class GroupController extends Controller
         return back();
     }
 
+    // ── Incontri ─────────────────────────────────────────────────────────────
+    public function storeMeeting(Request $request, Group $group): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'            => ['nullable', 'string', 'max:160'],
+            'scheduled_at'     => ['required', 'date'],
+            'duration_minutes' => ['required', 'integer', 'min:5', 'max:600'],
+            'notes'            => ['nullable', 'string'],
+        ]);
+
+        $group->meetings()->create($validated);
+
+        return back()->with('flash', ['banner' => 'Incontro aggiunto.']);
+    }
+
+    public function destroyMeeting(Group $group, GroupMeeting $meeting): RedirectResponse
+    {
+        abort_unless($meeting->group_id === $group->id, 404);
+        $meeting->delete();
+
+        return back()->with('flash', ['banner' => 'Incontro eliminato.']);
+    }
+
+    // ── Materiali ────────────────────────────────────────────────────────────
+    public function storeMaterial(Request $request, Group $group): RedirectResponse
+    {
+        $validated = $request->validate([
+            'label' => ['nullable', 'string', 'max:60'],
+            'file'  => ['required', 'file', 'max:20480'], // 20 MB
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store("group-materials/{$group->id}", 'local');
+
+        $group->materials()->create([
+            'label'         => $validated['label'] ?? null,
+            'original_name' => $file->getClientOriginalName(),
+            'path'          => $path,
+            'mime'          => $file->getClientMimeType(),
+            'size'          => $file->getSize(),
+            'uploaded_by'   => $request->user()->id,
+        ]);
+
+        return back()->with('flash', ['banner' => 'Materiale caricato.']);
+    }
+
+    public function downloadMaterial(Group $group, GroupMaterial $material)
+    {
+        abort_unless($material->group_id === $group->id, 404);
+        abort_unless(Storage::disk('local')->exists($material->path), 404);
+
+        return Storage::disk('local')->download($material->path, $material->original_name);
+    }
+
+    public function destroyMaterial(Group $group, GroupMaterial $material): RedirectResponse
+    {
+        abort_unless($material->group_id === $group->id, 404);
+        Storage::disk('local')->delete($material->path);
+        $material->delete();
+
+        return back()->with('flash', ['banner' => 'Materiale eliminato.']);
+    }
+
     // ── Esporta CSV ──────────────────────────────────────────────────────────
     public function exportParticipants(Group $group): StreamedResponse
     {
@@ -250,8 +319,7 @@ class GroupController extends Controller
     {
         $url = route('groups.public.show', $group->public_token);
 
-        // SVG (nessuna dipendenza da ext-gd, che su Aruba può non essere attiva);
-        // DomPDF renderizza l'SVG via data-uri.
+        // SVG: nessuna dipendenza da ext-gd; DomPDF lo renderizza via data-uri.
         $qr = (new Builder(
             writer: new SvgWriter(),
             data: $url,
@@ -260,17 +328,15 @@ class GroupController extends Controller
             margin: 8,
         ))->build();
 
-        // Anteprima: restituisce solo il PNG del QR (per l'<img> nella pagina gruppo).
         if ($request->boolean('preview')) {
             return new HttpResponse($qr->getString(), 200, ['Content-Type' => $qr->getMimeType()]);
         }
 
-        $cat = $group->categoryConfig();
         $pdf = Pdf::loadView('pdf.group-flyer', [
-            'group'      => $group,
-            'category'   => $cat,
-            'qrDataUri'  => $qr->getDataUri(),
-            'url'        => $url,
+            'group'     => $group,
+            'tone'      => $group->tone,
+            'qrDataUri' => $qr->getDataUri(),
+            'url'       => $url,
         ])->setPaper('a4');
 
         return $pdf->download('volantino-'.Str::slug($group->name).'.pdf');
@@ -289,8 +355,8 @@ class GroupController extends Controller
     private function validateGroup(Request $request): array
     {
         return $request->validate([
-            'category'        => ['required', Rule::in(array_keys(config('groups.categories')))],
             'name'            => ['required', 'string', 'max:160'],
+            'edition'         => ['nullable', 'string', 'max:80'],
             'description'     => ['nullable', 'string'],
             'leader_user_id'  => ['nullable', 'exists:users,id'],
             'cadence'         => ['nullable', Rule::in(config('groups.cadences'))],
@@ -304,18 +370,15 @@ class GroupController extends Controller
 
     private function present(Group $g, bool $full = false): array
     {
-        $cat = $g->categoryConfig();
-
         $base = [
-            'id'              => $g->id,
-            'name'            => $g->name,
-            'category'        => $g->category,
-            'category_label'  => $cat['label'],
-            'tone'            => $cat['tone'],
-            'description'     => $g->description ?: $cat['description'],
-            'status'          => $g->status,
-            'capacity'        => $g->capacity,
-            'enrolled'        => $g->participants_count ?? $g->participants()->count(),
+            'id'          => $g->id,
+            'name'        => $g->name,
+            'edition'     => $g->edition,
+            'tone'        => $g->tone,
+            'description' => $g->description,
+            'status'      => $g->status,
+            'capacity'    => $g->capacity,
+            'enrolled'    => $g->participants_count ?? $g->participants()->count(),
         ];
 
         if (! $full) {

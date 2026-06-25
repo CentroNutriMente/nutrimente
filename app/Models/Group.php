@@ -15,7 +15,7 @@ class Group extends Model
     protected $table = 'support_groups';
 
     protected $fillable = [
-        'category', 'name', 'description', 'leader_user_id', 'cadence',
+        'category', 'name', 'edition', 'description', 'leader_user_id', 'cadence',
         'modality', 'location', 'capacity', 'next_meeting_at', 'status',
         'public_token', 'created_by',
     ];
@@ -55,6 +55,16 @@ class Group extends Model
         return $this->hasMany(GroupEnrollmentRequest::class);
     }
 
+    public function meetings(): HasMany
+    {
+        return $this->hasMany(GroupMeeting::class)->orderBy('scheduled_at');
+    }
+
+    public function materials(): HasMany
+    {
+        return $this->hasMany(GroupMaterial::class)->orderByDesc('created_at');
+    }
+
     // ── Accessor / helper ────────────────────────────────────────────────────
     public function getEnrolledCountAttribute(): int
     {
@@ -67,12 +77,12 @@ class Group extends Model
         return max(0, (int) $this->capacity - $this->enrolled_count);
     }
 
-    public function categoryConfig(): array
+    // Tono cromatico (le categorie fisse non esistono più): rotazione per id,
+    // così le card hanno varietà visiva mantenendo la palette del brand.
+    public function getToneAttribute(): string
     {
-        return config("groups.categories.{$this->category}", [
-            'label' => $this->category,
-            'tone'  => 'sage',
-            'description' => null,
-        ]);
+        $tones = ['lavender', 'sage', 'blush'];
+
+        return $tones[$this->id % count($tones)];
     }
 }

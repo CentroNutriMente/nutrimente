@@ -62,6 +62,13 @@ Route::middleware([
     Route::post('groups/{group}/enrollments/{enrollment}/reject', [\App\Http\Controllers\GroupController::class, 'rejectEnrollment'])->name('groups.enrollments.reject');
     Route::get('groups/{group}/export', [\App\Http\Controllers\GroupController::class, 'exportParticipants'])->name('groups.export');
     Route::get('groups/{group}/flyer', [\App\Http\Controllers\GroupController::class, 'flyer'])->name('groups.flyer');
+    // Incontri
+    Route::post('groups/{group}/meetings', [\App\Http\Controllers\GroupController::class, 'storeMeeting'])->name('groups.meetings.store');
+    Route::delete('groups/{group}/meetings/{meeting}', [\App\Http\Controllers\GroupController::class, 'destroyMeeting'])->name('groups.meetings.destroy');
+    // Materiali
+    Route::post('groups/{group}/materials', [\App\Http\Controllers\GroupController::class, 'storeMaterial'])->name('groups.materials.store');
+    Route::get('groups/{group}/materials/{material}/download', [\App\Http\Controllers\GroupController::class, 'downloadMaterial'])->name('groups.materials.download');
+    Route::delete('groups/{group}/materials/{material}', [\App\Http\Controllers\GroupController::class, 'destroyMaterial'])->name('groups.materials.destroy');
 
     // Pazienti
     Route::resource('patients', PatientController::class);
