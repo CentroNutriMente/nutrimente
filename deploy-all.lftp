@@ -14,15 +14,19 @@ put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupMeeting.php -o www.sara
 put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupMaterial.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupMaterial.php
 put /Users/alfonso/nutrimente/nutrimente/config/groups.php -o www.saraalessandripsicologa.it/nutrimente_app/config/groups.php
 put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/group-flyer.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
-# Stato cliente
+# Pazienti: stato + note cliniche
 put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientController.php
 put /Users/alfonso/nutrimente/nutrimente/app/Models/Patient.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Patient.php
-# Routes (include gruppi-v2 + patients.status)
+put /Users/alfonso/nutrimente/nutrimente/app/Models/ClinicalNote.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/ClinicalNote.php
+# Home: rimozione area oncologica
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ContactRequestController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ContactRequestController.php
+# Routes
 put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
 # Migrazioni
 put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_130000_add_edition_to_support_groups.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_130000_add_edition_to_support_groups.php
 put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_130100_create_group_meetings_table.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_130100_create_group_meetings_table.php
 put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_130200_create_group_materials_table.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_130200_create_group_materials_table.php
 put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_140000_add_status_to_patients.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_140000_add_status_to_patients.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_150000_create_clinical_notes_table.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_150000_create_clinical_notes_table.php
 ls -l www.saraalessandripsicologa.it/build/manifest.json
 bye

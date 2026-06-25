@@ -59,7 +59,11 @@ class ContactRequestController extends Controller
                 'phone'                    => $profile->phone,
                 'session_duration_minutes' => $profile->session_duration_minutes,
                 'session_price'            => $profile->session_price,
-                'areas'                    => $curriculum['aree'] ?? [],
+                // Esclude l'area "Psicologia oncologica" (titolo non posseduto;
+                // "Supporto nei percorsi di malattia" resta a coprire l'ambito).
+                'areas'                    => collect($curriculum['aree'] ?? [])
+                    ->reject(fn ($a) => str_contains(mb_strtolower((string) $a), 'oncolog'))
+                    ->values()->all(),
             ],
         ]);
     }

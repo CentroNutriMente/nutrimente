@@ -161,6 +161,7 @@ class PatientController extends Controller
 
         if ($isCreator) {
             $relations['reports'] = fn ($q) => $q->with(['user', 'template'])->orderByDesc('report_date');
+            $relations['clinicalNotes'] = fn ($q) => $q->with('author:id,name');
         }
 
         $patient->load($relations);
@@ -249,6 +250,32 @@ class PatientController extends Controller
         ]);
 
         return back()->with('success', 'Stato aggiornato.');
+    }
+
+    // ── Note cliniche (sezione autonoma, scollegata dai referti) ─────────────
+    public function storeNote(Request $request, Patient $patient): RedirectResponse
+    {
+        $this->authorizePatient($patient);
+
+        $validated = $request->validate([
+            'body' => 'required|string|max:5000',
+        ]);
+
+        $patient->clinicalNotes()->create([
+            'user_id' => auth()->id(),
+            'body'    => $validated['body'],
+        ]);
+
+        return back()->with('success', 'Nota aggiunta.');
+    }
+
+    public function destroyNote(Patient $patient, \App\Models\ClinicalNote $note): RedirectResponse
+    {
+        $this->authorizePatient($patient);
+        abort_unless($note->patient_id === $patient->id, 404);
+        $note->delete();
+
+        return back()->with('success', 'Nota eliminata.');
     }
 
     public function destroy(Patient $patient): RedirectResponse

@@ -67,6 +67,11 @@ class Patient extends Model
         return $this->hasMany(PatientConsent::class);
     }
 
+    public function clinicalNotes(): HasMany
+    {
+        return $this->hasMany(ClinicalNote::class)->latest();
+    }
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);

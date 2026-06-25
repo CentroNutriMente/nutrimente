@@ -73,6 +73,8 @@ Route::middleware([
     // Pazienti
     Route::resource('patients', PatientController::class);
     Route::put('patients/{patient}/status', [PatientController::class, 'updateStatus'])->name('patients.status');
+    Route::post('patients/{patient}/notes', [PatientController::class, 'storeNote'])->name('patients.notes.store');
+    Route::delete('patients/{patient}/notes/{note}', [PatientController::class, 'destroyNote'])->name('patients.notes.destroy');
     Route::get('patients/{patient}/records', [PatientController::class, 'records'])->name('patients.records');
     Route::post('patients/{patient}/records', [PatientController::class, 'storeRecord'])->name('patients.records.store');
 

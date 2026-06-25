@@ -31,10 +31,20 @@ const tabs = computed(() => [
     { key: 'cartella',     label: 'Cartella Clinica' },
     { key: 'appointments', label: 'Appuntamenti' },
     ...(props.isCreator ? [
+        { key: 'note',     label: 'Note cliniche' },
         { key: 'invoices', label: 'Fatture' },
         { key: 'consents', label: 'Consensi' },
     ] : []),
 ]);
+
+// ── Note cliniche (sezione autonoma) ──
+const noteForm = useForm({ body: '' });
+const submitNote = () => noteForm.post(route('patients.notes.store', props.patient.id), {
+    preserveScroll: true,
+    onSuccess: () => noteForm.reset(),
+});
+const deleteNote = (n) => { if (confirm('Eliminare questa nota?')) router.delete(route('patients.notes.destroy', [props.patient.id, n.id]), { preserveScroll: true }); };
+const fmtNoteDate = (iso) => new Date(iso).toLocaleString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('it-IT') : '—';
 const fmtDatetime = (d) => d ? new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -572,6 +582,40 @@ const chartsData = computed(() => {
                                 </svg>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Note cliniche (autonome, scollegate dai referti) -->
+                <div v-if="activeTab === 'note'" class="space-y-4">
+                    <!-- Aggiungi nota -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-4">
+                        <textarea v-model="noteForm.body" rows="3"
+                            class="w-full rounded-lg border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+                            placeholder="Scrivi una nota clinica (visibile solo a te)…"></textarea>
+                        <p v-if="noteForm.errors.body" class="text-xs text-red-500 mt-1">{{ noteForm.errors.body }}</p>
+                        <div class="flex justify-end mt-2">
+                            <button @click="submitNote" :disabled="noteForm.processing || !noteForm.body.trim()"
+                                class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-60">
+                                Aggiungi nota
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Elenco scorrevole (più recenti in alto) -->
+                    <div v-if="(patient.clinical_notes ?? []).length" class="space-y-3">
+                        <div v-for="n in patient.clinical_notes" :key="n.id"
+                            class="bg-white rounded-xl border border-gray-200 p-4">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs text-gray-400">{{ fmtNoteDate(n.created_at) }}<span v-if="n.author"> · {{ n.author.name }}</span></span>
+                                <button @click="deleteNote(n)" class="text-gray-300 hover:text-red-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-7 0h8l-1 12a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1L7 7Z"/></svg>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ n.body }}</p>
+                        </div>
+                    </div>
+                    <div v-else class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
+                        Nessuna nota clinica. Aggiungine una qui sopra.
                     </div>
                 </div>
 
