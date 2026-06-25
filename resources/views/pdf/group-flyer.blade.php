@@ -57,7 +57,7 @@
             <div class="url">{{ $url }}</div>
         </div>
 
-        <div class="brand"><b>nutrimente</b> · Studio di nutrizione e psicologia</div>
+        <div class="brand"><b>nutrimente</b> · Studio di psicologia</div>
     </div>
 </body>
 </html>

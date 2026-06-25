@@ -158,7 +158,7 @@ onUnmounted(() => {
                     <BotanicalSprig id="bot-sprout" klass="w-7 h-9 text-sage" />
                     <div class="font-serif text-2xl leading-none text-ink lowercase tracking-wide">nutrimente</div>
                     <div class="text-[9px] text-inkSoft uppercase tracking-[0.18em] leading-tight mt-0.5">
-                        Studio di nutrizione<br>e psicologia
+                        Studio di<br>psicologia
                     </div>
                 </Link>
             </div>
