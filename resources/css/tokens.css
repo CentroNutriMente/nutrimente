@@ -1,0 +1,79 @@
+/* ============================================================
+   nutrimente — design tokens
+   A calm botanical visual language (psychology & nutrition studio)
+   Drop into your global stylesheet, then reference via var(--…).
+   ============================================================ */
+
+:root {
+  /* — foundations — */
+  --bg:          #F7F4EF;   /* ivory page ground        */
+  --card:        #FFFFFF;   /* panels & cards           */
+  --card-warm:   #FBF9F5;   /* inputs, inset wells      */
+  --ink:         #3E3A37;   /* headings, primary text   */
+  --ink-soft:    #6B6661;   /* body text                */
+  --ink-muted:   #9A938C;   /* meta, captions, labels   */
+  --line:        #ECE7E0;   /* hairline borders         */
+
+  /* — sage : primary action — */
+  --sage:        #7C8A66;
+  --sage-deep:   #6B7A57;   /* hover / pressed          */
+  --sage-tint:   #E8ECE0;   /* active nav, soft fills   */
+
+  /* — lavender : accent — */
+  --lav:         #9B85C4;
+  --lav-soft:    #B9A8D0;
+  --lav-tint:    #ECE6F4;
+
+  /* — blush : warmth — */
+  --blush:       #E6B89C;
+  --blush-tint:  #F7E9DE;
+
+  /* — status — */
+  --ok:          #8FA572;   /* confirmed / positive     */
+  --ok-bg:       #E4EDD9;
+  --warn:        #D9A06B;   /* waiting / attention      */
+  --warn-bg:     #F6E7D6;
+  --info:        #9B85C4;   /* online / neutral state   */
+  --info-bg:     #ECE6F4;
+
+  /* — type — */
+  --font-serif:  'Cormorant Garamond', Georgia, serif;  /* greetings, titles, big numerals */
+  --font-sans:   'Mulish', system-ui, sans-serif;       /* body, labels, all UI text       */
+
+  /* type scale (px) */
+  --t-display:   52px;   /* serif 600 — greeting            */
+  --t-title:     28px;   /* serif 600 — section / card title */
+  --t-numeral:   42px;   /* serif 600 — stat numbers        */
+  --t-body:      16px;   /* sans 400                        */
+  --t-ui:        14px;   /* sans 500/600 — controls, links  */
+  --t-overline:  12px;   /* sans 600, 0.16em, uppercase     */
+
+  /* — shape — */
+  --radius-card: 22px;
+  --radius-ctrl: 12px;
+  --radius-pill: 999px;
+
+  /* — elevation — */
+  --shadow:      0 6px 28px rgba(74, 68, 60, .05);
+  --shadow-btn:  0 4px 14px rgba(124, 138, 102, .28);
+
+  /* — spacing rhythm — */
+  --pad-card:    26px;
+  --gap:         22px;
+}
+
+/* — watercolour wash (decorative blurred bloom) —
+   place inside a position:relative, overflow:hidden container */
+.wash {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(13px);
+  pointer-events: none;
+}
+.wash--lavender { background: radial-gradient(circle at 45% 40%, rgba(201,182,222,.65), rgba(201,182,222,0) 68%); }
+.wash--blush    { background: radial-gradient(circle at 50% 50%, rgba(240,211,190,.55), rgba(240,211,190,0) 68%); }
+.wash--sage     { background: radial-gradient(circle at 50% 50%, rgba(214,222,198,.85), rgba(214,222,198,0) 68%); }
+
+/* Google Fonts import (or self-host):
+   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Mulish:wght@300;400;500;600;700&display=swap');
+*/

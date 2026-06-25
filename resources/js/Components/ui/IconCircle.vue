@@ -12,7 +12,7 @@ const tones = {
     lavender: 'bg-lavenderLight text-lavender',
     blush:    'bg-blush text-blushDeep',
     peach:    'bg-blush text-blushDeep',
-    neutral:  'bg-cream text-inkSoft',
+    neutral:  'bg-cardWarm text-inkMuted',
 };
 
 const sizes = { sm: 'w-9 h-9', md: 'w-11 h-11', lg: 'w-14 h-14' };

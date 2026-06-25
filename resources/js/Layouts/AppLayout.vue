@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import BotanicalSprig from '@/Components/ui/BotanicalSprig.vue';
+import BotanicalSprite from '@/Components/ui/BotanicalSprite.vue';
 import axios from 'axios';
 
 const page = usePage();
@@ -140,10 +141,11 @@ onUnmounted(() => {
 <template>
     <div class="min-h-screen bg-cream flex">
         <Head :title="title" />
+        <BotanicalSprite />
         <Banner />
 
         <!-- Overlay mobile -->
-        <div v-if="sidebarOpen" class="fixed inset-0 bg-ink/30 z-30 md:hidden" @click="sidebarOpen = false" />
+        <div v-if="sidebarOpen" class="fixed inset-0 bg-black/30 z-30 md:hidden" @click="sidebarOpen = false" />
 
         <!-- Sidebar -->
         <aside
@@ -153,7 +155,7 @@ onUnmounted(() => {
             <!-- Logo / wordmark -->
             <div class="px-6 pt-7 pb-5">
                 <Link :href="route('dashboard')" class="flex flex-col items-center text-center gap-1">
-                    <BotanicalSprig klass="w-7 h-7 text-sage" />
+                    <BotanicalSprig id="bot-sprout" klass="w-7 h-9 text-sage" />
                     <div class="font-serif text-2xl leading-none text-ink lowercase tracking-wide">nutrimente</div>
                     <div class="text-[9px] text-inkSoft uppercase tracking-[0.18em] leading-tight mt-0.5">
                         Studio di nutrizione<br>e psicologia
@@ -170,9 +172,9 @@ onUnmounted(() => {
                     @click="closeSidebar"
                     :class="[
                         isActive(item.match)
-                            ? 'bg-sageLight text-sage font-semibold'
+                            ? 'bg-sageLight text-sageDeep font-semibold'
                             : 'text-inkSoft hover:bg-cream hover:text-ink',
-                        'flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm transition-colors'
+                        'flex items-center gap-3 px-3.5 py-2.5 rounded-ctrl text-sm transition-colors'
                     ]"
                 >
                     <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
@@ -184,7 +186,7 @@ onUnmounted(() => {
                 <!-- Altro -->
                 <button
                     @click="moreOpen = !moreOpen"
-                    class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-sm text-inkSoft hover:bg-cream hover:text-ink transition-colors"
+                    class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-ctrl text-sm text-inkSoft hover:bg-cream hover:text-ink transition-colors"
                 >
                     <svg class="w-[18px] h-[18px] shrink-0 transition-transform" :class="moreOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -208,7 +210,7 @@ onUnmounted(() => {
             <!-- User -->
             <div class="border-t border-line p-3">
                 <div class="flex items-center gap-2.5">
-                    <Link :href="route('profile.show')" @click="closeSidebar" class="flex items-center gap-2.5 flex-1 min-w-0 px-1.5 py-1.5 rounded-2xl hover:bg-cream transition-colors">
+                    <Link :href="route('profile.show')" @click="closeSidebar" class="flex items-center gap-2.5 flex-1 min-w-0 px-1.5 py-1.5 rounded-ctrl hover:bg-cream transition-colors">
                         <img class="w-9 h-9 rounded-full object-cover shrink-0 ring-2 ring-white" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name" />
                         <div class="text-left min-w-0">
                             <div class="text-sm font-semibold text-ink truncate">{{ $page.props.auth.user.name }}</div>
@@ -239,7 +241,7 @@ onUnmounted(() => {
 
                 <!-- Bell -->
                 <div class="relative shrink-0" data-bell>
-                    <button @click.stop="toggleBell" class="relative p-2.5 rounded-2xl text-inkSoft bg-white border border-line hover:text-sage transition-colors" title="Notifiche">
+                    <button @click.stop="toggleBell" class="relative p-2.5 rounded-ctrl text-inkSoft bg-white border border-line hover:text-sage transition-colors" title="Notifiche">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
                         </svg>

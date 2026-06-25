@@ -55,8 +55,8 @@ const statTiles = [
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 px-2 pt-4 pb-6">
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="font-serif text-4xl md:text-5xl text-ink leading-none">{{ greeting }}, {{ firstName }}</h1>
-                        <BotanicalSprig klass="w-8 h-8 text-sage mt-1" />
+                        <h1 class="font-serif text-4xl md:text-[52px] font-semibold text-ink leading-none">{{ greeting }}, {{ firstName }}</h1>
+                        <BotanicalSprig id="bot-sprig" klass="w-20 h-7 text-sage mt-2" />
                     </div>
                     <p class="text-inkSoft mt-3">
                         Hai {{ todayAppointments.length }} {{ todayAppointments.length === 1 ? 'colloquio' : 'colloqui' }} oggi,
@@ -69,12 +69,12 @@ const statTiles = [
                     <div class="flex items-center gap-3">
                         <div class="relative">
                             <input v-model="search" @keyup.enter="doSearch" type="text" placeholder="Cerca paziente..."
-                                class="w-56 pl-4 pr-9 py-2.5 rounded-2xl border border-line bg-white text-sm text-ink placeholder-inkSoft focus:border-sage focus:ring-sage/30" />
+                                class="w-56 pl-4 pr-9 py-2.5 rounded-ctrl border border-line bg-cardWarm text-sm text-ink placeholder-inkSoft focus:border-sage focus:ring-sageLight" />
                             <button @click="doSearch" class="absolute right-3 top-1/2 -translate-y-1/2 text-inkSoft">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
                             </button>
                         </div>
-                        <Link :href="route('patients.create')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium transition-colors whitespace-nowrap">
+                        <Link :href="route('patients.create')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium transition-colors whitespace-nowrap">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
                             Nuovo paziente
                         </Link>
@@ -90,7 +90,7 @@ const statTiles = [
                 <h2 class="font-serif text-xl text-ink mb-5">Azioni rapide</h2>
                 <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
                     <Link v-for="a in quickActions" :key="a.label" :href="a.href"
-                        class="flex flex-col items-center gap-2.5 p-3 rounded-2xl hover:bg-cream transition-colors text-center">
+                        class="flex flex-col items-center gap-2.5 p-3 rounded-ctrl hover:bg-cream transition-colors text-center">
                         <IconCircle :icon="a.icon" :tone="a.tone" size="lg" />
                         <span class="text-xs text-inkSoft leading-tight whitespace-pre-line">{{ a.label }}</span>
                     </Link>

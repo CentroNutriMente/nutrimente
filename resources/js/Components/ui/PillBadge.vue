@@ -10,7 +10,7 @@ const tones = {
     lavender: 'bg-lavenderLight text-lavender',
     blush:    'bg-blush text-blushDeep',
     peach:    'bg-blush text-blushDeep',
-    neutral:  'bg-cream text-inkSoft',
+    neutral:  'bg-cardWarm text-inkMuted',
 };
 </script>
 

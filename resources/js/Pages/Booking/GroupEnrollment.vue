@@ -1,6 +1,7 @@
 <script setup>
 import { useForm, usePage } from '@inertiajs/vue3';
 import BotanicalSprig from '@/Components/ui/BotanicalSprig.vue';
+import BotanicalSprite from '@/Components/ui/BotanicalSprite.vue';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -44,27 +45,28 @@ const submit = () => {
     });
 };
 
-const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white text-sm text-ink placeholder-inkSoft focus:border-sage focus:ring-sage/30';
+const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm text-sm text-ink placeholder-inkSoft focus:border-sage focus:ring-sageLight';
 </script>
 
 <template>
     <div class="min-h-screen bg-cream">
+        <BotanicalSprite />
         <!-- Top nav -->
-        <nav class="bg-cream/80 backdrop-blur border-b border-line sticky top-0 z-10">
+        <nav class="bg-cream backdrop-blur border-b border-line sticky top-0 z-10">
             <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
                 <a href="/" class="flex items-center gap-2 text-ink">
-                    <BotanicalSprig klass="w-6 h-6 text-sage" />
+                    <BotanicalSprig id="bot-sprout" klass="w-6 h-8 text-sage" />
                     <span class="font-serif text-xl lowercase">nutrimente</span>
                 </a>
-                <a href="/login" class="text-sm font-medium text-white bg-sage hover:bg-sage/90 px-4 py-1.5 rounded-2xl transition-colors">Accesso professionisti</a>
+                <a href="/login" class="text-sm font-medium text-white bg-sage hover:bg-sageDeep px-4 py-1.5 rounded-ctrl transition-colors">Accesso professionisti</a>
             </div>
         </nav>
 
         <!-- Hero -->
         <header class="relative overflow-hidden">
             <div class="pointer-events-none absolute inset-0 -z-10">
-                <div class="absolute -top-16 left-1/3 w-72 h-72 rounded-full blur-3xl opacity-50" style="background: radial-gradient(circle, #D9CFEA 0%, transparent 70%)"></div>
-                <div class="absolute -top-10 right-1/4 w-72 h-72 rounded-full blur-3xl opacity-40" style="background: radial-gradient(circle, #F6E4D2 0%, transparent 70%)"></div>
+                <span class="wash wash--lavender" style="top:-70px;left:28%;width:360px;height:280px;"></span>
+                <span class="wash wash--blush" style="top:-50px;right:22%;width:320px;height:260px;"></span>
             </div>
             <div class="max-w-2xl mx-auto px-4 pt-10 pb-6 text-center">
                 <a href="/" class="self-start text-sm text-inkSoft hover:text-ink inline-flex items-center gap-1 mb-4">
@@ -78,7 +80,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
         </header>
 
         <main class="max-w-2xl mx-auto px-4 pb-16">
-            <div v-if="flash" class="mb-5 rounded-2xl bg-sageLight border border-line text-sage px-4 py-3 text-sm text-center">{{ flash }}</div>
+            <div v-if="flash" class="mb-5 rounded-ctrl bg-sageLight border border-line text-sage px-4 py-3 text-sm text-center">{{ flash }}</div>
 
             <form @submit.prevent="submit" class="bg-white rounded-xl2 border border-line p-6 sm:p-8 space-y-5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -118,14 +120,14 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                 </div>
 
                 <label class="flex items-start gap-3 text-sm text-ink">
-                    <input v-model="form.privacy_consent" type="checkbox" class="mt-0.5 rounded border-line text-sage focus:ring-sage/30" />
+                    <input v-model="form.privacy_consent" type="checkbox" class="mt-0.5 rounded border-line text-sage focus:ring-sageLight" />
                     <span>Ho letto l'informativa privacy e acconsento al trattamento dei dati.</span>
                 </label>
                 <p v-if="form.errors.privacy_consent" class="text-xs text-red-500 -mt-3">È necessario il consenso per inviare la richiesta.</p>
 
                 <div class="flex items-center justify-between gap-3 pt-2">
                     <a href="/" class="text-sm text-inkSoft hover:text-ink">Annulla</a>
-                    <button type="submit" :disabled="form.processing" class="px-6 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium transition-colors disabled:opacity-60">
+                    <button type="submit" :disabled="form.processing" class="px-6 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium transition-colors disabled:opacity-60">
                         Invia richiesta
                     </button>
                 </div>

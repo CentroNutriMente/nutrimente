@@ -5,8 +5,8 @@ defineProps({
 </script>
 
 <template>
-    <!-- Soft = bordo sottile + spazi bianchi, niente ombre marcate -->
-    <div class="bg-white rounded-xl2 border border-line" :class="padded ? 'p-6' : ''">
+    <!-- Card bianca su ground ivory: hairline border + whisper-soft shadow, raggio 22px -->
+    <div class="bg-card rounded-xl2 border border-line shadow-soft" :class="padded ? 'p-6' : ''">
         <slot />
     </div>
 </template>

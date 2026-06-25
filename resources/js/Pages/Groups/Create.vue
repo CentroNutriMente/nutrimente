@@ -26,7 +26,7 @@ const form = useForm({
 
 const leafIcon = 'M12 3c1.5 2 4 3.5 4 7a4 4 0 1 1-8 0c0-3.5 2.5-5 4-7Z';
 const submit = () => form.post(route('groups.store'));
-const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white text-sm text-ink focus:border-sage focus:ring-sage/30';
+const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm text-sm text-ink focus:border-sage focus:ring-sageLight';
 </script>
 
 <template>
@@ -45,7 +45,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                     <label class="block text-sm font-medium text-ink mb-3">Categoria</label>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <button type="button" v-for="c in categories" :key="c.key" @click="form.category = c.key"
-                            :class="['flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors text-center',
+                            :class="['flex flex-col items-center gap-2 p-4 rounded-ctrl border-2 transition-colors text-center',
                                 form.category === c.key ? 'border-sage bg-sageLight' : 'border-line hover:border-sage']">
                             <IconCircle :icon="leafIcon" :tone="c.tone" />
                             <span class="text-sm font-medium text-ink">{{ c.label }}</span>
@@ -102,8 +102,8 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                 </Card>
 
                 <div class="flex items-center justify-end gap-3">
-                    <Link :href="route('groups.index')" class="px-4 py-2.5 rounded-2xl text-sm text-inkSoft hover:bg-cream transition-colors">Annulla</Link>
-                    <button type="submit" :disabled="form.processing" class="px-5 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium transition-colors disabled:opacity-60">
+                    <Link :href="route('groups.index')" class="px-4 py-2.5 rounded-ctrl text-sm text-inkSoft hover:bg-cream transition-colors">Annulla</Link>
+                    <button type="submit" :disabled="form.processing" class="px-5 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium transition-colors disabled:opacity-60">
                         Crea gruppo
                     </button>
                 </div>

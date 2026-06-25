@@ -41,7 +41,7 @@ const statusLabel = { attivo: 'Attivo', in_partenza: 'In partenza', concluso: 'C
                     <h1 class="font-serif text-4xl text-ink leading-none">Gruppi di aiuto e sostegno</h1>
                     <p class="text-inkSoft mt-2">Gestisci i tuoi gruppi e le iscrizioni.</p>
                 </div>
-                <Link :href="route('groups.create')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium transition-colors self-start sm:self-auto whitespace-nowrap">
+                <Link :href="route('groups.create')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium transition-colors self-start sm:self-auto whitespace-nowrap">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
                     Nuovo gruppo
                 </Link>
@@ -58,7 +58,7 @@ const statusLabel = { attivo: 'Attivo', in_partenza: 'In partenza', concluso: 'C
             </div>
             <div class="relative">
                 <input v-model="search" @keyup.enter="apply" type="text" placeholder="Cerca gruppo..."
-                    class="w-full sm:w-56 pl-4 pr-9 py-2 rounded-2xl border border-line bg-white text-sm text-ink placeholder-inkSoft focus:border-sage focus:ring-sage/30" />
+                    class="w-full sm:w-56 pl-4 pr-9 py-2 rounded-ctrl border border-line bg-cardWarm text-sm text-ink placeholder-inkSoft focus:border-sage focus:ring-sageLight" />
                 <button @click="apply" class="absolute right-3 top-1/2 -translate-y-1/2 text-inkSoft">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
                 </button>

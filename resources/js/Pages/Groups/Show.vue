@@ -82,7 +82,7 @@ const emailAll = () => {
     if (emails) window.location.href = `mailto:?bcc=${emails}`;
 };
 
-const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white text-sm text-ink focus:border-sage focus:ring-sage/30';
+const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm text-sm text-ink focus:border-sage focus:ring-sageLight';
 </script>
 
 <template>
@@ -106,7 +106,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                     </div>
                     <p class="text-sm text-inkSoft mt-1.5 leading-relaxed">{{ group.description }}</p>
                 </div>
-                <button @click="tab = 'impostazioni'" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-line text-sm text-ink hover:bg-cream transition-colors shrink-0">
+                <button @click="tab = 'impostazioni'" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-ctrl border border-line text-sm text-ink hover:bg-cream transition-colors shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586Z"/></svg>
                     Modifica
                 </button>
@@ -137,7 +137,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                     <div class="relative flex-1 max-w-xs">
                         <input v-model="search" type="text" placeholder="Cerca partecipante..." :class="inputCls" />
                     </div>
-                    <button @click="showAdd = !showAdd" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium transition-colors whitespace-nowrap">
+                    <button @click="showAdd = !showAdd" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium transition-colors whitespace-nowrap">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
                         Aggiungi partecipante
                     </button>
@@ -145,7 +145,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
 
                 <!-- Form aggiungi -->
                 <div v-if="showAdd" class="px-5 pb-5">
-                    <div class="rounded-2xl bg-cream border border-line p-4 space-y-3">
+                    <div class="rounded-ctrl bg-cream border border-line p-4 space-y-3">
                         <div class="flex gap-2">
                             <button @click="mode = 'patient'" :class="['px-3 py-1.5 rounded-full text-xs border', mode === 'patient' ? 'bg-sage text-white border-sage' : 'bg-white text-inkSoft border-line']">Paziente esistente</button>
                             <button @click="mode = 'external'" :class="['px-3 py-1.5 rounded-full text-xs border', mode === 'external' ? 'bg-sage text-white border-sage' : 'bg-white text-inkSoft border-line']">Contatto esterno</button>
@@ -165,7 +165,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                             <select v-model="addForm.status" :class="inputCls + ' max-w-[180px]'">
                                 <option v-for="s in participantStatuses" :key="s" :value="s">{{ pStatusLabel[s] }}</option>
                             </select>
-                            <button @click="submitAdd" :disabled="addForm.processing" class="px-4 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium disabled:opacity-60">Aggiungi</button>
+                            <button @click="submitAdd" :disabled="addForm.processing" class="px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium disabled:opacity-60">Aggiungi</button>
                         </div>
                     </div>
                 </div>
@@ -192,7 +192,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                                 <td class="px-5 py-3 text-inkSoft">{{ p.phone || '—' }}</td>
                                 <td class="px-5 py-3">
                                     <select :value="p.status" @change="updateStatus(p, $event.target.value)"
-                                        class="text-xs rounded-full border-line py-1 pl-2 pr-7 focus:border-sage focus:ring-sage/30"
+                                        class="text-xs rounded-full border-line py-1 pl-2 pr-7 focus:border-sage focus:ring-sageLight"
                                         :class="pStatusTone[p.status] === 'sage' ? 'text-sage bg-sageLight' : pStatusTone[p.status] === 'peach' ? 'text-blushDeep bg-blush' : 'text-lavender bg-lavenderLight'">
                                         <option v-for="s in participantStatuses" :key="s" :value="s">{{ pStatusLabel[s] }}</option>
                                     </select>
@@ -209,11 +209,11 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                 </div>
 
                 <div class="flex items-center gap-3 p-5 border-t border-line">
-                    <button @click="emailAll" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-line text-sm text-ink hover:bg-cream transition-colors">
+                    <button @click="emailAll" class="inline-flex items-center gap-2 px-4 py-2 rounded-ctrl border border-line text-sm text-ink hover:bg-cream transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
                         Invia email a tutti
                     </button>
-                    <a :href="route('groups.export', group.id)" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-line text-sm text-ink hover:bg-cream transition-colors">
+                    <a :href="route('groups.export', group.id)" class="inline-flex items-center gap-2 px-4 py-2 rounded-ctrl border border-line text-sm text-ink hover:bg-cream transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
                         Esporta elenco
                     </a>
@@ -242,7 +242,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                                 <td class="px-5 py-3 text-inkSoft">{{ r.email || '—' }}</td>
                                 <td class="px-5 py-3 text-inkSoft">{{ r.date }}</td>
                                 <td class="px-5 py-3 text-right whitespace-nowrap">
-                                    <button @click="approve(r)" class="text-xs px-3 py-1.5 rounded-full bg-sage hover:bg-sage/90 text-white mr-2">Approva</button>
+                                    <button @click="approve(r)" class="text-xs px-3 py-1.5 rounded-full bg-sage hover:bg-sageDeep text-white shadow-btn mr-2">Approva</button>
                                     <button @click="reject(r)" class="text-xs px-3 py-1.5 rounded-full border border-line text-inkSoft hover:bg-cream">Rifiuta</button>
                                 </td>
                             </tr>
@@ -305,7 +305,7 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                 </div>
                 <div class="flex items-center justify-between pt-2">
                     <button @click="destroyGroup" class="text-sm text-red-500 hover:underline">Elimina gruppo</button>
-                    <button @click="saveSettings" :disabled="settings.processing" class="px-5 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium disabled:opacity-60">Salva</button>
+                    <button @click="saveSettings" :disabled="settings.processing" class="px-5 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium disabled:opacity-60">Salva</button>
                 </div>
             </Card>
 
@@ -314,10 +314,10 @@ const inputCls = 'w-full px-4 py-2.5 rounded-2xl border border-line bg-white tex
                 <h3 class="font-serif text-lg text-ink mb-2">Volantino & QR</h3>
                 <p class="text-xs text-inkSoft mb-4">Le persone possono iscriversi inquadrando il QR del volantino.</p>
                 <img :src="route('groups.flyer', { group: group.id, preview: 1 })" alt="QR iscrizione"
-                     class="w-40 h-40 mx-auto rounded-2xl border border-line object-contain bg-white" @error="$event.target.style.display='none'" />
+                     class="w-40 h-40 mx-auto rounded-ctrl border border-line object-contain bg-white" @error="$event.target.style.display='none'" />
                 <div class="mt-4 text-xs text-inkSoft break-all bg-cream rounded-xl px-3 py-2">{{ group.public_url }}</div>
                 <a :href="route('groups.flyer', group.id)" target="_blank"
-                   class="inline-flex items-center gap-2 mt-4 px-4 py-2.5 rounded-2xl bg-sage hover:bg-sage/90 text-white text-sm font-medium transition-colors">
+                   class="inline-flex items-center gap-2 mt-4 px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
                     Scarica volantino
                 </a>

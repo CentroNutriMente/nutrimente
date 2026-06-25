@@ -14,26 +14,43 @@ export default {
 
     theme: {
         extend: {
-            // Token del template dashboard di riferimento
+            // Token = CSS custom properties di tokens.css (sorgente unica)
             colors: {
-                cream:         '#FBF7F2',
-                sage:          '#7C8B6F',
-                sageLight:     '#E9EEE3',
-                lavender:      '#B9A8D9',
-                lavenderLight: '#EFEAF8',
-                blush:         '#F3DCD4',
-                blushDeep:     '#C98A74', // testo/accento su blush (derivato)
-                ink:           '#2E2A26',
-                inkSoft:       '#6B645C',
-                line:          '#ECE6DD',
+                bg:            'var(--bg)',
+                cream:         'var(--bg)',        // ground ivory (alias usato nelle pagine)
+                card:          'var(--card)',
+                cardWarm:      'var(--card-warm)',
+                ink:           'var(--ink)',
+                inkSoft:       'var(--ink-soft)',
+                inkMuted:      'var(--ink-muted)',
+                line:          'var(--line)',
+                sage:          'var(--sage)',
+                sageDeep:      'var(--sage-deep)',
+                sageLight:     'var(--sage-tint)',
+                lavender:      'var(--lav)',
+                lavSoft:       'var(--lav-soft)',
+                lavenderLight: 'var(--lav-tint)',
+                blush:         'var(--blush-tint)',  // sfondo well/pill
+                blushWarm:     'var(--blush)',
+                blushDeep:     'var(--warn)',         // testo su blush / "in attesa"
+                ok:            'var(--ok)',
+                okBg:          'var(--ok-bg)',
+                warn:          'var(--warn)',
+                warnBg:        'var(--warn-bg)',
+                info:          'var(--info)',
+                infoBg:        'var(--info-bg)',
             },
             fontFamily: {
-                // Titoli/saluti in serif, corpo in Inter
                 serif: ["'Cormorant Garamond'", 'Georgia', 'serif'],
-                sans:  ["'Inter'", ...defaultTheme.fontFamily.sans],
+                sans:  ["'Mulish'", ...defaultTheme.fontFamily.sans],
             },
             borderRadius: {
-                xl2: '1.25rem', // 20px — card
+                xl2:  '22px', // card
+                ctrl: '12px', // bottoni/input
+            },
+            boxShadow: {
+                soft: 'var(--shadow)',
+                btn:  'var(--shadow-btn)',
             },
         },
     },
