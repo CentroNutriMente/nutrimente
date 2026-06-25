@@ -1,0 +1,7 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+bye

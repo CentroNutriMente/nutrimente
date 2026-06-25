@@ -10,7 +10,7 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -220,8 +220,10 @@ class GroupController extends Controller
     {
         $url = route('groups.public.show', $group->public_token);
 
+        // SVG (nessuna dipendenza da ext-gd, che su Aruba può non essere attiva);
+        // DomPDF renderizza l'SVG via data-uri.
         $qr = (new Builder(
-            writer: new PngWriter(),
+            writer: new SvgWriter(),
             data: $url,
             errorCorrectionLevel: ErrorCorrectionLevel::High,
             size: 320,

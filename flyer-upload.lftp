@@ -1,0 +1,9 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+
+put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/group-flyer.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
+
+ls -l www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
+bye
