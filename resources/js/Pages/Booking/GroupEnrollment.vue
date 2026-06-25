@@ -25,6 +25,7 @@ const form = useForm({
     cognome: '',
     email: '',
     phone: '',
+    codice_fiscale: '',
     group_id: props.preselect?.id ?? null,
     how_heard: '',
     privacy_consent: false,
@@ -36,6 +37,7 @@ const submit = () => {
         name: `${d.nome} ${d.cognome}`.trim(),
         email: d.email,
         phone: d.phone,
+        codice_fiscale: d.codice_fiscale,
         group_id: d.group_id,
         how_heard: d.how_heard,
         privacy_consent: d.privacy_consent,
@@ -99,6 +101,13 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                     <div>
                         <label class="block text-sm font-medium text-ink mb-1.5">Telefono</label>
                         <input v-model="form.phone" type="text" :class="inputCls" placeholder="333 1234567" />
+                        <p v-if="form.errors.phone" class="text-xs text-red-500 mt-1">{{ form.errors.phone }}</p>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-ink mb-1.5">Codice fiscale</label>
+                        <input v-model="form.codice_fiscale" type="text" maxlength="16"
+                               :class="[inputCls, 'uppercase']" placeholder="RSSMRA80A01H501U" />
+                        <p v-if="form.errors.codice_fiscale" class="text-xs text-red-500 mt-1">{{ form.errors.codice_fiscale }}</p>
                     </div>
                 </div>
 

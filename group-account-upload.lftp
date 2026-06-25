@@ -1,0 +1,17 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# build
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# nuovo service (crea la cartella)
+mkdir -p www.saraalessandripsicologa.it/nutrimente_app/app/Services
+put /Users/alfonso/nutrimente/nutrimente/app/Services/PatientRegistrar.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Services/PatientRegistrar.php
+# controller + modello + migrazione
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupEnrollmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupEnrollmentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupEnrollmentRequest.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupEnrollmentRequest.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_25_120000_add_codice_fiscale_to_group_enrollment_requests.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_25_120000_add_codice_fiscale_to_group_enrollment_requests.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/app/Services/PatientRegistrar.php
+bye

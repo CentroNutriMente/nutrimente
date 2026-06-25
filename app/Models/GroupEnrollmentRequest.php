@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class GroupEnrollmentRequest extends Model
 {
     protected $fillable = [
-        'group_id', 'category', 'name', 'email', 'phone',
+        'group_id', 'category', 'name', 'email', 'phone', 'codice_fiscale',
         'how_heard', 'privacy_consent', 'source', 'status',
     ];
 

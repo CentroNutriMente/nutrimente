@@ -45,9 +45,9 @@ const filtered = computed(() => {
 // ── Aggiungi partecipante ──
 const showAdd = ref(false);
 const mode = ref('patient'); // patient | external
-const addForm = useForm({ patient_id: null, name: '', email: '', phone: '', status: 'in_attesa' });
+const addForm = useForm({ patient_id: null, first_name: '', last_name: '', email: '', phone: '', codice_fiscale: '', status: 'in_attesa' });
 const submitAdd = () => {
-    if (mode.value === 'patient') { addForm.name = ''; addForm.email = ''; addForm.phone = ''; }
+    if (mode.value === 'patient') { addForm.first_name = ''; addForm.last_name = ''; addForm.email = ''; addForm.phone = ''; addForm.codice_fiscale = ''; }
     else addForm.patient_id = null;
     addForm.post(route('groups.participants.store', props.group.id), {
         preserveScroll: true,
@@ -156,10 +156,12 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                                 <option v-for="p in patientsOptions" :key="p.id" :value="p.id">{{ p.name }}</option>
                             </select>
                         </div>
-                        <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <input v-model="addForm.name" type="text" placeholder="Nome e cognome" :class="inputCls" />
+                        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input v-model="addForm.first_name" type="text" placeholder="Nome" :class="inputCls" />
+                            <input v-model="addForm.last_name" type="text" placeholder="Cognome" :class="inputCls" />
                             <input v-model="addForm.email" type="email" placeholder="Email" :class="inputCls" />
                             <input v-model="addForm.phone" type="text" placeholder="Telefono" :class="inputCls" />
+                            <input v-model="addForm.codice_fiscale" type="text" maxlength="16" placeholder="Codice fiscale" :class="[inputCls, 'uppercase sm:col-span-2']" />
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <select v-model="addForm.status" :class="inputCls + ' max-w-[180px]'">

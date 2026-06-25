@@ -40,8 +40,9 @@ class GroupEnrollmentController extends Controller
     {
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:120'],
-            'email'           => ['nullable', 'email', 'max:160'],
-            'phone'           => ['nullable', 'string', 'max:40'],
+            'email'           => ['required', 'email', 'max:160'],
+            'phone'           => ['required', 'string', 'max:40'],
+            'codice_fiscale'  => ['required', 'string', 'regex:/^[A-Za-z0-9]{16}$/'],
             'group_id'        => ['nullable', 'exists:support_groups,id'],
             'how_heard'       => ['nullable', 'string', 'max:120'],
             'privacy_consent' => ['accepted'],
@@ -57,8 +58,9 @@ class GroupEnrollmentController extends Controller
             'group_id'        => $validated['group_id'] ?? null,
             'category'        => $category,
             'name'            => $validated['name'],
-            'email'           => $validated['email'] ?? null,
-            'phone'           => $validated['phone'] ?? null,
+            'email'           => $validated['email'],
+            'phone'           => $validated['phone'],
+            'codice_fiscale'  => strtoupper($validated['codice_fiscale']),
             'how_heard'       => $validated['how_heard'] ?? null,
             'privacy_consent' => true,
             'source'          => $validated['source'] ?? 'form',

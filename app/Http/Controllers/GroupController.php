@@ -7,6 +7,7 @@ use App\Models\GroupEnrollmentRequest;
 use App\Models\GroupParticipant;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\PatientRegistrar;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel;
@@ -132,25 +133,43 @@ class GroupController extends Controller
     }
 
     // ── Partecipanti ─────────────────────────────────────────────────────────
-    public function addParticipant(Request $request, Group $group): RedirectResponse
+    public function addParticipant(Request $request, Group $group, PatientRegistrar $registrar): RedirectResponse
     {
         $validated = $request->validate([
-            'patient_id' => ['nullable', 'exists:patients,id'],
-            'name'       => ['required_without:patient_id', 'nullable', 'string', 'max:120'],
-            'email'      => ['nullable', 'email', 'max:160'],
-            'phone'      => ['nullable', 'string', 'max:40'],
-            'status'     => ['required', Rule::in(config('groups.participant_statuses'))],
+            'patient_id'     => ['nullable', 'exists:patients,id'],
+            'first_name'     => ['required_without:patient_id', 'nullable', 'string', 'max:100'],
+            'last_name'      => ['nullable', 'string', 'max:100'],
+            'email'          => ['nullable', 'email', 'max:160'],
+            'phone'          => ['nullable', 'string', 'max:40'],
+            'codice_fiscale' => ['nullable', 'regex:/^[A-Za-z0-9]{16}$/'],
+            'status'         => ['required', Rule::in(config('groups.participant_statuses'))],
         ]);
 
+        $proIds = array_filter([$group->leader_user_id]);
+
         if (! empty($validated['patient_id'])) {
+            // Paziente esistente: associa al professionista del gruppo, nessun duplicato.
             $patient = Patient::findOrFail($validated['patient_id']);
-            $validated['name']  = "{$patient->first_name} {$patient->last_name}";
-            $validated['email'] = $validated['email'] ?: $patient->email;
-            $validated['phone'] = $validated['phone'] ?: $patient->phone;
+            $patient->professionals()->syncWithoutDetaching($proIds);
+        } else {
+            // Contatto esterno: crea (o ritrova) la scheda + account portale.
+            $patient = $registrar->findOrCreate([
+                'first_name'     => $validated['first_name'] ?? '',
+                'last_name'      => $validated['last_name'] ?? '',
+                'email'          => $validated['email'] ?? null,
+                'phone'          => $validated['phone'] ?? null,
+                'codice_fiscale' => $validated['codice_fiscale'] ?? null,
+            ], $request->user()->id, $proIds);
         }
 
-        $validated['joined_at'] = now();
-        $group->participants()->create($validated);
+        $group->participants()->create([
+            'patient_id' => $patient->id,
+            'name'       => trim("{$patient->first_name} {$patient->last_name}"),
+            'email'      => $patient->email,
+            'phone'      => $patient->phone,
+            'status'     => $validated['status'],
+            'joined_at'  => now(),
+        ]);
 
         return back()->with('flash', ['banner' => 'Partecipante aggiunto.']);
     }
@@ -175,21 +194,32 @@ class GroupController extends Controller
     }
 
     // ── Richieste d'iscrizione ───────────────────────────────────────────────
-    public function approveEnrollment(Group $group, GroupEnrollmentRequest $enrollment): RedirectResponse
+    public function approveEnrollment(Request $request, Group $group, GroupEnrollmentRequest $enrollment, PatientRegistrar $registrar): RedirectResponse
     {
         abort_unless($enrollment->group_id === $group->id, 404);
 
+        // Crea (o ritrova) la scheda anagrafica + account portale dai dati della richiesta.
+        [$first, $last] = PatientRegistrar::splitName($enrollment->name);
+        $patient = $registrar->findOrCreate([
+            'first_name'     => $first,
+            'last_name'      => $last,
+            'email'          => $enrollment->email,
+            'phone'          => $enrollment->phone,
+            'codice_fiscale' => $enrollment->codice_fiscale,
+        ], $request->user()->id, array_filter([$group->leader_user_id]));
+
         $group->participants()->create([
-            'name'      => $enrollment->name,
-            'email'     => $enrollment->email,
-            'phone'     => $enrollment->phone,
-            'status'    => 'in_attesa',
-            'joined_at' => now(),
+            'patient_id' => $patient->id,
+            'name'       => trim("{$patient->first_name} {$patient->last_name}"),
+            'email'      => $patient->email,
+            'phone'      => $patient->phone,
+            'status'     => 'in_attesa',
+            'joined_at'  => now(),
         ]);
 
         $enrollment->update(['status' => 'confermata']);
 
-        return back()->with('flash', ['banner' => 'Richiesta approvata e partecipante inserito.']);
+        return back()->with('flash', ['banner' => 'Richiesta approvata: partecipante inserito e scheda creata.']);
     }
 
     public function rejectEnrollment(Group $group, GroupEnrollmentRequest $enrollment): RedirectResponse
