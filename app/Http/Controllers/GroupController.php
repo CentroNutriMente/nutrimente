@@ -76,6 +76,17 @@ class GroupController extends Controller
             'materials.uploadedBy:id,name',
         ]);
 
+        // Collega i partecipanti "vecchi" (senza patient_id) alla scheda paziente
+        // corrispondente per email, così il nome diventa cliccabile verso il profilo.
+        foreach ($group->participants as $p) {
+            if (! $p->patient_id && $p->email) {
+                $match = Patient::where('email', $p->email)->first();
+                if ($match) {
+                    $p->update(['patient_id' => $match->id]);
+                }
+            }
+        }
+
         $patients = Patient::orderBy('last_name')->orderBy('first_name')
             ->get(['id', 'first_name', 'last_name', 'email', 'phone'])
             ->map(fn ($p) => [
