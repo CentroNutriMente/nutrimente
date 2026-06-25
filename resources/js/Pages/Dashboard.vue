@@ -5,7 +5,6 @@ import IconCircle from '@/Components/ui/IconCircle.vue';
 import PillBadge from '@/Components/ui/PillBadge.vue';
 import StatTile from '@/Components/ui/StatTile.vue';
 import WatercolorHeader from '@/Components/ui/WatercolorHeader.vue';
-import BotanicalSprig from '@/Components/ui/BotanicalSprig.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -54,11 +53,19 @@ const statTiles = [
         <WatercolorHeader class="px-1 pb-2">
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 px-2 pt-4 pb-6">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="font-serif text-4xl md:text-[52px] font-semibold text-ink leading-none">{{ greeting }}, {{ firstName }}</h1>
-                        <BotanicalSprig id="bot-sprig" klass="w-20 h-7 text-sage mt-2" />
+                    <h1 class="font-serif text-4xl md:text-[52px] font-semibold text-ink leading-none">{{ greeting }}, {{ firstName }}</h1>
+
+                    <!-- Bloom watercolor (lavanda tint --lav-tint) + fogliame sotto il saluto -->
+                    <div class="relative h-14 w-full max-w-md mt-2 mb-1">
+                        <span class="wash" style="top:-14px;left:-6px;width:280px;height:100px;background:radial-gradient(circle at 40% 50%, var(--lav-tint), rgba(236,230,244,0) 70%);"></span>
+                        <div class="relative flex items-end gap-5 pl-1 h-full">
+                            <svg class="w-5 h-11" style="color:var(--lav)" aria-hidden="true"><use href="#bot-lavender" /></svg>
+                            <svg class="w-20 h-7 mb-2" style="color:var(--sage)" aria-hidden="true"><use href="#bot-sprig" /></svg>
+                            <svg class="w-8 h-11" style="color:var(--sage)" aria-hidden="true"><use href="#bot-sprout" /></svg>
+                        </div>
                     </div>
-                    <p class="text-inkSoft mt-3">
+
+                    <p class="text-inkSoft">
                         Hai {{ todayAppointments.length }} {{ todayAppointments.length === 1 ? 'colloquio' : 'colloqui' }} oggi,
                         {{ tasks.length }} {{ tasks.length === 1 ? 'attività' : 'attività' }} da completare e
                         {{ requestsTotal }} {{ requestsTotal === 1 ? 'richiesta' : 'richieste' }} da gestire.
