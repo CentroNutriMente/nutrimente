@@ -194,12 +194,8 @@ class ContactRequestController extends Controller
             'time' => 'required|date_format:H:i',
         ]);
 
-        // Soft-check the chosen slot falls within the client's stated availability.
-        $slot = (self::DAYS[Carbon::parse($validated['date'])->isoWeekday() - 1] ?? '')
-            . '|' . $validated['time'];
-        if (! empty($contactRequest->availability) && ! in_array($slot, $contactRequest->availability)) {
-            return back()->withErrors(['time' => 'Lo slot scelto non rientra nelle disponibilità indicate dal cliente.']);
-        }
+        // Il professionista è libero di fissare qualsiasi giorno/orario, a prescindere
+        // dalle disponibilità indicate dal cliente (che restano solo come indicazione).
 
         // Find or create the patient record from the contact's anagrafica.
         $patient = Patient::where('email', $contactRequest->email)->first();

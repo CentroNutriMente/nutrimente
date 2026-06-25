@@ -1,6 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -17,7 +17,6 @@ const CONTACT_LABELS = {
     telefono: 'Telefono',
 };
 const DAY_LABELS = { lun: 'Lun', mar: 'Mar', mer: 'Mer', gio: 'Gio', ven: 'Ven', sab: 'Sab' };
-const DAY_ISO    = { lun: 1, mar: 2, mer: 3, gio: 4, ven: 5, sab: 6 };
 
 const STATUS = {
     pending:  { label: 'Da gestire', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -50,22 +49,6 @@ function reject(c) {
 // ── Accept modal ──────────────────────────────────────────────────────────────
 const acceptingFor = ref(null); // the request being accepted
 const acceptForm = useForm({ date: '', time: '' });
-
-const timeOptions = computed(() => {
-    const c = acceptingFor.value;
-    if (!c) return [];
-    if (!acceptForm.date || !(c.availability || []).length) {
-        return Array.from({ length: 12 }, (_, i) => String(8 + i).padStart(2, '0') + ':00');
-    }
-    // Restrict to hours the client marked for that weekday
-    const iso = new Date(acceptForm.date + 'T00:00:00').getDay(); // 0=Sun..6=Sat
-    const isoMon = iso === 0 ? 7 : iso;
-    const dayCode = Object.keys(DAY_ISO).find(k => DAY_ISO[k] === isoMon);
-    return (c.availability || [])
-        .filter(s => s.startsWith(dayCode + '|'))
-        .map(s => s.split('|')[1])
-        .sort();
-});
 
 function openAccept(c) {
     acceptingFor.value = c;
@@ -159,11 +142,9 @@ function submitAccept() {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Orario</label>
-                        <select v-model="acceptForm.time"
-                            class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
-                            <option value="" disabled>Seleziona…</option>
-                            <option v-for="t in timeOptions" :key="t" :value="t">{{ t }}</option>
-                        </select>
+                        <input v-model="acceptForm.time" type="time" step="300"
+                            class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                        <p class="text-xs text-gray-400 mt-1">Puoi scegliere qualsiasi giorno e orario, anche fuori dalle disponibilità indicate dal cliente.</p>
                         <p v-if="acceptForm.errors.time" class="text-xs text-red-500 mt-1">{{ acceptForm.errors.time }}</p>
                     </div>
                 </div>
