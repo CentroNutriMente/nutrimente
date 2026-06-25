@@ -150,7 +150,7 @@ onUnmounted(() => {
         <!-- Sidebar -->
         <aside
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-            class="fixed md:relative z-40 w-64 flex flex-col bg-cream border-r border-line h-full min-h-screen transition-transform duration-200 shrink-0"
+            class="fixed top-0 left-0 md:sticky md:top-0 z-40 w-64 h-screen flex flex-col bg-cream border-r border-line transition-transform duration-200 shrink-0"
         >
             <!-- Logo / wordmark -->
             <div class="px-6 pt-7 pb-5">
