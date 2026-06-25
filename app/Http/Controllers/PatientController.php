@@ -230,6 +230,27 @@ class PatientController extends Controller
         return redirect()->route('patients.show', $patient)->with('success', 'Paziente aggiornato.');
     }
 
+    public function updateStatus(Request $request, Patient $patient): RedirectResponse
+    {
+        $this->authorizePatient($patient);
+        if (! auth()->user()->hasRole('admin')
+            && $patient->created_by !== null
+            && (int) $patient->created_by !== auth()->id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:attivo,sospeso,concluso',
+        ]);
+
+        $patient->update([
+            'status'    => $validated['status'],
+            'is_active' => $validated['status'] === 'attivo',
+        ]);
+
+        return back()->with('success', 'Stato aggiornato.');
+    }
+
     public function destroy(Patient $patient): RedirectResponse
     {
         $this->authorizePatient($patient);

@@ -1,6 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const authUserId = usePage().props.auth.user.id;
@@ -10,6 +10,21 @@ const props = defineProps({
     isCreator:              Boolean,
     canCreateQuestionnaire: Boolean,
 });
+
+// Stato cliente modificabile dal professionista
+const STATUS_OPTIONS = [
+    { value: 'attivo',   label: 'Attivo' },
+    { value: 'sospeso',  label: 'Sospeso' },
+    { value: 'concluso', label: 'Concluso' },
+];
+const statusClass = (s) => s === 'attivo'
+    ? 'bg-purple-100 text-purple-700 border-purple-200'
+    : s === 'sospeso'
+        ? 'bg-amber-100 text-amber-700 border-amber-200'
+        : 'bg-gray-100 text-gray-500 border-gray-200';
+const changeStatus = (e) => {
+    router.put(route('patients.status', props.patient.id), { status: e.target.value }, { preserveScroll: true });
+};
 
 const activeTab = ref('cartella');
 const tabs = computed(() => [
@@ -223,8 +238,13 @@ const chartsData = computed(() => {
                         <h1 class="text-xl font-semibold text-gray-800 truncate">{{ patient.last_name }} {{ patient.first_name }}</h1>
                         <p class="text-sm text-gray-400">CF: {{ patient.codice_fiscale ?? '—' }}</p>
                     </div>
-                    <span :class="patient.is_active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'" class="shrink-0 text-xs px-2 py-1 rounded-full font-medium">
-                        {{ patient.is_active ? 'Attivo' : 'Archiviato' }}
+                    <select v-if="isCreator" :value="patient.status ?? 'attivo'" @change="changeStatus"
+                        :class="statusClass(patient.status ?? 'attivo')"
+                        class="shrink-0 text-xs pl-2.5 pr-7 py-1 rounded-full font-medium border cursor-pointer focus:ring-purple-300 focus:border-purple-300">
+                        <option v-for="o in STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
+                    </select>
+                    <span v-else :class="statusClass(patient.status ?? 'attivo')" class="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium border">
+                        {{ STATUS_OPTIONS.find(o => o.value === (patient.status ?? 'attivo'))?.label }}
                     </span>
                     <!-- Bottoni azione — visibili solo su sm+ -->
                     <div v-if="isCreator" class="hidden sm:flex gap-2 ml-2 shrink-0">

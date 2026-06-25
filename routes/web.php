@@ -72,6 +72,7 @@ Route::middleware([
 
     // Pazienti
     Route::resource('patients', PatientController::class);
+    Route::put('patients/{patient}/status', [PatientController::class, 'updateStatus'])->name('patients.status');
     Route::get('patients/{patient}/records', [PatientController::class, 'records'])->name('patients.records');
     Route::post('patients/{patient}/records', [PatientController::class, 'storeRecord'])->name('patients.records.store');
 

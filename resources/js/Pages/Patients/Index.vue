@@ -12,6 +12,13 @@ const props = defineProps({
 const search = ref(props.filters.search ?? '');
 const selectedTag = ref(props.filters.tag ?? '');
 
+const statusLabel = (s) => ({ attivo: 'Attivo', sospeso: 'Sospeso', concluso: 'Concluso' }[s] ?? 'Attivo');
+const statusClass = (s) => s === 'attivo'
+    ? 'bg-purple-100 text-purple-700 border-purple-200'
+    : s === 'sospeso'
+        ? 'bg-amber-100 text-amber-700 border-amber-200'
+        : 'bg-gray-100 text-gray-500 border-gray-200';
+
 let searchTimer = null;
 watch([search, selectedTag], () => {
     clearTimeout(searchTimer);
@@ -125,8 +132,8 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                             <span v-else class="text-xs text-gray-300">—</span>
                         </td>
                         <td class="px-4 py-3">
-                            <span :class="patient.is_active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'" class="text-xs px-2 py-1 rounded-full font-medium">
-                                {{ patient.is_active ? 'Attivo' : 'Archiviato' }}
+                            <span :class="statusClass(patient.status ?? 'attivo')" class="text-xs px-2 py-1 rounded-full font-medium border">
+                                {{ statusLabel(patient.status ?? 'attivo') }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-right">
