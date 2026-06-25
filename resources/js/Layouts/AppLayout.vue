@@ -93,6 +93,9 @@ function notificationTarget(n) {
     if (['contact_request_new', 'contact_request_assigned', 'contact_request_rejected'].includes(n.type)) {
         return route('contact-requests.inbox');
     }
+    if (n.type === 'group_enrollment_new') {
+        return n.data?.group_id ? route('groups.show', n.data.group_id) : route('groups.index');
+    }
     return null;
 }
 
@@ -112,6 +115,7 @@ const notifIcon = {
     contact_request_new:       'M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z',
     contact_request_assigned:  'M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z',
     contact_request_rejected:  'M6 18 18 6M6 6l12 12',
+    group_enrollment_new:      'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a6 6 0 0 1 12 0M15 14a6 6 0 0 1 6 6',
 };
 
 const notifColor = {
@@ -123,6 +127,7 @@ const notifColor = {
     contact_request_new:       'text-lavender bg-lavenderLight',
     contact_request_assigned:  'text-blue-500 bg-blue-50',
     contact_request_rejected:  'text-amber-500 bg-amber-50',
+    group_enrollment_new:      'text-sage bg-sageLight',
 };
 
 onMounted(() => {

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\GroupEnrollmentRequest;
+use App\Models\Notification;
+use App\Models\ProfessionalProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -55,7 +57,9 @@ class GroupEnrollmentController extends Controller
             'source'          => ['nullable', Rule::in(['form', 'qr'])],
         ]);
 
-        GroupEnrollmentRequest::create([
+        $group = ! empty($validated['group_id']) ? Group::find($validated['group_id']) : null;
+
+        $enrollment = GroupEnrollmentRequest::create([
             'group_id'        => $validated['group_id'] ?? null,
             'name'            => $validated['name'],
             'email'           => $validated['email'],
@@ -66,6 +70,22 @@ class GroupEnrollmentController extends Controller
             'source'          => $validated['source'] ?? 'form',
             'status'          => 'da_contattare',
         ]);
+
+        // Notifica in dashboard: conduttrice del gruppo, o la founder come fallback.
+        $recipientId = $group?->leader_user_id
+            ?? ProfessionalProfile::where('is_founder', true)->value('user_id');
+
+        if ($recipientId) {
+            Notification::send(
+                $recipientId,
+                'group_enrollment_new',
+                'Nuova iscrizione a un gruppo',
+                $group
+                    ? "{$enrollment->name} ha richiesto l'iscrizione al gruppo «{$group->name}»."
+                    : "{$enrollment->name} ha inviato una richiesta d'iscrizione a un gruppo.",
+                ['group_id' => $group?->id, 'enrollment_id' => $enrollment->id],
+            );
+        }
 
         $firstName = trim(explode(' ', $validated['name'])[0]);
 
