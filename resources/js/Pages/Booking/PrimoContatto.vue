@@ -184,7 +184,10 @@ function submit() {
                 <!-- Giorni e fasce orarie -->
                 <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                     <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Giorni e fasce orarie disponibili</h2>
-                    <p class="text-xs text-gray-400 mb-4">Seleziona le caselle in cui di solito sei disponibile.</p>
+                    <p class="text-xs text-gray-500 mb-4">
+                        Seleziona <span class="font-semibold text-gray-700">tutte</span> le caselle in cui sei disponibile — puoi indicarne
+                        quante vuoi, non solo una. Più opzioni dai, più è facile trovare un orario insieme.
+                    </p>
                     <div class="overflow-x-auto">
                         <table class="w-full border-collapse text-center text-sm">
                             <thead>
