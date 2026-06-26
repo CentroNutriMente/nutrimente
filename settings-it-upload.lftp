@@ -1,0 +1,12 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# UI impostazioni tradotte (compilate nel bundle) — assets prima, manifest per ultimo
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Locale italiano di default + file di lingua it
+put /Users/alfonso/nutrimente/nutrimente/config/app.php -o www.saraalessandripsicologa.it/nutrimente_app/config/app.php
+mirror -R --ignore-time --no-perms /Users/alfonso/nutrimente/nutrimente/lang/it www.saraalessandripsicologa.it/nutrimente_app/lang/it
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

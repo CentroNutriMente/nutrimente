@@ -1,0 +1,9 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Locale italiano: default in config/app.php + file di lingua it
+put /Users/alfonso/nutrimente/nutrimente/config/app.php -o www.saraalessandripsicologa.it/nutrimente_app/config/app.php
+mirror -R --ignore-time --no-perms /Users/alfonso/nutrimente/nutrimente/lang/it www.saraalessandripsicologa.it/nutrimente_app/lang/it
+cls -l www.saraalessandripsicologa.it/nutrimente_app/lang/it
+bye

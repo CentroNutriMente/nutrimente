@@ -40,32 +40,32 @@ const closeModal = () => {
 <template>
     <ActionSection>
         <template #title>
-            Delete Account
+            Elimina account
         </template>
 
         <template #description>
-            Permanently delete your account.
+            Elimina definitivamente il tuo account.
         </template>
 
         <template #content>
             <div class="max-w-xl text-sm text-gray-600">
-                Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.
+                Una volta eliminato l'account, tutte le risorse e i dati associati verranno cancellati definitivamente. Prima di procedere, scarica eventuali dati o informazioni che desideri conservare.
             </div>
 
             <div class="mt-5">
                 <DangerButton @click="confirmUserDeletion">
-                    Delete Account
+                    Elimina account
                 </DangerButton>
             </div>
 
-            <!-- Delete Account Confirmation Modal -->
+            <!-- Modale di conferma eliminazione account -->
             <DialogModal :show="confirmingUserDeletion" @close="closeModal">
                 <template #title>
-                    Delete Account
+                    Elimina account
                 </template>
 
                 <template #content>
-                    Are you sure you want to delete your account? Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.
+                    Sei sicuro di voler eliminare il tuo account? Una volta eliminato, tutte le risorse e i dati associati verranno cancellati definitivamente. Inserisci la password per confermare l'eliminazione definitiva del tuo account.
 
                     <div class="mt-4">
                         <TextInput
@@ -84,7 +84,7 @@ const closeModal = () => {
 
                 <template #footer>
                     <SecondaryButton @click="closeModal">
-                        Cancel
+                        Annulla
                     </SecondaryButton>
 
                     <DangerButton
@@ -93,7 +93,7 @@ const closeModal = () => {
                         :disabled="form.processing"
                         @click="deleteUser"
                     >
-                        Delete Account
+                        Elimina account
                     </DangerButton>
                 </template>
             </DialogModal>
