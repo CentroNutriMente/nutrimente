@@ -54,7 +54,11 @@ class ContactRequestController extends Controller
                 'title'                    => $profile->title,
                 'category'                 => $profile->category,
                 'bio'                      => $profile->bio,
-                'photo'                    => $profile->user->profile_photo_url,
+                // Solo se ha caricato una foto vera: altrimenti `null` così la
+                // landing mostra il placeholder elegante invece dell'avatar "SA".
+                'photo'                    => $profile->user->profile_photo_path
+                    ? $profile->user->profile_photo_url
+                    : null,
                 'slug'                     => $profile->slug,
                 'phone'                    => $profile->phone,
                 'session_duration_minutes' => $profile->session_duration_minutes,

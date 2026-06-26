@@ -138,7 +138,7 @@ const year = new Date().getFullYear();
                     <div class="relative">
                         <div class="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-[#D9C6F5] to-[#F2EAFC] blur-2xl opacity-70"></div>
                         <div class="relative w-64 sm:w-80 aspect-[4/5] rounded-[2.25rem] overflow-hidden ring-1 ring-white/70 shadow-2xl shadow-[#9575E0]/25 bg-gradient-to-br from-[#EFE7FB] to-[#E3D6F6]">
-                            <img v-if="!imgFailed.hero" :src="sara.photo" :alt="sara.name"
+                            <img v-if="sara.photo && !imgFailed.hero" :src="sara.photo" :alt="sara.name"
                                  @error="imgFailed.hero = true"
                                  class="w-full h-full object-cover" />
                             <div v-else class="w-full h-full grid place-items-center">

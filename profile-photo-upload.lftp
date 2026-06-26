@@ -1,0 +1,13 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Build (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Foto profilo: feature Jetstream + disco "avatars" nel docroot + landing
+put /Users/alfonso/nutrimente/nutrimente/config/jetstream.php -o www.saraalessandripsicologa.it/nutrimente_app/config/jetstream.php
+put /Users/alfonso/nutrimente/nutrimente/config/filesystems.php -o www.saraalessandripsicologa.it/nutrimente_app/config/filesystems.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ContactRequestController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ContactRequestController.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

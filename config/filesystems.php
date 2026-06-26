@@ -47,6 +47,22 @@ return [
             'report' => false,
         ],
 
+        // Foto profilo / avatar. Servito staticamente da una cartella nel docroot,
+        // senza symlink (su Aruba non è creabile via FTP e `public/` è splittata).
+        // In produzione l'app vive in `nutrimente_app/` e il docroot è un livello
+        // sopra → `../uploads/avatars`. In locale usa `public/uploads/avatars`.
+        // Override possibile con AVATARS_ROOT / AVATARS_URL nel .env.
+        'avatars' => [
+            'driver' => 'local',
+            'root' => env('AVATARS_ROOT', basename(base_path()) === 'nutrimente_app'
+                ? base_path('../uploads/avatars')
+                : public_path('uploads/avatars')),
+            'url' => env('AVATARS_URL', rtrim(env('APP_URL', 'http://localhost'), '/').'/uploads/avatars'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
