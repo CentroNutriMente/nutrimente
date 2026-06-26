@@ -80,6 +80,12 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task): RedirectResponse
     {
+        $user = $request->user();
+        abort_unless(
+            $user->hasRole('admin') || $task->created_by === $user->id || $task->user_id === $user->id,
+            403
+        );
+
         $validated = $request->validate([
             'title'     => 'sometimes|required|string|max:500',
             'notes'     => 'nullable|string',
@@ -100,6 +106,12 @@ class TaskController extends Controller
 
     public function destroy(Task $task): RedirectResponse
     {
+        $user = auth()->user();
+        abort_unless(
+            $user->hasRole('admin') || $task->created_by === $user->id || $task->user_id === $user->id,
+            403
+        );
+
         $task->delete();
         return back();
     }

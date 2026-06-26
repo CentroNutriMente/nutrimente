@@ -13,11 +13,45 @@ use Inertia\Response;
 
 class DocumentController extends Controller
 {
+    /** IDs dei pazienti accessibili all'utente corrente (null = legacy, visibili a tutti). */
+    private function accessiblePatientIds(): \Illuminate\Support\Collection
+    {
+        $userId = auth()->id();
+
+        return Patient::query()
+            ->where(function ($q) use ($userId) {
+                $q->whereNull('created_by')
+                  ->orWhere('created_by', $userId)
+                  ->orWhereHas('professionals', fn ($q) => $q->where('user_id', $userId));
+            })
+            ->pluck('id');
+    }
+
+    /** Un documento è accessibile se condiviso (senza paziente) o legato a un paziente accessibile. */
+    private function authorizeDocument(Document $document): void
+    {
+        if (auth()->user()->hasRole('admin')) return;
+        if ($document->patient_id === null) return; // documento organizzativo, condiviso
+
+        if (! $this->accessiblePatientIds()->contains($document->patient_id)) {
+            abort(403, 'Non sei autorizzato ad accedere a questo documento.');
+        }
+    }
+
     public function index(Request $request): Response
     {
         $query = Document::with('uploader', 'patient')
             ->whereNull('deleted_at')
             ->orderByDesc('created_at');
+
+        // Limita ai documenti condivisi (senza paziente) o dei pazienti accessibili.
+        if (! $request->user()->hasRole('admin')) {
+            $accessibleIds = $this->accessiblePatientIds();
+            $query->where(fn ($q) => $q
+                ->whereNull('patient_id')
+                ->orWhereIn('patient_id', $accessibleIds)
+            );
+        }
 
         if ($request->filled('category')) {
             $query->where('category', $request->category);
@@ -69,6 +103,13 @@ class DocumentController extends Controller
             'is_shared_with_patient' => 'boolean',
         ]);
 
+        // Non si può allegare un documento a un paziente a cui non si ha accesso.
+        if (! empty($validated['patient_id'])
+            && ! $request->user()->hasRole('admin')
+            && ! $this->accessiblePatientIds()->contains((int) $validated['patient_id'])) {
+            abort(403, 'Non sei autorizzato ad allegare documenti a questo paziente.');
+        }
+
         $file = $request->file('file');
         $path = $file->store('documents', config('filesystems.default'));
 
@@ -90,6 +131,8 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
+        $this->authorizeDocument($document);
+
         $disk = config('filesystems.default');
         abort_if(! Storage::disk($disk)->exists($document->file_path), 404);
         return Storage::disk($disk)->download($document->file_path, $document->file_name);
@@ -98,6 +141,8 @@ class DocumentController extends Controller
     /** Serve the file inline (opens in browser tab rather than downloading). */
     public function view(Document $document)
     {
+        $this->authorizeDocument($document);
+
         $disk    = config('filesystems.default');
         $storage = Storage::disk($disk);
 
@@ -114,13 +159,16 @@ class DocumentController extends Controller
         }
 
         return response($storage->get($document->file_path), 200, [
-            'Content-Type'        => $document->mime_type ?? 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . addslashes($document->file_name) . '"',
+            'Content-Type'           => $document->mime_type ?? 'application/pdf',
+            'Content-Disposition'    => 'inline; filename="' . addslashes($document->file_name) . '"',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
     public function destroy(Document $document): RedirectResponse
     {
+        $this->authorizeDocument($document);
+
         Storage::disk(config('filesystems.default'))->delete($document->file_path);
         $document->update(['deleted_at' => now()]);
         return back()->with('success', 'Documento eliminato.');

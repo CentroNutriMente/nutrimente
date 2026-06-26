@@ -26,6 +26,19 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GroupController extends Controller
 {
+    /** Operazioni sensibili (export PII, materiali, eliminazione) riservate a conduttore, creatore o admin. */
+    private function ensureGroupManager(Group $group): void
+    {
+        $user = auth()->user();
+        abort_unless(
+            $user->hasRole('admin')
+                || $group->leader_user_id === $user->id
+                || $group->created_by === $user->id,
+            403,
+            'Operazione riservata al conduttore del gruppo.'
+        );
+    }
+
     public function index(Request $request): Response
     {
         $filter = $request->query('status', 'tutti'); // tutti|attivo|in_partenza|concluso
@@ -147,6 +160,7 @@ class GroupController extends Controller
 
     public function destroy(Group $group): RedirectResponse
     {
+        $this->ensureGroupManager($group);
         $group->delete();
 
         return redirect()->route('groups.index')->with('flash', ['banner' => 'Gruppo eliminato.']);
@@ -273,6 +287,8 @@ class GroupController extends Controller
     // ── Materiali ────────────────────────────────────────────────────────────
     public function storeMaterial(Request $request, Group $group): RedirectResponse
     {
+        $this->ensureGroupManager($group);
+
         $validated = $request->validate([
             'label' => ['nullable', 'string', 'max:60'],
             'file'  => ['required', 'file', 'max:20480'], // 20 MB
@@ -295,6 +311,7 @@ class GroupController extends Controller
 
     public function downloadMaterial(Group $group, GroupMaterial $material)
     {
+        $this->ensureGroupManager($group);
         abort_unless($material->group_id === $group->id, 404);
         abort_unless(Storage::disk('local')->exists($material->path), 404);
 
@@ -303,6 +320,7 @@ class GroupController extends Controller
 
     public function destroyMaterial(Group $group, GroupMaterial $material): RedirectResponse
     {
+        $this->ensureGroupManager($group);
         abort_unless($material->group_id === $group->id, 404);
         Storage::disk('local')->delete($material->path);
         $material->delete();
@@ -313,6 +331,8 @@ class GroupController extends Controller
     // ── Esporta CSV ──────────────────────────────────────────────────────────
     public function exportParticipants(Group $group): StreamedResponse
     {
+        $this->ensureGroupManager($group);
+
         $filename = 'partecipanti-'.Str::slug($group->name).'.csv';
 
         return response()->streamDownload(function () use ($group) {

@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({ professionals: Array });
+const props = defineProps({ professionals: Array, isAdmin: Boolean });
 
 const showModal = ref(false);
 
@@ -52,8 +52,8 @@ const roleColor = {
     <AppLayout title="Professionisti">
         <template #header>
             <div class="flex items-center justify-between">
-                <h1 class="text-xl font-semibold text-gray-800">Professionisti</h1>
-                <button @click="showModal = true"
+                <h1 class="text-xl font-semibold text-gray-800">{{ isAdmin ? 'Professionisti' : 'Il mio profilo' }}</h1>
+                <button v-if="isAdmin" @click="showModal = true"
                     class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
                     + Aggiungi professionista
                 </button>

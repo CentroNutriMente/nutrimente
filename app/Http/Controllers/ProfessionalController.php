@@ -14,10 +14,28 @@ use Spatie\Permission\Models\Role;
 
 class ProfessionalController extends Controller
 {
+    /** La creazione di nuovi account professionista è riservata agli admin. */
+    private function ensureAdmin(): void
+    {
+        abort_unless(auth()->user()->hasRole('admin'), 403, 'Area riservata agli amministratori.');
+    }
+
+    /** Un profilo può essere visto/modificato solo dall'admin o dal diretto interessato. */
+    private function ensureAdminOrSelf(User $user): void
+    {
+        $current = auth()->user();
+        abort_unless($current->hasRole('admin') || $current->id === $user->id, 403);
+    }
+
     public function index(): Response
     {
+        $current = auth()->user();
+        $isAdmin = $current->hasRole('admin');
+
         $professionals = User::with('professionalProfile', 'roles')
             ->whereHas('professionalProfile')
+            // I non-admin vedono e gestiscono solo il proprio profilo.
+            ->when(! $isAdmin, fn ($q) => $q->whereKey($current->id))
             ->get()
             ->map(fn ($u) => [
                 'id' => $u->id,
@@ -32,11 +50,14 @@ class ProfessionalController extends Controller
 
         return Inertia::render('Professionals/Index', [
             'professionals' => $professionals,
+            'isAdmin'       => $isAdmin,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->ensureAdmin();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -71,6 +92,8 @@ class ProfessionalController extends Controller
 
     public function show(User $user): Response
     {
+        $this->ensureAdminOrSelf($user);
+
         $user->load('professionalProfile', 'roles', 'availabilitySlots');
 
         return Inertia::render('Professionals/Show', [
@@ -81,6 +104,8 @@ class ProfessionalController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $this->ensureAdminOrSelf($user);
+
         $validated = $request->validate([
             'category' => 'nullable|string|max:100',
             'title' => 'nullable|string|max:50',
@@ -121,6 +146,8 @@ class ProfessionalController extends Controller
 
     public function storeSlot(Request $request, User $user): RedirectResponse
     {
+        $this->ensureAdminOrSelf($user);
+
         $validated = $request->validate([
             'day_of_week' => 'required|integer|between:0,6',
             'start_time'  => 'required|date_format:H:i',
@@ -138,6 +165,7 @@ class ProfessionalController extends Controller
 
     public function destroySlot(User $user, AvailabilitySlot $slot): RedirectResponse
     {
+        $this->ensureAdminOrSelf($user);
         abort_if($slot->user_id !== $user->id, 403);
         $slot->delete();
         return back()->with('success', 'Fascia rimossa.');

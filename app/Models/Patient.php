@@ -17,8 +17,11 @@ class Patient extends Model
         'first_name', 'last_name', 'codice_fiscale', 'date_of_birth', 'gender',
         'email', 'phone', 'address', 'city', 'cap',
         'emergency_contact_name', 'emergency_contact_phone',
-        'medico_base', 'notes', 'diagnosis', 'is_active', 'status', 'booking_token', 'created_by',
+        'medico_base', 'notes', 'diagnosis', 'is_active', 'status', 'created_by',
     ];
+
+    // booking_token è volutamente NON fillable: viene generato dal model (hook creating)
+    // e non deve mai essere impostabile via mass assignment.
 
     /** Stati gestiti dal professionista. */
     public const STATUSES = ['attivo', 'sospeso', 'concluso'];
@@ -40,6 +43,24 @@ class Patient extends Model
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /**
+     * Limita la query ai pazienti visibili all'utente: i propri (created_by),
+     * quelli condivisi (pivot professionals) e i legacy senza creatore.
+     * Gli admin vedono tutto.
+     */
+    public function scopeVisibleTo($query, User $user)
+    {
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->whereNull('created_by')
+              ->orWhere('created_by', $user->id)
+              ->orWhereHas('professionals', fn ($q) => $q->where('user_id', $user->id));
+        });
     }
 
     public function creator(): BelongsTo

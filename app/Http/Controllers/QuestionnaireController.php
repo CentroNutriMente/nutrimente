@@ -211,10 +211,70 @@ class QuestionnaireController extends Controller
             }
 
             if (!preg_match('/^[\d\s\+\-\*\/\(\)\.]+$/', $expr)) return 0;
-            $result = eval("return (float)($expr);");
-            return (int) round((float) $result);
+            return (int) round($this->evalArithmetic($expr));
         }
 
+        return $this->fallbackScore($answers, $scoring);
+    }
+
+    /**
+     * Valuta un'espressione puramente aritmetica (+ - * / e parentesi) senza eval():
+     * shunting-yard → RPN. Sostituisce l'uso di eval() per eliminare ogni rischio di
+     * code injection e gestire in sicurezza la divisione per zero.
+     */
+    private function evalArithmetic(string $expr): float
+    {
+        preg_match_all('/\d+\.?\d*|[\+\-\*\/\(\)]/', $expr, $m);
+        $tokens = $m[0];
+
+        $prec   = ['+' => 1, '-' => 1, '*' => 2, '/' => 2];
+        $output = [];
+        $ops    = [];
+
+        foreach ($tokens as $t) {
+            if (is_numeric($t)) {
+                $output[] = (float) $t;
+            } elseif (isset($prec[$t])) {
+                while ($ops && end($ops) !== '(' && $prec[end($ops)] >= $prec[$t]) {
+                    $output[] = array_pop($ops);
+                }
+                $ops[] = $t;
+            } elseif ($t === '(') {
+                $ops[] = $t;
+            } elseif ($t === ')') {
+                while ($ops && end($ops) !== '(') {
+                    $output[] = array_pop($ops);
+                }
+                array_pop($ops); // scarta '('
+            }
+        }
+        while ($ops) {
+            $output[] = array_pop($ops);
+        }
+
+        $stack = [];
+        foreach ($output as $tok) {
+            if (is_float($tok)) {
+                $stack[] = $tok;
+                continue;
+            }
+            $b = array_pop($stack);
+            $a = array_pop($stack);
+            if ($a === null || $b === null) return 0.0;
+            $stack[] = match ($tok) {
+                '+'     => $a + $b,
+                '-'     => $a - $b,
+                '*'     => $a * $b,
+                '/'     => $b != 0.0 ? $a / $b : 0.0,
+                default => 0.0,
+            };
+        }
+
+        return (float) (array_pop($stack) ?? 0.0);
+    }
+
+    private function fallbackScore(array $answers, array $scoring): int
+    {
         $sum   = (float) collect($answers)->sum('score');
         $base  = $scoring['base'] ?? 'sum';
         $count = count($answers);

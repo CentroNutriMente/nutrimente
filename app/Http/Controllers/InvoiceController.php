@@ -39,7 +39,7 @@ class InvoiceController extends Controller
         );
 
         return Inertia::render('Invoices/Create', [
-            'patients'   => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name', 'codice_fiscale']),
+            'patients'   => Patient::visibleTo($request->user())->orderBy('last_name')->get(['id', 'first_name', 'last_name', 'codice_fiscale']),
             'profile'    => $profile,
             'issuerName' => $user->name,
         ]);
@@ -126,7 +126,9 @@ class InvoiceController extends Controller
 
     public function show(Request $request, Invoice $invoice): Response
     {
-        // Tutti i professionisti del gestionale possono visualizzare; solo il proprietario può modificare
+        // Solo l'emittente (o un admin) può vedere la fattura: contiene dati fiscali e PII del paziente.
+        abort_unless($request->user()->hasRole('admin') || $invoice->user_id === $request->user()->id, 403);
+
         return Inertia::render('Invoices/Show', [
             'invoice'   => $invoice->load(['patient', 'lines', 'user.professionalProfile']),
             'canEdit'   => $invoice->user_id === $request->user()->id,
@@ -138,7 +140,7 @@ class InvoiceController extends Controller
         abort_if($invoice->user_id !== $request->user()->id, 403);
         return Inertia::render('Invoices/Edit', [
             'invoice' => $invoice->load(['patient', 'lines']),
-            'patients' => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name', 'codice_fiscale']),
+            'patients' => Patient::visibleTo($request->user())->orderBy('last_name')->get(['id', 'first_name', 'last_name', 'codice_fiscale']),
         ]);
     }
 
@@ -161,6 +163,7 @@ class InvoiceController extends Controller
 
     public function downloadPdf(Request $request, Invoice $invoice): HttpResponse
     {
+        abort_unless($request->user()->hasRole('admin') || $invoice->user_id === $request->user()->id, 403);
 
         $invoice->load(['patient', 'lines', 'user.professionalProfile']);
 

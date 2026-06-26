@@ -14,9 +14,29 @@ use Inertia\Response;
 
 class IntervisioneController extends Controller
 {
+    /** Accesso consentito al creatore, ai partecipanti e agli admin. */
+    private function ensureMember(Intervisione $intervisione): void
+    {
+        $user = request()->user();
+        if ($user->hasRole('admin')) return;
+        if ($intervisione->created_by === $user->id) return;
+        if ($intervisione->participants()->where('users.id', $user->id)->exists()) return;
+
+        abort(403, 'Non sei autorizzato ad accedere a questa intervisione.');
+    }
+
     public function index(Request $request): Response
     {
+        $userId = $request->user()->id;
+
         $intervisioni = Intervisione::with('createdBy', 'patient')
+            // Solo le intervisioni di cui l'utente è creatore o partecipante (admin: tutte).
+            ->when(! $request->user()->hasRole('admin'), fn ($q) => $q
+                ->where(fn ($q) => $q
+                    ->where('created_by', $userId)
+                    ->orWhereHas('participants', fn ($q) => $q->where('users.id', $userId))
+                )
+            )
             ->orderByDesc('created_at')
             ->paginate(20)
             ->through(fn ($i) => [
@@ -36,7 +56,8 @@ class IntervisioneController extends Controller
 
     public function create(Request $request): Response
     {
-        $patients = Patient::select('id', 'first_name', 'last_name')
+        $patients = Patient::visibleTo($request->user())
+            ->select('id', 'first_name', 'last_name')
             ->where('is_active', true)
             ->orderBy('last_name')
             ->get()
@@ -101,7 +122,10 @@ class IntervisioneController extends Controller
 
     public function show(Intervisione $intervisione): Response
     {
-        $patients = Patient::select('id', 'first_name', 'last_name')
+        $this->ensureMember($intervisione);
+
+        $patients = Patient::visibleTo(auth()->user())
+            ->select('id', 'first_name', 'last_name')
             ->where('is_active', true)
             ->orderBy('last_name')
             ->get()
@@ -118,6 +142,8 @@ class IntervisioneController extends Controller
 
     public function update(Request $request, Intervisione $intervisione): RedirectResponse
     {
+        $this->ensureMember($intervisione);
+
         $validated = $request->validate([
             'title'             => 'required|string|max:255',
             'description'       => 'nullable|string',
@@ -163,6 +189,9 @@ class IntervisioneController extends Controller
 
     public function destroy(Intervisione $intervisione): RedirectResponse
     {
+        $user = request()->user();
+        abort_unless($user->hasRole('admin') || $intervisione->created_by === $user->id, 403);
+
         $intervisione->delete();
         return redirect()->route('intervisioni.index')->with('success', 'Intervisione eliminata.');
     }

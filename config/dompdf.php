@@ -12,4 +12,17 @@ return [
      */
     'public_path' => base_path(),
 
+    /*
+     | Sicurezza: i PDF (referti, fatture, moduli compilati) incorporano contenuto
+     | inserito dagli utenti. Disabilitiamo esplicitamente il fetch di risorse remote
+     | (no SSRF) e l'esecuzione di PHP inline, senza affidarci ai default impliciti.
+     */
+    'enable_remote' => false,
+    'enable_php'    => false,
+
+    'options' => [
+        'isRemoteEnabled' => false,
+        'isPhpEnabled'    => false,
+    ],
+
 ];

@@ -1,0 +1,25 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Build (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Controller con fix di autorizzazione (IDOR / broken access control)
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/DocumentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/DocumentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ProfessionalController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ProfessionalController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/AppointmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/AppointmentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/InvoiceController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/InvoiceController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/IntervisioneController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/IntervisioneController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/SocialController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/SocialController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/TaskController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/TaskController.php
+# Hardening: eval rimosso, scope pazienti
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/QuestionnaireController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/QuestionnaireController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ReportController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ReportController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Patient.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Patient.php
+# Config & rotte (DomPDF blindato + rate limiting)
+put /Users/alfonso/nutrimente/nutrimente/config/dompdf.php -o www.saraalessandripsicologa.it/nutrimente_app/config/dompdf.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

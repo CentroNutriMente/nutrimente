@@ -23,7 +23,7 @@ class ReportController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        $patients = Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']);
+        $patients = Patient::visibleTo($request->user())->orderBy('last_name')->get(['id', 'first_name', 'last_name']);
 
         return Inertia::render('Reports/Index', [
             'reports'   => $reports,
@@ -38,7 +38,7 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get();
 
-        $patients = Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']);
+        $patients = Patient::visibleTo($request->user())->orderBy('last_name')->get(['id', 'first_name', 'last_name']);
 
         $selectedTemplate = null;
         if ($request->template_id) {
@@ -106,7 +106,7 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get();
 
-        $patients = Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']);
+        $patients = Patient::visibleTo($request->user())->orderBy('last_name')->get(['id', 'first_name', 'last_name']);
 
         return Inertia::render('Reports/Create', [
             'report'           => $report,

@@ -23,7 +23,9 @@ use Inertia\Inertia;
 // Scheda Primo Contatto — il cliente sceglie il professionista e compila la scheda
 Route::get('/prenota', [ContactRequestController::class, 'index'])->name('booking.index');
 Route::get('/prenota/{slug}', [ContactRequestController::class, 'create'])->name('contact-requests.create');
-Route::post('/prenota/{slug}', [ContactRequestController::class, 'store'])->name('contact-requests.store');
+Route::post('/prenota/{slug}', [ContactRequestController::class, 'store'])
+    ->middleware('throttle:6,1')
+    ->name('contact-requests.store');
 
 // Vecchie rotte di booking deprecate → reindirizzano alla selezione professionista
 Route::get('/prenota/{slug}/conferma/{token}', fn () => redirect()->route('booking.index'));
@@ -31,7 +33,9 @@ Route::get('/prenota/{slug}/rifiuta/{token}', fn () => redirect()->route('bookin
 
 // Iscrizione pubblica ai Gruppi di aiuto e sostegno (form + QR del volantino)
 Route::get('/iscrizione-gruppo', [\App\Http\Controllers\GroupEnrollmentController::class, 'create'])->name('groups.public.create');
-Route::post('/iscrizione-gruppo', [\App\Http\Controllers\GroupEnrollmentController::class, 'store'])->name('groups.public.store');
+Route::post('/iscrizione-gruppo', [\App\Http\Controllers\GroupEnrollmentController::class, 'store'])
+    ->middleware('throttle:6,1')
+    ->name('groups.public.store');
 Route::get('/iscrizione-gruppo/grazie', [\App\Http\Controllers\GroupEnrollmentController::class, 'done'])->name('groups.public.done');
 Route::get('/g/{token}', [\App\Http\Controllers\GroupEnrollmentController::class, 'show'])->name('groups.public.show');
 

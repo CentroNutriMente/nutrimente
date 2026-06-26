@@ -16,6 +16,13 @@ use Inertia\Response;
 
 class AppointmentController extends Controller
 {
+    /** Solo il proprietario dell'appuntamento (o un admin) può vederne il dettaglio o modificarlo. */
+    private function ensureOwner(Appointment $appointment): void
+    {
+        $user = request()->user();
+        abort_unless($user->hasRole('admin') || $appointment->user_id === $user->id, 403);
+    }
+
     public function index(Request $request): JsonResponse
     {
         try {
@@ -114,7 +121,7 @@ class AppointmentController extends Controller
                 'line' => $e->getLine(),
                 'user' => $request->user()?->id,
             ]);
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Impossibile caricare gli appuntamenti.'], 500);
         }
     }
 
@@ -176,6 +183,8 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment): Response
     {
+        $this->ensureOwner($appointment);
+
         return Inertia::render('Calendar/AppointmentShow', [
             'appointment' => $appointment->load(['patient', 'user', 'intervisione']),
         ]);
@@ -183,6 +192,8 @@ class AppointmentController extends Controller
 
     public function edit(Request $request, Appointment $appointment): Response
     {
+        $this->ensureOwner($appointment);
+
         return Inertia::render('Calendar/AppointmentForm', [
             'appointment'   => $appointment,
             'patients'      => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
@@ -194,6 +205,8 @@ class AppointmentController extends Controller
 
     public function update(Request $request, Appointment $appointment): RedirectResponse|JsonResponse
     {
+        $this->ensureOwner($appointment);
+
         $validated = $request->validate([
             'title'               => 'sometimes|required|string|max:255',
             'start_at'            => 'sometimes|required|date',
@@ -230,6 +243,8 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment): RedirectResponse
     {
+        $this->ensureOwner($appointment);
+
         $appointment->load('user', 'patient');
         $this->notifyPatientCancelled($appointment);
         $appointment->delete();

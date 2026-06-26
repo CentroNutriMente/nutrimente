@@ -55,6 +55,8 @@ class SocialController extends Controller
 
     public function update(Request $request, SocialPost $socialPost): RedirectResponse
     {
+        abort_unless($request->user()->hasRole('admin') || $socialPost->created_by === $request->user()->id, 403);
+
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'category'     => 'required|string|max:50',
@@ -73,6 +75,9 @@ class SocialController extends Controller
 
     public function destroy(SocialPost $socialPost): RedirectResponse
     {
+        $user = auth()->user();
+        abort_unless($user->hasRole('admin') || $socialPost->created_by === $user->id, 403);
+
         $socialPost->delete();
         return back();
     }
