@@ -123,6 +123,7 @@ const typeLabels = {
     intervision: 'Intervisione',
     personal: 'Personale',
     blocked: 'Bloccato',
+    group: 'Incontro di gruppo',
 };
 
 const statusLabels = {
@@ -173,6 +174,9 @@ function filterProfessional() {
             <div class="flex items-center gap-1.5 text-xs text-gray-600">
                 <span class="w-3 h-3 rounded-full inline-block" style="background:#9ca3af"></span> Bloccato
             </div>
+            <div class="flex items-center gap-1.5 text-xs text-gray-600">
+                <span class="w-3 h-3 rounded-full inline-block" style="background:#f59e0b"></span> Incontro di gruppo
+            </div>
         </div>
 
         <!-- Calendario -->
@@ -219,17 +223,22 @@ function filterProfessional() {
                 </dl>
                 <div class="flex gap-2 flex-wrap">
                     <Link
-                        v-if="selectedAppointment.is_own"
+                        v-if="selectedAppointment.is_group && selectedAppointment.group_id"
+                        :href="route('groups.show', selectedAppointment.group_id)"
+                        class="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 text-center"
+                    >Vai al gruppo</Link>
+                    <Link
+                        v-if="!selectedAppointment.is_group && selectedAppointment.is_own"
                         :href="route('appointments.edit', selectedAppointment.id)"
                         class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 text-center"
                     >Modifica</Link>
                     <Link
-                        v-if="selectedAppointment.patient_id"
+                        v-if="!selectedAppointment.is_group && selectedAppointment.patient_id"
                         :href="route('patients.show', selectedAppointment.patient_id)"
                         class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 text-center"
                     >Cartella paziente</Link>
                     <button
-                        v-if="selectedAppointment.is_own"
+                        v-if="!selectedAppointment.is_group && selectedAppointment.is_own"
                         @click="deleteAppointment"
                         class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 border border-red-200"
                     >Elimina</button>

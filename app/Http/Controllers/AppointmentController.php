@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\AppointmentCancelledByProfessionalMail;
 use App\Models\Appointment;
+use App\Models\GroupMeeting;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -64,7 +65,48 @@ class AppointmentController extends Controller
                     ];
                 });
 
-            return response()->json($appointments);
+            // ── Incontri di gruppo ────────────────────────────────────────────
+            // Gli incontri fissati per i gruppi (GroupMeeting) vivono in una
+            // tabella separata: li uniamo qui così compaiono nel calendario
+            // condiviso con un colore dedicato (ambra).
+            $start = $request->input('start');
+            $end   = $request->input('end');
+
+            $groupEvents = GroupMeeting::with('group:id,name,leader_user_id')
+                ->when($filterUserId, fn ($q) => $q->whereHas(
+                    'group',
+                    fn ($g) => $g->where('leader_user_id', $filterUserId)
+                ))
+                ->when($start && $end, fn ($q) => $q
+                    ->where('scheduled_at', '>=', $start)
+                    ->where('scheduled_at', '<', $end)
+                )
+                ->get()
+                ->map(function ($m) use ($userId) {
+                    $endAt = $m->scheduled_at->copy()->addMinutes($m->duration_minutes ?? 60);
+
+                    return [
+                        'id'        => "group-{$m->id}",
+                        'title'     => '👥 ' . ($m->title ?: $m->group?->name ?? 'Incontro di gruppo'),
+                        'start'     => $m->scheduled_at,
+                        'end'       => $endAt,
+                        'color'     => '#f59e0b',   // ambra – incontro di gruppo
+                        'textColor' => '#ffffff',
+                        'editable'  => false,
+                        'extendedProps' => [
+                            'type'       => 'group',
+                            'status'     => null,
+                            'room'       => null,
+                            'group_id'   => $m->group_id,
+                            'group_name' => $m->group?->name,
+                            'is_group'   => true,
+                            'is_private' => false,
+                            'is_own'     => $m->group?->leader_user_id === $userId,
+                        ],
+                    ];
+                });
+
+            return response()->json($appointments->concat($groupEvents)->values());
 
         } catch (\Throwable $e) {
             \Log::error('AppointmentController@index failed: ' . $e->getMessage(), [
