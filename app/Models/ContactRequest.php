@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
+use App\Casts\EncryptedArray;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,9 +17,14 @@ class ContactRequest extends Model
     ];
 
     protected $casts = [
-        'how_found'      => 'array',
-        'contact_method' => 'array',
-        'availability'   => 'array',
+        'how_found'      => EncryptedArray::class,
+        'contact_method' => EncryptedArray::class,
+        'availability'   => EncryptedArray::class,
+        'name'           => Encrypted::class,
+        'surname'        => Encrypted::class,
+        'phone'          => Encrypted::class,
+        'email'          => Encrypted::class,
+        'notes'          => Encrypted::class,
     ];
 
     public function professional(): BelongsTo

@@ -25,9 +25,12 @@ const areaIcons = [
 // ── Studio carousel ──────────────────────────────────────────────────────────
 // Drop real photos in public/studio/ named studio-1.jpg … to replace placeholders.
 const studio = [
-    { src: '/studio/studio-1.jpg', caption: "La sala d'attesa", hint: 'Uno spazio accogliente in cui sentirsi a proprio agio' },
-    { src: '/studio/studio-2.jpg', caption: 'Lo studio',          hint: 'Un ambiente riservato e protetto per i colloqui' },
-    { src: '/studio/studio-3.jpg', caption: "L'ingresso",         hint: 'Facile da raggiungere, pensato per accoglierti' },
+    { src: '/studio/studio-1.jpg' },
+    { src: '/studio/studio-2.jpg' },
+    { src: '/studio/studio-3.jpg' },
+    { src: '/studio/studio-4.jpg' },
+    { src: '/studio/studio-5.jpg' },
+    { src: '/studio/studio-6.jpg' },
 ];
 const imgFailed = reactive({});
 const current = ref(0);
@@ -208,15 +211,11 @@ const year = new Date().getFullYear();
                     <div class="relative rounded-[2rem] overflow-hidden shadow-2xl shadow-[#9575E0]/20 ring-1 ring-[#EFE9FB] aspect-[16/9] bg-[#EFE7FB]">
                         <transition-group name="fade-slide" tag="div">
                             <div v-for="(s, i) in studio" :key="i" v-show="current === i" class="absolute inset-0">
-                                <img v-if="!imgFailed[i]" :src="s.src" :alt="s.caption" @error="imgFailed[i] = true"
+                                <img v-if="!imgFailed[i]" :src="s.src" alt="Lo studio" @error="imgFailed[i] = true"
                                      class="w-full h-full object-cover" />
                                 <!-- elegant placeholder until real photos are added -->
                                 <div v-else class="w-full h-full grid place-items-center bg-gradient-to-br from-[#EADDFA] via-[#F1E9FC] to-[#E0D0F4]">
                                     <svg class="w-16 h-16 text-[#B69FE6]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                </div>
-                                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-6 sm:p-8">
-                                    <div class="text-white font-serif text-2xl">{{ s.caption }}</div>
-                                    <div class="text-white/80 text-sm mt-1">{{ s.hint }}</div>
                                 </div>
                             </div>
                         </transition-group>
@@ -276,6 +275,8 @@ const year = new Date().getFullYear();
             <div class="max-w-6xl mx-auto px-5 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-[#8A8499]">
                 <span>© {{ year }} {{ sara.title }} {{ sara.name }}</span>
                 <div class="flex items-center gap-5">
+                    <a href="https://www.iubenda.com/privacy-policy/48720963" class="iubenda-white iubenda-noiframe iubenda-embed hover:text-[#5E4593] transition-colors" title="Privacy Policy">Privacy Policy</a>
+                    <a href="https://www.iubenda.com/privacy-policy/48720963/cookie-policy" class="iubenda-white iubenda-noiframe iubenda-embed hover:text-[#5E4593] transition-colors" title="Cookie Policy">Cookie Policy</a>
                     <a href="/mia-area" class="hover:text-[#5E4593] transition-colors">Area clienti</a>
                     <a href="/login" class="hover:text-[#5E4593] transition-colors">Accesso professionisti</a>
                 </div>

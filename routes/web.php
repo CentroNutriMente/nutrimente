@@ -49,12 +49,39 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 // Home = Sara-focused landing page (Centro NutriMente team page kept at /prenota for later).
 Route::get('/', [ContactRequestController::class, 'home'])->name('home');
 
+// SEO: sitemap con le pagine pubbliche (referenziata da robots.txt e Search Console)
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
     'require.professional',
 ])->group(function () {
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Accessibili anche all'AMMINISTRATORE DI SISTEMA (nessun dato clinico):
+    // gestione utenti, template referti/questionari, calendario anonimo + feed.
+    // ─────────────────────────────────────────────────────────────────────────
+    Route::get('utenti', [\App\Http\Controllers\UserManagementController::class, 'index'])->name('utenti.index');
+    Route::post('utenti', [\App\Http\Controllers\UserManagementController::class, 'store'])->name('utenti.store');
+    Route::delete('utenti/{user}', [\App\Http\Controllers\UserManagementController::class, 'erase'])->name('utenti.erase');
+
+    Route::resource('report-templates', ReportTemplateController::class);
+    Route::resource('questionnaire-templates', QuestionnaireTemplateController::class);
+
+    Route::get('calendar', [AppointmentController::class, 'calendar'])->name('calendar');
+    Route::get('appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+
+    // Notifiche proprie dell'utente (usate anche dalla campanella del layout).
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // AREA CLINICA — vietata all'amministratore di sistema (require.clinical).
+    // ─────────────────────────────────────────────────────────────────────────
+    Route::middleware('require.clinical')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -69,23 +96,37 @@ Route::middleware([
     Route::get('groups/{group}/flyer', [\App\Http\Controllers\GroupController::class, 'flyer'])->name('groups.flyer');
     // Incontri
     Route::post('groups/{group}/meetings', [\App\Http\Controllers\GroupController::class, 'storeMeeting'])->name('groups.meetings.store');
+    Route::put('groups/{group}/meetings/{meeting}', [\App\Http\Controllers\GroupController::class, 'updateMeeting'])->name('groups.meetings.update');
     Route::delete('groups/{group}/meetings/{meeting}', [\App\Http\Controllers\GroupController::class, 'destroyMeeting'])->name('groups.meetings.destroy');
+    // Presenze
+    Route::post('groups/{group}/meetings/{meeting}/attendance', [\App\Http\Controllers\GroupController::class, 'markAttendance'])->name('groups.meetings.attendance');
     // Materiali
     Route::post('groups/{group}/materials', [\App\Http\Controllers\GroupController::class, 'storeMaterial'])->name('groups.materials.store');
     Route::get('groups/{group}/materials/{material}/download', [\App\Http\Controllers\GroupController::class, 'downloadMaterial'])->name('groups.materials.download');
     Route::delete('groups/{group}/materials/{material}', [\App\Http\Controllers\GroupController::class, 'destroyMaterial'])->name('groups.materials.destroy');
 
     // Pazienti
-    Route::resource('patients', PatientController::class);
+    // Archivio: cartelle eliminate, consultabili ma fuori dall'elenco generale.
+    // Va prima della resource, altrimenti "archivio" verrebbe letto come {patient}.
+    Route::get('patients/archivio', [PatientController::class, 'archived'])->name('patients.archived');
+    Route::post('patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore')->withTrashed();
+    Route::resource('patients', PatientController::class)->withTrashed(['show']);
     Route::put('patients/{patient}/status', [PatientController::class, 'updateStatus'])->name('patients.status');
     Route::post('patients/{patient}/notes', [PatientController::class, 'storeNote'])->name('patients.notes.store');
     Route::delete('patients/{patient}/notes/{note}', [PatientController::class, 'destroyNote'])->name('patients.notes.destroy');
+    Route::post('patients/{patient}/consents', [PatientController::class, 'storeConsent'])->name('patients.consents.store');
+    Route::delete('patients/{patient}/consents/{consent}', [PatientController::class, 'destroyConsent'])->name('patients.consents.destroy');
+    Route::get('patients/{patient}/export', [PatientController::class, 'export'])->name('patients.export');
     Route::get('patients/{patient}/records', [PatientController::class, 'records'])->name('patients.records');
     Route::post('patients/{patient}/records', [PatientController::class, 'storeRecord'])->name('patients.records.store');
 
-    // Calendario & Appuntamenti
-    Route::resource('appointments', AppointmentController::class);
-    Route::get('calendar', [AppointmentController::class, 'calendar'])->name('calendar');
+    // Calendario & Appuntamenti (index/calendar sono già aperti sopra)
+    Route::resource('appointments', AppointmentController::class)->except(['index']);
+
+    // Richieste di appuntamento (dal portale paziente)
+    Route::get('richieste-appuntamento', [\App\Http\Controllers\AppointmentRequestController::class, 'index'])->name('appointment-requests.index');
+    Route::post('richieste-appuntamento/{booking}/conferma', [\App\Http\Controllers\AppointmentRequestController::class, 'confirm'])->name('appointment-requests.confirm');
+    Route::post('richieste-appuntamento/{booking}/rifiuta', [\App\Http\Controllers\AppointmentRequestController::class, 'reject'])->name('appointment-requests.reject');
 
     // Intervisioni
     Route::get('intervisioni', [\App\Http\Controllers\IntervisioneController::class, 'index'])->name('intervisioni.index');
@@ -95,18 +136,22 @@ Route::middleware([
     Route::put('intervisioni/{intervisione}', [\App\Http\Controllers\IntervisioneController::class, 'update'])->name('intervisioni.update');
     Route::delete('intervisioni/{intervisione}', [\App\Http\Controllers\IntervisioneController::class, 'destroy'])->name('intervisioni.destroy');
 
-    // Referti & Modelli
-    Route::resource('report-templates', ReportTemplateController::class);
+    // Referti (i template referti sono già aperti sopra)
     Route::resource('reports', ReportController::class);
     Route::get('reports/{report}/pdf', [ReportController::class, 'downloadPdf'])->name('reports.pdf');
 
-    // Questionari
-    Route::resource('questionnaire-templates', QuestionnaireTemplateController::class);
+    // Questionari (i template questionari sono già aperti sopra)
     Route::resource('questionnaires', QuestionnaireController::class)->except(['index']);
 
     // Fatturazione
     Route::resource('invoices', InvoiceController::class);
+    Route::get('invoices-export', [InvoiceController::class, 'exportExcel'])->name('invoices.export');
+    // Fattura emessa fuori dall'app: registrazione con PDF allegato
+    Route::get('invoices-carica', [InvoiceController::class, 'uploadForm'])->name('invoices.upload');
+    Route::post('invoices-carica', [InvoiceController::class, 'uploadStore'])->name('invoices.upload.store');
+    Route::post('invoices-carica/analizza', [InvoiceController::class, 'analyzePdf'])->name('invoices.upload.analyze');
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
+    Route::get('invoices/{invoice}/anteprima', [InvoiceController::class, 'viewPdf'])->name('invoices.pdf.view');
     Route::post('invoices/{invoice}/sts', [InvoiceController::class, 'exportSts'])->name('invoices.sts');
 
     // Chat
@@ -133,11 +178,6 @@ Route::middleware([
     Route::get('doc-templates/{docTemplate}/compile', [DocTemplateController::class, 'compile'])->name('doc-templates.compile');
     Route::post('doc-templates/{docTemplate}/generate', [DocTemplateController::class, 'generatePdf'])->name('doc-templates.generate');
 
-    // Notifiche
-    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
-    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
-
     // Inbox richieste di primo contatto (ogni professionista vede le proprie)
     Route::get('richieste', [ContactRequestController::class, 'inbox'])->name('contact-requests.inbox');
     Route::post('richieste/{contactRequest}/accept', [ContactRequestController::class, 'accept'])->name('contact-requests.accept');
@@ -159,6 +199,9 @@ Route::middleware([
     Route::get('gdpr', [\App\Http\Controllers\GdprController::class, 'index'])->name('gdpr.index');
     Route::get('gdpr/download/{document}', [\App\Http\Controllers\GdprController::class, 'download'])->name('gdpr.download');
 
+    // Registro operazioni (audit log) — admin/founder
+    Route::get('registro-operazioni', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('audit.index');
+
     // Profili professionisti (admin)
     Route::get('team/professionals', [\App\Http\Controllers\ProfessionalController::class, 'index'])->name('professionals.index');
     Route::post('team/professionals', [\App\Http\Controllers\ProfessionalController::class, 'store'])->name('professionals.store');
@@ -168,4 +211,6 @@ Route::middleware([
     // Availability slots
     Route::post('team/professionals/{user}/slots', [\App\Http\Controllers\ProfessionalController::class, 'storeSlot'])->name('professionals.slots.store');
     Route::delete('team/professionals/{user}/slots/{slot}', [\App\Http\Controllers\ProfessionalController::class, 'destroySlot'])->name('professionals.slots.destroy');
+
+    }); // fine area clinica (require.clinical)
 });

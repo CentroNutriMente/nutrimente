@@ -8,6 +8,7 @@ defineProps({
     delta: String,
     deltaPositive: { type: Boolean, default: true },
     icon: String,
+    text: String,
     tone: { type: String, default: 'sage' },
 });
 </script>
@@ -15,7 +16,7 @@ defineProps({
 <template>
     <div class="bg-card rounded-xl2 border border-line shadow-soft p-5">
         <div class="flex items-start gap-3">
-            <IconCircle :icon="icon" :tone="tone" />
+            <IconCircle :icon="icon" :text="text" :tone="tone" />
             <div class="min-w-0">
                 <p class="text-xs text-inkMuted font-medium">{{ label }}</p>
                 <p class="text-[42px] font-serif font-semibold text-ink leading-none mt-1">{{ value }}</p>

@@ -1,0 +1,20 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set net:max-retries 5
+set xfer:clobber on
+# Nuovi campi anagrafici paziente (parenti/tutori, stato civile, educazione, professione)
+# + fix: medico di base e contatti emergenza mancanti nella modifica.
+# NB: eseguire prima deploy/anagrafica-fields.sql in phpMyAdmin.
+
+# Backend
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Patient.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Patient.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientController.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_07_20_120000_add_socio_demographic_fields_to_patients.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_07_20_120000_add_socio_demographic_fields_to_patients.php
+
+# Frontend (asset compilati + manifest)
+mirror -R --ignore-time --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+
+cls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

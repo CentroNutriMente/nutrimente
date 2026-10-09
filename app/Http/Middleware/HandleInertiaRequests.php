@@ -40,6 +40,9 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            // Ruoli dell'utente, per il gating della sidebar lato frontend.
+            // Chiave dedicata per non sovrascrivere 'auth.user' di Jetstream.
+            'userRoles' => $user ? $user->getRoleNames() : [],
             // Unread notification count included in every Inertia response so
             // the bell badge is correct on first render, before any AJAX polling.
             'notif_unread' => $user ? rescue(

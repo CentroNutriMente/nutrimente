@@ -31,9 +31,9 @@ const form = useForm({
     patient_id:         props.selectedPatient ?? (props.report?.patient_id ?? ''),
     report_template_id: activeTemplate.value?.id ?? (props.report?.report_template_id ?? null),
     title:              props.report?.title ?? (activeTemplate.value?.name ?? ''),
-    report_date:        props.report?.report_date?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+    report_date:        props.report?.report_date?.slice(0, 16) ?? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
     sections_data:      prefillSections(),
-    next_appointment:   props.report?.next_appointment ?? '',
+    next_appointment_at: props.report?.next_appointment_at?.slice(0, 16) ?? '',
     notes:              props.report?.notes ?? '',
 });
 
@@ -163,8 +163,8 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
                         </div>
 
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Data referto *</label>
-                            <input v-model="form.report_date" type="date"
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Data e ora referto *</label>
+                            <input v-model="form.report_date" type="datetime-local"
                                 class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                         </div>
                     </div>
@@ -179,27 +179,31 @@ const showTemplatePicker = ref(!isEdit.value && !props.selectedTemplate && props
                             <span v-if="activeTemplate?.sections?.[i]?.required" class="text-red-400 ml-1">*</span>
                         </label>
 
-                        <!-- Textarea o input in base al tipo del template -->
-                        <textarea v-if="!activeTemplate || activeTemplate.sections[i]?.type !== 'text'"
+                        <!-- Campo in base al tipo del template: data, testo o area -->
+                        <input v-if="activeTemplate?.sections?.[i]?.type === 'date'"
                             v-model="sec.content"
-                            rows="5"
-                            :placeholder="activeTemplate?.sections?.[i]?.placeholder || ''"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y" />
-                        <input v-else
+                            type="date"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        <input v-else-if="activeTemplate?.sections?.[i]?.type === 'text'"
                             v-model="sec.content"
                             type="text"
                             :placeholder="activeTemplate?.sections?.[i]?.placeholder || ''"
                             class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        <textarea v-else
+                            v-model="sec.content"
+                            rows="5"
+                            :placeholder="activeTemplate?.sections?.[i]?.placeholder || ''"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y" />
                     </div>
                 </div>
 
                 <!-- Prossimo appuntamento + note -->
                 <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Prossimo Appuntamento</label>
-                        <input v-model="form.next_appointment" type="text"
-                            placeholder="es. 20 maggio 2026 ore 15:00"
-                            class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Prossimo appuntamento</label>
+                        <input v-model="form.next_appointment_at" type="datetime-local"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        <p class="text-xs text-gray-400 mt-1">Impostando data e ora, l'appuntamento viene creato in agenda e viene inviata la conferma al paziente.</p>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Note interne (non nel PDF)</label>

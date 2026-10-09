@@ -14,6 +14,12 @@ trait PasswordValidationRules
      */
     protected function passwordRules(): array
     {
-        return ['required', 'string', Password::default(), 'confirmed'];
+        // Policy robusta per dati sanitari: min 12 caratteri, maiuscole+minuscole,
+        // numeri e simboli. (uncompromised() omesso: richiederebbe una chiamata
+        // esterna a HaveIBeenPwned, non garantita sull'hosting.)
+        return [
+            'required', 'string', 'confirmed',
+            Password::min(12)->mixedCase()->numbers()->symbols(),
+        ];
     }
 }

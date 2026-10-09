@@ -24,7 +24,7 @@ class ContactRequestController extends Controller
     // Fixed option sets mirrored on the public form.
     private const HOW_FOUND      = ['passaparola', 'social', 'miodottore'];
     private const CONTACT_METHOD = ['whatsapp', 'telefono'];
-    private const DAYS           = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+    private const DAYS           = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
 
     // ── Public: Sara-focused landing page (site home) ───────────────────────────
 
@@ -48,6 +48,15 @@ class ContactRequestController extends Controller
             ? $profile->curriculum
             : (json_decode($profile->curriculum ?? '[]', true) ?: []);
 
+        $displayName = trim(($profile->title ? $profile->title.' ' : '').$profile->user->name);
+        $category    = $profile->category ? Str::ucfirst($profile->category) : 'Psicologa';
+        $photoUrl    = $profile->user->profile_photo_path
+            ? $profile->user->profile_photo_url
+            : asset('logo.jpeg');
+        $description = $profile->bio
+            ? Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($profile->bio))), 155)
+            : "Colloqui psicologici individuali e gruppi di parola. Richiedi un primo contatto con {$displayName}.";
+
         return Inertia::render('Landing', [
             'sara' => [
                 'name'                     => $profile->user->name,
@@ -69,7 +78,32 @@ class ContactRequestController extends Controller
                     ->reject(fn ($a) => str_contains(mb_strtolower((string) $a), 'oncolog'))
                     ->values()->all(),
             ],
-        ]);
+        ])->withViewData(['meta' => [
+            'title'       => "{$displayName} — {$category}",
+            'description' => $description,
+            'canonical'   => route('home'),
+            'image'       => $photoUrl,
+            // Dati strutturati: dicono a Google che è un'attività professionale
+            // sanitaria locale (nome, telefono, indirizzo se presente).
+            'jsonld'      => array_filter([
+                '@context'  => 'https://schema.org',
+                '@type'     => 'MedicalBusiness',
+                'name'      => $displayName,
+                'url'       => route('home'),
+                'image'     => $photoUrl,
+                'telephone' => $profile->phone,
+                'address'   => $profile->address ? [
+                    '@type'          => 'PostalAddress',
+                    'streetAddress'  => $profile->address,
+                    'addressCountry' => 'IT',
+                ] : null,
+                'founder'   => [
+                    '@type'    => 'Person',
+                    'name'     => $profile->user->name,
+                    'jobTitle' => $category,
+                ],
+            ]),
+        ]]);
     }
 
     // ── Public: choose a professional (Centro NutriMente team page, kept for later) ──
@@ -96,7 +130,13 @@ class ContactRequestController extends Controller
             ->sortByDesc('is_founder')
             ->values();
 
-        return Inertia::render('Booking/Index', compact('professionals'));
+        return Inertia::render('Booking/Index', compact('professionals'))
+            ->withViewData(['meta' => [
+                'title'       => 'Prenota un primo colloquio — '.config('app.name'),
+                'description' => 'Scegli il professionista e invia la scheda di primo contatto: verrai ricontattato per fissare il primo colloquio.',
+                'canonical'   => route('booking.index'),
+                'image'       => asset('logo.jpeg'),
+            ]]);
     }
 
     // ── Public: Scheda Primo Contatto for a given professional ──────────────────
@@ -108,6 +148,8 @@ class ContactRequestController extends Controller
             ->with('user')
             ->firstOrFail();
 
+        $displayName = trim(($profile->title ? $profile->title.' ' : '').$profile->user->name);
+
         return Inertia::render('Booking/PrimoContatto', [
             'professional' => [
                 'name'     => $profile->user->name,
@@ -116,7 +158,14 @@ class ContactRequestController extends Controller
                 'category' => $profile->category,
                 'photo'    => $profile->user->profile_photo_url,
             ],
-        ]);
+        ])->withViewData(['meta' => [
+            'title'       => "Prenota con {$displayName} — ".config('app.name'),
+            'description' => "Compila la scheda di primo contatto per richiedere un colloquio con {$displayName}.",
+            'canonical'   => route('contact-requests.create', $slug),
+            'image'       => $profile->user->profile_photo_path
+                ? $profile->user->profile_photo_url
+                : asset('logo.jpeg'),
+        ]]);
     }
 
     public function store(Request $request, string $slug): RedirectResponse
@@ -202,7 +251,7 @@ class ContactRequestController extends Controller
         // dalle disponibilità indicate dal cliente (che restano solo come indicazione).
 
         // Find or create the patient record from the contact's anagrafica.
-        $patient = Patient::where('email', $contactRequest->email)->first();
+        $patient = Patient::whereBlind('email', $contactRequest->email)->first();
         if (! $patient) {
             $patient = Patient::create([
                 'first_name' => $contactRequest->name,

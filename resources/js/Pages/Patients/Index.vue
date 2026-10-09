@@ -1,7 +1,10 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
+
+// L'archivio delle cartelle eliminate è riservato all'amministratore.
+const isAdmin = computed(() => (usePage().props.userRoles ?? []).includes('admin'));
 
 const props = defineProps({
     patients: Object,
@@ -12,12 +15,14 @@ const props = defineProps({
 const search = ref(props.filters.search ?? '');
 const selectedTag = ref(props.filters.tag ?? '');
 
-const statusLabel = (s) => ({ attivo: 'Attivo', sospeso: 'Sospeso', concluso: 'Concluso' }[s] ?? 'Attivo');
+const statusLabel = (s) => ({ primo_contatto: 'Solo primo contatto', attivo: 'Attivo', sospeso: 'Sospeso', concluso: 'Concluso' }[s] ?? 'Attivo');
 const statusClass = (s) => s === 'attivo'
     ? 'bg-purple-100 text-purple-700 border-purple-200'
-    : s === 'sospeso'
-        ? 'bg-amber-100 text-amber-700 border-amber-200'
-        : 'bg-gray-100 text-gray-500 border-gray-200';
+    : s === 'primo_contatto'
+        ? 'bg-sky-100 text-sky-700 border-sky-200'
+        : s === 'sospeso'
+            ? 'bg-amber-100 text-amber-700 border-amber-200'
+            : 'bg-gray-100 text-gray-500 border-gray-200';
 
 let searchTimer = null;
 watch([search, selectedTag], () => {
@@ -38,6 +43,17 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
         <template #header>
             <div class="flex items-center justify-between">
                 <h1 class="text-xl font-semibold text-gray-800">Clienti</h1>
+                <div class="flex items-center gap-2">
+                <Link
+                    v-if="isAdmin"
+                    :href="route('patients.archived')"
+                    class="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M6 7v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7M9 4h6" />
+                    </svg>
+                    Archivio
+                </Link>
                 <Link
                     :href="route('patients.create')"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
@@ -47,6 +63,7 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                     </svg>
                     Nuovo paziente
                 </Link>
+                </div>
             </div>
         </template>
 
@@ -85,7 +102,7 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                         <th class="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Contatto</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Tag</th>
                         <th class="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Creato da</th>
-                        <th class="text-left px-4 py-3 font-medium text-gray-600">Stato</th>
+                        <th class="text-left px-4 py-3 font-medium text-gray-600 w-40">Stato</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
@@ -131,8 +148,8 @@ const tagColor = (color) => ({ backgroundColor: color + '22', color });
                             </span>
                             <span v-else class="text-xs text-gray-300">—</span>
                         </td>
-                        <td class="px-4 py-3">
-                            <span :class="statusClass(patient.status ?? 'attivo')" class="text-xs px-2 py-1 rounded-full font-medium border">
+                        <td class="px-4 py-3 w-40">
+                            <span :class="statusClass(patient.status ?? 'attivo')" class="inline-block text-xs px-2 py-1 rounded-full font-medium border whitespace-nowrap">
                                 {{ statusLabel(patient.status ?? 'attivo') }}
                             </span>
                         </td>

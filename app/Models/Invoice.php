@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
+    use SoftDeletes;
+
     const MARCA_DA_BOLLO_THRESHOLD = 77.47;
     const MARCA_DA_BOLLO_AMOUNT = 2.00;
 
@@ -24,14 +28,19 @@ class Invoice extends Model
     ];
 
     protected $casts = [
-        'issued_at' => 'date',
-        'paid_at' => 'date',
-        'sts_sent_at' => 'datetime',
-        'iva_exempt' => 'boolean',
-        'sts_sent' => 'boolean',
-        'subtotal' => 'decimal:2',
-        'marca_da_bollo' => 'decimal:2',
-        'total' => 'decimal:2',
+        'issued_at'             => 'date',
+        'paid_at'               => 'date',
+        'sts_sent_at'           => 'datetime',
+        'iva_exempt'            => 'boolean',
+        'sts_sent'              => 'boolean',
+        'subtotal'              => 'decimal:2',
+        'marca_da_bollo'        => 'decimal:2',
+        'total'                 => 'decimal:2',
+        'client_name'           => Encrypted::class,
+        'client_codice_fiscale' => Encrypted::class,
+        'client_address'        => Encrypted::class,
+        'client_phone'          => Encrypted::class,
+        'client_email'          => Encrypted::class,
     ];
 
     public function user(): BelongsTo

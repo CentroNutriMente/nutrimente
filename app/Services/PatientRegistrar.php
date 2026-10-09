@@ -28,10 +28,10 @@ class PatientRegistrar
 
         $patient = null;
         if ($cf) {
-            $patient = Patient::where('codice_fiscale', $cf)->first();
+            $patient = Patient::whereBlind('codice_fiscale', $cf)->first();
         }
         if (! $patient && $email) {
-            $patient = Patient::where('email', $email)->first();
+            $patient = Patient::whereBlind('email', $email)->first();
         }
 
         // Già in anagrafica: associa eventuali professionisti e ritorna (niente duplicati).

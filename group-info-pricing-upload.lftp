@@ -1,0 +1,22 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set net:max-retries 5
+set xfer:clobber on
+# Iscrizione gruppo: scheda informativa (date incontri, dove, posti, conduttrice)
+# sotto la select del form pubblico e da QR + quota di partecipazione (35 €/incontro).
+# NB: eseguire prima deploy/group-pricing.sql in phpMyAdmin.
+
+# Backend
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Group.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Group.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupEnrollmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupEnrollmentController.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/group-flyer.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_07_30_100000_add_pricing_to_support_groups.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_07_30_100000_add_pricing_to_support_groups.php
+
+# Frontend (asset compilati + manifest)
+mirror -R --ignore-time --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+
+cls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

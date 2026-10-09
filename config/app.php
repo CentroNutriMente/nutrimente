@@ -107,6 +107,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Blind Index Key
+    |--------------------------------------------------------------------------
+    |
+    | Chiave HMAC usata per i blind index (lookup/unicità su colonne cifrate,
+    | es. patients.email/codice_fiscale). Deve restare STABILE quanto APP_KEY:
+    | se cambia, i lookup per hash non troveranno più le righe esistenti.
+    |
+    */
+
+    'blind_index_key' => env('BLIND_INDEX_KEY', hash('sha256', (string) env('APP_KEY'))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     |

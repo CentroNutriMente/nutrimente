@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,7 +17,11 @@ class Intervisione extends Model
     ];
 
     protected $casts = [
-        'scheduled_at' => 'datetime',
+        'scheduled_at'     => 'datetime',
+        'title'            => Encrypted::class,
+        'description'      => Encrypted::class,
+        'discussion_notes' => Encrypted::class,
+        'conclusions'      => Encrypted::class,
     ];
 
     public function createdBy(): BelongsTo

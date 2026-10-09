@@ -1,0 +1,21 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Fix fuso orario appuntamenti: gli orari erano salvati "da parete" ma serializzati
+# con suffisso Z (UTC) e quindi mostrati +2h dal calendario / new Date() in JS.
+# Ora start/end vengono emessi come ora locale senza Z, coerenti in scrittura e lettura.
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/AppointmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/AppointmentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Appointment.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Appointment.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupMeeting.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupMeeting.php
+# Frontend ricompilato (drag&drop calendario invia ora l'orario locale)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Svuota cache config/route/view
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

@@ -149,7 +149,7 @@ class BookingController extends Controller
         $duration = $booking->professional->professionalProfile?->session_duration_minutes ?? 50;
 
         // Try to find an existing patient record by email to link it
-        $patient = \App\Models\Patient::where('email', $booking->patient_email)->first();
+        $patient = \App\Models\Patient::whereBlind('email', $booking->patient_email)->first();
 
         $appointment = Appointment::create([
             'user_id'     => $booking->professional_id,

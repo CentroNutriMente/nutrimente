@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\BookingRequest;
 use App\Models\ContactRequest;
 use App\Models\Group;
 use App\Models\GroupEnrollmentRequest;
@@ -63,12 +64,14 @@ class DashboardController extends Controller
         // ── Richieste da gestire ────────────────────────────────────────────
         $contactPending = ContactRequest::where('professional_id', $user->id)->where('status', 'pending')->count();
         $enrollPending = GroupEnrollmentRequest::whereIn('status', ['da_contattare', 'in_attesa_conferma'])->count();
+        $bookingPending = BookingRequest::where('professional_id', $user->id)->where('status', 'pending')->count();
 
         $requests = [
-            ['label' => 'Primi contatti',      'sub' => 'Da ricontattare', 'count' => $contactPending, 'tone' => 'lavender', 'href' => route('contact-requests.inbox')],
-            ['label' => 'Iscrizioni ai gruppi', 'sub' => 'Da confermare',   'count' => $enrollPending,  'tone' => 'sage',     'href' => route('groups.index')],
+            ['label' => 'Richieste appuntamento', 'sub' => 'Da confermare',   'count' => $bookingPending, 'tone' => 'blush',    'href' => route('appointment-requests.index')],
+            ['label' => 'Primi contatti',         'sub' => 'Da ricontattare', 'count' => $contactPending, 'tone' => 'lavender', 'href' => route('contact-requests.inbox')],
+            ['label' => 'Iscrizioni ai gruppi',   'sub' => 'Da confermare',   'count' => $enrollPending,  'tone' => 'sage',     'href' => route('groups.index')],
         ];
-        $requestsTotal = $contactPending + $enrollPending;
+        $requestsTotal = $contactPending + $enrollPending + $bookingPending;
 
         // ── Attività da completare ──────────────────────────────────────────
         $tasks = Task::where('user_id', $user->id)

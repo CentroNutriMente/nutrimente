@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RequirePatient
 {
-    private const PROFESSIONAL_ROLES = ['admin', 'psicologo', 'nutrizionista', 'osteopata', 'collaboratore'];
+    private const PROFESSIONAL_ROLES = ['admin', 'system_admin', 'psicologo', 'nutrizionista', 'osteopata', 'collaboratore'];
 
     public function handle(Request $request, Closure $next): Response
     {

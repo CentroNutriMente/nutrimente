@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Models\GroupAttendance;
 use App\Models\GroupEnrollmentRequest;
 use App\Models\GroupMaterial;
 use App\Models\GroupMeeting;
 use App\Models\GroupParticipant;
 use App\Models\Patient;
 use App\Models\User;
+use App\Mail\GroupParticipationMail;
 use App\Services\PatientRegistrar;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel;
@@ -83,9 +87,9 @@ class GroupController extends Controller
     {
         $group->load([
             'leader:id,name',
-            'participants' => fn ($q) => $q->orderBy('name'),
+            'participants',
             'enrollmentRequests' => fn ($q) => $q->whereNotIn('status', ['confermata', 'rifiutata'])->orderByDesc('created_at'),
-            'meetings',
+            'meetings.attendances',
             'materials.uploadedBy:id,name',
         ]);
 
@@ -93,15 +97,22 @@ class GroupController extends Controller
         // corrispondente per email, così il nome diventa cliccabile verso il profilo.
         foreach ($group->participants as $p) {
             if (! $p->patient_id && $p->email) {
-                $match = Patient::where('email', $p->email)->first();
+                $match = Patient::whereBlind('email', $p->email)->first();
                 if ($match) {
                     $p->update(['patient_id' => $match->id]);
                 }
             }
         }
 
-        $patients = Patient::orderBy('last_name')->orderBy('first_name')
-            ->get(['id', 'first_name', 'last_name', 'email', 'phone'])
+        // Nome partecipante cifrato: ordinamento lato PHP.
+        $group->setRelation(
+            'participants',
+            $group->participants->sortBy(fn ($p) => mb_strtolower((string) $p->name))->values(),
+        );
+
+        $patients = Patient::get(['id', 'first_name', 'last_name', 'email', 'phone'])
+            ->sortBy(fn ($p) => mb_strtolower((string) $p->last_name.' '.(string) $p->first_name))
+            ->values()
             ->map(fn ($p) => [
                 'id'    => $p->id,
                 'name'  => "{$p->first_name} {$p->last_name}",
@@ -130,10 +141,11 @@ class GroupController extends Controller
             'meetings' => $group->meetings->map(fn (GroupMeeting $m) => [
                 'id'       => $m->id,
                 'title'    => $m->title,
-                'datetime' => $m->scheduled_at->toISOString(),
+                'datetime' => $m->scheduled_at->format('Y-m-d\TH:i:s'),
                 'duration' => $m->duration_minutes,
                 'notes'    => $m->notes,
             ]),
+            'attendance' => $this->attendanceMap($group),
             'materials' => $group->materials->map(fn (GroupMaterial $m) => [
                 'id'      => $m->id,
                 'label'   => $m->label,
@@ -203,6 +215,8 @@ class GroupController extends Controller
             'joined_at'  => now(),
         ]);
 
+        $this->sendParticipationMail($group, $patient);
+
         return back()->with('flash', ['banner' => 'Partecipante aggiunto.']);
     }
 
@@ -250,7 +264,24 @@ class GroupController extends Controller
 
         $enrollment->update(['status' => 'confermata']);
 
+        $this->sendParticipationMail($group, $patient);
+
         return back()->with('flash', ['banner' => 'Richiesta approvata: partecipante inserito e scheda creata.']);
+    }
+
+    /** Invia la mail automatica di partecipazione al gruppo (no-op se manca l'email). */
+    private function sendParticipationMail(Group $group, Patient $patient): void
+    {
+        if (! $patient->email) {
+            return;
+        }
+
+        try {
+            $group->loadMissing('leader');
+            Mail::to($patient->email)->send(new GroupParticipationMail($patient, $group));
+        } catch (\Throwable $e) {
+            Log::error('GroupParticipationMail failed: '.$e->getMessage());
+        }
     }
 
     public function rejectEnrollment(Group $group, GroupEnrollmentRequest $enrollment): RedirectResponse
@@ -276,12 +307,81 @@ class GroupController extends Controller
         return back()->with('flash', ['banner' => 'Incontro aggiunto.']);
     }
 
+    /** Note della singola giornata (e titolo/orario) modificabili dopo la creazione. */
+    public function updateMeeting(Request $request, Group $group, GroupMeeting $meeting): RedirectResponse
+    {
+        abort_unless($meeting->group_id === $group->id, 404);
+
+        $meeting->update($request->validate([
+            'title'            => ['nullable', 'string', 'max:160'],
+            'scheduled_at'     => ['sometimes', 'required', 'date'],
+            'duration_minutes' => ['sometimes', 'required', 'integer', 'min:5', 'max:600'],
+            'notes'            => ['nullable', 'string', 'max:5000'],
+        ]));
+
+        return back(303)->with('flash', ['banner' => 'Note dell\'incontro salvate.']);
+    }
+
     public function destroyMeeting(Group $group, GroupMeeting $meeting): RedirectResponse
     {
         abort_unless($meeting->group_id === $group->id, 404);
         $meeting->delete();
 
         return back()->with('flash', ['banner' => 'Incontro eliminato.']);
+    }
+
+    // ── Presenze ─────────────────────────────────────────────────────────────
+    /**
+     * Registra la presenza di un partecipante (o di tutti, se participant_id è
+     * assente) a un incontro. present = null cancella la registrazione.
+     */
+    public function markAttendance(Request $request, Group $group, GroupMeeting $meeting): RedirectResponse
+    {
+        abort_unless($meeting->group_id === $group->id, 404);
+
+        $validated = $request->validate([
+            'participant_id' => [
+                'nullable',
+                Rule::exists('group_participants', 'id')->where('group_id', $group->id),
+            ],
+            'present' => ['nullable', 'boolean'],
+        ]);
+
+        $ids = isset($validated['participant_id'])
+            ? [$validated['participant_id']]
+            : $group->participants()->pluck('id')->all();
+
+        $present = $validated['present'] ?? null;
+
+        if ($present === null) {
+            GroupAttendance::where('group_meeting_id', $meeting->id)
+                ->whereIn('group_participant_id', $ids)
+                ->delete();
+        } else {
+            foreach ($ids as $id) {
+                GroupAttendance::updateOrCreate(
+                    ['group_meeting_id' => $meeting->id, 'group_participant_id' => $id],
+                    ['present' => $present, 'marked_by' => $request->user()->id],
+                );
+            }
+        }
+
+        return back(303);
+    }
+
+    /** Mappa incontro → partecipante → presente (true/false); riga assente = non registrata. */
+    private function attendanceMap(Group $group): array
+    {
+        $map = [];
+        foreach ($group->meetings as $meeting) {
+            $row = [];
+            foreach ($meeting->attendances as $a) {
+                $row[$a->group_participant_id] = $a->present;
+            }
+            $map[$meeting->id] = (object) $row;
+        }
+
+        return $map;
     }
 
     // ── Materiali ────────────────────────────────────────────────────────────
@@ -295,7 +395,7 @@ class GroupController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store("group-materials/{$group->id}", 'local');
+        $path = \App\Support\EncryptedFile::store($file, "group-materials/{$group->id}", 'local');
 
         $group->materials()->create([
             'label'         => $validated['label'] ?? null,
@@ -315,7 +415,10 @@ class GroupController extends Controller
         abort_unless($material->group_id === $group->id, 404);
         abort_unless(Storage::disk('local')->exists($material->path), 404);
 
-        return Storage::disk('local')->download($material->path, $material->original_name);
+        return response(\App\Support\EncryptedFile::get('local', $material->path), 200, [
+            'Content-Type'        => $material->mime ?? 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="'.addslashes($material->original_name).'"',
+        ]);
     }
 
     public function destroyMaterial(Group $group, GroupMaterial $material): RedirectResponse
@@ -338,7 +441,8 @@ class GroupController extends Controller
         return response()->streamDownload(function () use ($group) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Nome', 'Email', 'Telefono', 'Stato']);
-            foreach ($group->participants()->orderBy('name')->get() as $p) {
+            $rows = $group->participants()->get()->sortBy(fn ($p) => mb_strtolower((string) $p->name));
+            foreach ($rows as $p) {
                 fputcsv($out, [$p->name, $p->email, $p->phone, $p->status]);
             }
             fclose($out);
@@ -394,6 +498,8 @@ class GroupController extends Controller
             'modality'        => ['nullable', Rule::in(config('groups.modalities'))],
             'location'        => ['nullable', 'string', 'max:160'],
             'capacity'        => ['required', 'integer', 'min:1', 'max:200'],
+            'price_per_session'        => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'session_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:600'],
             'next_meeting_at' => ['nullable', 'date'],
             'status'          => ['required', Rule::in(config('groups.statuses'))],
         ]);
@@ -422,7 +528,10 @@ class GroupController extends Controller
             'cadence'         => $g->cadence,
             'modality'        => $g->modality,
             'location'        => $g->location,
-            'next_meeting_at' => $g->next_meeting_at?->toISOString(),
+            'price_per_session'        => $g->price_per_session,
+            'session_duration_minutes' => $g->session_duration_minutes,
+            'price_label'              => $g->price_label,
+            'next_meeting_at' => $g->next_meeting_at?->format('Y-m-d\TH:i:s'),
             'public_token'    => $g->public_token,
             'public_url'      => route('groups.public.show', $g->public_token),
         ]);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\GroupEnrollmentRequest;
+use App\Models\GroupMeeting;
 use App\Models\Notification;
 use App\Models\ProfessionalProfile;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,12 @@ class GroupEnrollmentController extends Controller
             'groups'    => $this->openGroups(),
             'preselect' => null,
             'source'    => 'form',
-        ]);
+        ])->withViewData(['meta' => [
+            'title'       => 'Iscriviti a un gruppo — '.config('app.name'),
+            'description' => 'Richiedi l\'iscrizione a un gruppo di parola: compila il modulo e verrai ricontattato con tutte le informazioni.',
+            'canonical'   => route('groups.public.create'),
+            'image'       => asset('logo.jpeg'),
+        ]]);
     }
 
     // Pagina conclusiva di conferma dopo l'invio della richiesta.
@@ -29,7 +35,10 @@ class GroupEnrollmentController extends Controller
     {
         return Inertia::render('Booking/GroupEnrollmentDone', [
             'name' => $request->session()->get('enrolled_name'),
-        ]);
+        ])->withViewData(['meta' => [
+            'title'  => 'Richiesta inviata — '.config('app.name'),
+            'robots' => 'noindex,nofollow',
+        ]]);
     }
 
     // Form pre-compilato dal QR del volantino (token del gruppo).
@@ -38,10 +47,15 @@ class GroupEnrollmentController extends Controller
         $group = Group::where('public_token', $token)->firstOrFail();
 
         return Inertia::render('Booking/GroupEnrollment', [
-            'groups'    => $this->openGroups(),
+            // Il gruppo del QR è sempre incluso, anche se non più fra quelli aperti.
+            'groups'    => $this->openGroups($group),
             'preselect' => ['id' => $group->id, 'name' => $group->name, 'edition' => $group->edition],
             'source'    => 'qr',
-        ]);
+        ])->withViewData(['meta' => [
+            'title'  => 'Iscriviti a un gruppo — '.config('app.name'),
+            // URL con token da QR: non deve finire nell'indice.
+            'robots' => 'noindex,nofollow',
+        ]]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -92,15 +106,47 @@ class GroupEnrollmentController extends Controller
         return redirect()->route('groups.public.done')->with('enrolled_name', $firstName);
     }
 
-    private function openGroups(): array
+    /**
+     * Gruppi aperti con tutte le informazioni utili a capire se si può partecipare:
+     * calendario degli incontri, quota, dove/quando, posti rimasti.
+     */
+    private function openGroups(?Group $ensure = null): array
     {
-        return Group::whereIn('status', ['attivo', 'in_partenza'])
+        $groups = Group::query()
+            ->where(fn ($q) => $q
+                ->whereIn('status', ['attivo', 'in_partenza'])
+                ->when($ensure, fn ($q2) => $q2->orWhere('id', $ensure->id)))
+            ->withCount('participants')
+            ->with([
+                'leader:id,name',
+                // Solo gli incontri non ancora passati: il calendario serve a decidere.
+                'meetings' => fn ($q) => $q->where('scheduled_at', '>=', now()->startOfDay()),
+            ])
             ->orderBy('name')
-            ->get(['id', 'name', 'edition'])
-            ->map(fn ($g) => [
-                'id'      => $g->id,
-                'name'    => $g->name,
-                'edition' => $g->edition,
-            ])->all();
+            ->get();
+
+        return $groups->map(fn (Group $g) => [
+            'id'              => $g->id,
+            'name'            => $g->name,
+            'edition'         => $g->edition,
+            'description'     => $g->description,
+            'status'          => $g->status,
+            'leader'          => $g->leader?->name,
+            'cadence'         => $g->cadence,
+            'modality'        => $g->modality,
+            'location'        => $g->modality === 'online' ? null : $g->location,
+            'capacity'        => $g->capacity,
+            'available_seats' => $g->available_seats,
+            'price_label'     => $g->price_label,
+            'duration_label'  => $g->duration_label,
+            'session_minutes' => $g->session_duration_minutes,
+            'next_meeting_at' => $g->next_meeting_at?->format('Y-m-d\TH:i:s'),
+            'meetings'        => $g->meetings->map(fn (GroupMeeting $m) => [
+                'id'       => $m->id,
+                'title'    => $m->title,
+                'datetime' => $m->scheduled_at->format('Y-m-d\TH:i:s'),
+                'duration' => $m->duration_minutes,
+            ])->values()->all(),
+        ])->all();
     }
 }

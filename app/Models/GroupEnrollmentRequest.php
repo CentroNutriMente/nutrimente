@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,6 +15,10 @@ class GroupEnrollmentRequest extends Model
 
     protected $casts = [
         'privacy_consent' => 'boolean',
+        'name'            => Encrypted::class,
+        'email'           => Encrypted::class,
+        'phone'           => Encrypted::class,
+        'codice_fiscale'  => Encrypted::class,
     ];
 
     public function group(): BelongsTo

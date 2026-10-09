@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'require.professional' => \App\Http\Middleware\RequireProfessional::class,
             'require.patient'      => \App\Http\Middleware\RequirePatient::class,
+            'require.clinical'     => \App\Http\Middleware\RequireClinical::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -22,11 +22,24 @@ const form = useForm({
     medico_base: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
+    stato_civile: '',
+    educazione: '',
+    professione: '',
+    relatives: [],
     notes: '',
     diagnosis: '',
     tags: [],
     professionals: [],
 });
+
+const statoCivileOptions = ['Celibe/Nubile', 'Coniugato/a', 'Convivente', 'Separato/a', 'Divorziato/a', 'Vedovo/a'];
+const educazioneOptions = ['Licenza elementare', 'Licenza media', 'Diploma di scuola superiore', 'Laurea triennale', 'Laurea magistrale', 'Dottorato / Post-laurea', 'Altro'];
+
+const addRelative = () => form.relatives.push({
+    name: '', relationship: '', phone: '', email: '',
+    can_access_data: false, is_legal_guardian: false,
+});
+const removeRelative = (idx) => form.relatives.splice(idx, 1);
 
 const submit = () => form.post(route('patients.store'));
 
@@ -135,6 +148,79 @@ const otherProfessionals = props.professionals.filter(p => p.id !== props.authId
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Contatto emergenza (tel)</label>
                         <input v-model="form.emergency_contact_phone" type="tel" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parenti / Tutori legali -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="font-semibold text-gray-700">Parenti / Tutori legali</h2>
+                    <button type="button" @click="addRelative" class="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Aggiungi un nominativo
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mb-4">I familiari possono essere selezionati come persone autorizzate o tutori legali di questo paziente.</p>
+
+                <p v-if="!form.relatives.length" class="text-sm text-gray-400">Nessun nominativo aggiunto.</p>
+
+                <div v-for="(rel, idx) in form.relatives" :key="idx" class="border border-gray-200 rounded-lg p-4 mb-3 relative">
+                    <button type="button" @click="removeRelative(idx)" class="absolute top-3 right-3 text-gray-300 hover:text-red-500" title="Rimuovi">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome e cognome</label>
+                            <input v-model="rel.name" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Relazione / Parentela</label>
+                            <input v-model="rel.relationship" type="text" placeholder="Es. Genitore, Coniuge, Tutore…" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
+                            <input v-model="rel.phone" type="tel" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input v-model="rel.email" type="email" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        </div>
+                    </div>
+                    <div class="mt-3 space-y-2">
+                        <label class="flex items-start gap-2 text-sm text-gray-600 cursor-pointer">
+                            <input v-model="rel.can_access_data" type="checkbox" class="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                            <span>Il paziente autorizza questa persona ad accedere ai suoi dati medici</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-sm text-gray-600 cursor-pointer">
+                            <input v-model="rel.is_legal_guardian" type="checkbox" class="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                            <span>Tutore legale (il paziente è un minore o non ha capacità giuridica)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dati aggiuntivi -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <h2 class="font-semibold text-gray-700 mb-4">Dati aggiuntivi</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stato civile</label>
+                        <select v-model="form.stato_civile" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white">
+                            <option value="">Seleziona un'opzione</option>
+                            <option v-for="opt in statoCivileOptions" :key="opt" :value="opt">{{ opt }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Educazione</label>
+                        <select v-model="form.educazione" class="w-full border border-gray-200 rounded-lg px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white">
+                            <option value="">Seleziona un'opzione</option>
+                            <option v-for="opt in educazioneOptions" :key="opt" :value="opt">{{ opt }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Professione</label>
+                        <input v-model="form.professione" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                 </div>
             </div>

@@ -1,0 +1,16 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Fix fuso orario referti: report_date/next_appointment_at venivano serializzati
+# con suffisso Z (UTC) e quindi mostrati +2h da new Date() nella pagina di dettaglio.
+# Ora il modello Report emette l'orario "da parete" senza Z, coerente in scrittura/lettura.
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Report.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Report.php
+# Svuota cache config/route/view
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/app/Models/Report.php
+bye

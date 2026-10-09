@@ -1,0 +1,22 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:max-retries 40
+set net:timeout 60
+set net:reconnect-interval-base 3
+set xfer:clobber on
+# Fix 403 system_admin dopo il login.
+# - Redirect post-login role-safe SIA senza 2FA (LoginResponse) SIA con 2FA
+#   (TwoFactorLoginResponse), con logica condivisa (ResolvesHomeRedirect).
+# - Binding del contratto 2FA in AppServiceProvider.
+# - Logo sidebar → home per ruolo (AppLayout, negli asset compilati).
+# Asset compilati per primi, poi il manifest.
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Risposte di login e trait condiviso
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Responses/ResolvesHomeRedirect.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Responses/ResolvesHomeRedirect.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Responses/LoginResponse.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Responses/LoginResponse.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Responses/TwoFactorLoginResponse.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Responses/TwoFactorLoginResponse.php
+# Binding del contratto TwoFactorLoginResponse
+put /Users/alfonso/nutrimente/nutrimente/app/Providers/AppServiceProvider.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Providers/AppServiceProvider.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/app/Http/Responses/TwoFactorLoginResponse.php
+bye

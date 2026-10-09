@@ -1,0 +1,15 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Foto studio nel carosello della landing + landing ricompilata
+mkdir -f -p www.saraalessandripsicologa.it/studio
+put /Users/alfonso/nutrimente/nutrimente/public/studio/studio-1.jpg -o www.saraalessandripsicologa.it/studio/studio-1.jpg
+put /Users/alfonso/nutrimente/nutrimente/public/studio/studio-2.jpg -o www.saraalessandripsicologa.it/studio/studio-2.jpg
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/studio/studio-1.jpg
+bye

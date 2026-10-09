@@ -1,7 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Card from '@/Components/ui/Card.vue';
-import IconCircle from '@/Components/ui/IconCircle.vue';
 import WatercolorHeader from '@/Components/ui/WatercolorHeader.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -27,7 +26,6 @@ const apply = () => {
 };
 const setStatus = (s) => { activeStatus.value = s; apply(); };
 
-const leafIcon = 'M12 3c1.5 2 4 3.5 4 7a4 4 0 1 1-8 0c0-3.5 2.5-5 4-7Z';
 const statusTone = { attivo: 'bg-sage', in_partenza: 'bg-lavender', concluso: 'bg-line' };
 const statusLabel = { attivo: 'Attivo', in_partenza: 'In partenza', concluso: 'Concluso' };
 </script>
@@ -69,9 +67,8 @@ const statusLabel = { attivo: 'Attivo', in_partenza: 'In partenza', concluso: 'C
             <Link v-for="g in groups" :key="g.id" :href="route('groups.show', g.id)">
                 <Card class="h-full hover:shadow-lg transition-shadow text-center">
                     <div class="flex flex-col items-center">
-                        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-                             :class="g.tone === 'sage' ? 'bg-sageLight' : g.tone === 'lavender' ? 'bg-lavenderLight' : 'bg-blush'">
-                            <IconCircle :icon="leafIcon" :tone="g.tone" size="lg" />
+                        <div class="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center mb-4 bg-lavenderLight">
+                            <img src="/images/gruppo-cerchio.png?v=2" alt="" class="w-full h-full object-cover" />
                         </div>
                         <h3 class="font-serif text-xl text-ink">{{ g.name }}</h3>
                         <p v-if="g.edition" class="text-xs text-inkMuted italic mt-0.5">{{ g.edition }}</p>

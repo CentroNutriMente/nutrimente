@@ -1,0 +1,11 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Fix UI dashboard: icona € su "Fatturato mese" + nube dietro al saluto (solo frontend)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

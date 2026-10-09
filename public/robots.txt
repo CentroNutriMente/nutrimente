@@ -1,2 +1,36 @@
 User-agent: *
-Disallow:
+# Aree riservate (professionisti e pazienti) — non indicizzare
+Disallow: /dashboard
+Disallow: /mia-area
+Disallow: /patients
+Disallow: /calendar
+Disallow: /appointments
+Disallow: /appointment-requests
+Disallow: /richieste-appuntamento
+Disallow: /notifications
+Disallow: /messages
+Disallow: /reports
+Disallow: /invoices
+Disallow: /documents
+Disallow: /doc-templates
+Disallow: /groups
+Disallow: /intervisioni
+Disallow: /questionnaires
+Disallow: /questionnaire-templates
+Disallow: /utenti
+Disallow: /tasks
+Disallow: /social
+Disallow: /workspace
+Disallow: /team
+Disallow: /gdpr
+Disallow: /registro-operazioni
+Disallow: /user/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /two-factor-challenge
+# Link con token usa-e-getta (QR volantini, conferme)
+Disallow: /g/
+Disallow: /iscrizione-gruppo/grazie
+
+Sitemap: https://www.saraalessandripsicologa.it/sitemap.xml

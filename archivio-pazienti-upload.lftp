@@ -1,0 +1,14 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Build (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Archivio pazienti eliminati + collegamento account/cartella in gestione utenti
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/UserManagementController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/UserManagementController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Console/Commands/CheckPatientAccounts.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Console/Commands/CheckPatientAccounts.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

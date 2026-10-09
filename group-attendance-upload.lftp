@@ -1,0 +1,19 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Build (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Illustrazione tondo gruppo (finisce in docroot/images/)
+mkdir -f -p www.saraalessandripsicologa.it/images
+put /Users/alfonso/nutrimente/nutrimente/public/images/gruppo-cerchio.png -o www.saraalessandripsicologa.it/images/gruppo-cerchio.png
+# Gruppi: registro presenze per incontro/partecipante
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupAttendance.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupAttendance.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupMeeting.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupMeeting.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupParticipant.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupParticipant.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_08_04_100000_create_group_attendances_table.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_08_04_100000_create_group_attendances_table.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

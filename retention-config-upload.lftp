@@ -1,0 +1,11 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Tempi di retention definiti (config/gdpr.php)
+put /Users/alfonso/nutrimente/nutrimente/config/gdpr.php -o www.saraalessandripsicologa.it/nutrimente_app/config/gdpr.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/config/gdpr.php
+bye

@@ -1,0 +1,54 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Crea le directory nuove (put non le crea da solo). -f ignora se già esistono.
+mkdir -f -p www.saraalessandripsicologa.it/nutrimente_app/app/Casts
+mkdir -f -p www.saraalessandripsicologa.it/nutrimente_app/app/Support
+mkdir -f -p www.saraalessandripsicologa.it/nutrimente_app/app/Models/Concerns
+mkdir -f -p www.saraalessandripsicologa.it/nutrimente_app/app/Console/Commands
+# === Cifratura a riposo dei dati sensibili (GDPR) ===
+# NB: eseguire PRIMA l'SQL deploy/aruba/encrypt-sensitive-columns.sql in phpMyAdmin,
+#     poi caricare questi file, poi visitare /__migrazione-cifratura-7f3a9c2e una volta.
+
+# --- Infrastruttura nuova (cast, blind index, comando) ---
+put /Users/alfonso/nutrimente/nutrimente/app/Casts/Encrypted.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Casts/Encrypted.php
+put /Users/alfonso/nutrimente/nutrimente/app/Casts/EncryptedArray.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Casts/EncryptedArray.php
+put /Users/alfonso/nutrimente/nutrimente/app/Support/BlindIndex.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Support/BlindIndex.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Concerns/HasBlindIndexes.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Concerns/HasBlindIndexes.php
+put /Users/alfonso/nutrimente/nutrimente/app/Console/Commands/EncryptExistingData.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Console/Commands/EncryptExistingData.php
+
+# --- Config + rotte (rotta temporanea di migrazione inclusa) ---
+put /Users/alfonso/nutrimente/nutrimente/config/app.php -o www.saraalessandripsicologa.it/nutrimente_app/config/app.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_06_28_120000_encrypt_sensitive_columns.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_06_28_120000_encrypt_sensitive_columns.php
+
+# --- Modelli (cast di cifratura) ---
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Patient.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Patient.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/ClinicalNote.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/ClinicalNote.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Report.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Report.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Questionnaire.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Questionnaire.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/PatientRecord.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/PatientRecord.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Document.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Document.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Appointment.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Appointment.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Intervisione.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Intervisione.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/ContactRequest.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/ContactRequest.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/BookingRequest.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/BookingRequest.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupParticipant.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupParticipant.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/GroupEnrollmentRequest.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/GroupEnrollmentRequest.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Invoice.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Invoice.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Message.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Message.php
+
+# --- Controller + service (lookup via blind index, ricerca/sort PHP) ---
+put /Users/alfonso/nutrimente/nutrimente/app/Services/PatientRegistrar.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Services/PatientRegistrar.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientPortalController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientPortalController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ContactRequestController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ContactRequestController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/BookingController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/BookingController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/AppointmentRequestController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/AppointmentRequestController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/AppointmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/AppointmentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ReportController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ReportController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/InvoiceController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/InvoiceController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/IntervisioneController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/IntervisioneController.php
+bye

@@ -18,6 +18,8 @@ const form = useForm({
     modality: props.modalities[0] ?? 'presenza',
     location: '',
     capacity: 12,
+    price_per_session: 35,
+    session_duration_minutes: 120,
     next_meeting_at: '',
     status: 'attivo',
 });
@@ -82,6 +84,16 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                             <label class="block text-sm font-medium text-ink mb-1.5">Posti totali *</label>
                             <input v-model="form.capacity" type="number" min="1" max="200" :class="inputCls" />
                             <p v-if="form.errors.capacity" class="text-xs text-red-500 mt-1">{{ form.errors.capacity }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-ink mb-1.5">Quota a persona (€ a incontro)</label>
+                            <input v-model="form.price_per_session" type="number" min="0" step="0.01" :class="inputCls" placeholder="35.00" />
+                            <p v-if="form.errors.price_per_session" class="text-xs text-red-500 mt-1">{{ form.errors.price_per_session }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-ink mb-1.5">Durata incontro (minuti)</label>
+                            <input v-model="form.session_duration_minutes" type="number" min="15" max="600" step="15" :class="inputCls" placeholder="120" />
+                            <p v-if="form.errors.session_duration_minutes" class="text-xs text-red-500 mt-1">{{ form.errors.session_duration_minutes }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-ink mb-1.5">Prossimo incontro</label>

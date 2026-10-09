@@ -140,6 +140,13 @@ function cancel() {
                             <td class="px-4 py-3 text-right text-gray-500">{{ fmtEur(line.unit_price) }}</td>
                             <td class="px-6 py-3 text-right font-medium text-gray-800">{{ fmtEur(line.total) }}</td>
                         </tr>
+                        <!-- Fattura caricata da PDF: il dettaglio è nel file allegato -->
+                        <tr v-if="!inv.lines?.length">
+                            <td colspan="4" class="px-6 py-6 text-center text-sm text-gray-400">
+                                Fattura caricata da PDF: il dettaglio delle prestazioni è nel file allegato.
+                                <a :href="route('invoices.pdf.view', inv.id)" target="_blank" class="text-purple-600 hover:underline ml-1">Aprilo</a>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
 

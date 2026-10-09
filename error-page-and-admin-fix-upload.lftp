@@ -1,0 +1,24 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Fix pagina 403 (pulsante consapevole del ruolo + link landing) +
+# riallineamento backend ruolo system_admin (evita 403 al login se deploy parziale).
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Responses/LoginResponse.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Responses/LoginResponse.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/RequireProfessional.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/RequireProfessional.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/RequirePatient.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/RequirePatient.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/RequireClinical.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/RequireClinical.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/HandleInertiaRequests.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/HandleInertiaRequests.php
+put /Users/alfonso/nutrimente/nutrimente/bootstrap/app.php -o www.saraalessandripsicologa.it/nutrimente_app/bootstrap/app.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+# Frontend ricompilato (Error page)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Svuota cache config/route/view
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,8 +15,10 @@ class Message extends Model
     ];
 
     protected $casts = [
-        'read_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'read_at'         => 'datetime',
+        'deleted_at'      => 'datetime',
+        'body'            => Encrypted::class,
+        'attachment_name' => Encrypted::class,
     ];
 
     public function sender(): BelongsTo

@@ -111,7 +111,7 @@ class DocumentController extends Controller
         }
 
         $file = $request->file('file');
-        $path = $file->store('documents', config('filesystems.default'));
+        $path = \App\Support\EncryptedFile::store($file, 'documents', config('filesystems.default'));
 
         Document::create([
             'uploaded_by' => $request->user()->id,
@@ -135,7 +135,13 @@ class DocumentController extends Controller
 
         $disk = config('filesystems.default');
         abort_if(! Storage::disk($disk)->exists($document->file_path), 404);
-        return Storage::disk($disk)->download($document->file_path, $document->file_name);
+        \App\Models\AuditLog::record('downloaded', $document);
+
+        // Il file è cifrato a riposo: lo decifriamo e lo serviamo come download.
+        return response(\App\Support\EncryptedFile::get($disk, $document->file_path), 200, [
+            'Content-Type'        => $document->mime_type ?? 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="'.addslashes($document->file_name).'"',
+        ]);
     }
 
     /** Serve the file inline (opens in browser tab rather than downloading). */
@@ -148,17 +154,9 @@ class DocumentController extends Controller
 
         abort_if(! $storage->exists($document->file_path), 404, 'File non disponibile.');
 
-        // For S3-compatible disks: redirect to a short-lived signed URL so the
-        // browser fetches the file directly (no PHP memory overhead, no CORS).
-        if ($disk !== 'local') {
-            try {
-                return redirect($storage->temporaryUrl($document->file_path, now()->addMinutes(30)));
-            } catch (\Exception) {
-                // Driver doesn't support temporaryUrl — fall through to streaming.
-            }
-        }
-
-        return response($storage->get($document->file_path), 200, [
+        // File cifrato a riposo: va decifrato lato server e servito in streaming
+        // (niente temporaryUrl: il browser riceverebbe il blob cifrato).
+        return response(\App\Support\EncryptedFile::get($disk, $document->file_path), 200, [
             'Content-Type'           => $document->mime_type ?? 'application/pdf',
             'Content-Disposition'    => 'inline; filename="' . addslashes($document->file_name) . '"',
             'X-Content-Type-Options' => 'nosniff',
@@ -169,8 +167,10 @@ class DocumentController extends Controller
     {
         $this->authorizeDocument($document);
 
-        Storage::disk(config('filesystems.default'))->delete($document->file_path);
-        $document->update(['deleted_at' => now()]);
+        // Soft-delete reversibile: il file cifrato resta finché non interviene la
+        // retention. Tracciato nell'audit.
+        \App\Models\AuditLog::record('deleted', $document);
+        $document->delete();
         return back()->with('success', 'Documento eliminato.');
     }
 }

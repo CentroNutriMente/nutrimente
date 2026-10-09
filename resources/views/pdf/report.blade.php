@@ -143,7 +143,7 @@
     </div>
     <div class="patient-field">
         <span class="field-label">Data:</span>
-        <span class="field-val">{{ $report->report_date->format('d/m/Y') }}</span>
+        <span class="field-val">{{ $report->report_date->format('d/m/Y H:i') }}</span>
     </div>
     @if($patient->codice_fiscale)
     <div class="patient-field">
@@ -157,10 +157,18 @@
 
 {{-- ── SECTIONS ─────────────────────────────────── --}}
 @foreach($report->sections_data as $section)
+@php
+    $secType = $template?->sections[$loop->index]['type'] ?? null;
+    $content = $section['content'] ?? '';
+    // Le sezioni di tipo "data" contengono YYYY-MM-DD: le mostriamo in gg/mm/aaaa.
+    if ($secType === 'date' && ! empty($content)) {
+        try { $content = \Illuminate\Support\Carbon::parse($content)->format('d/m/Y'); } catch (\Throwable $e) {}
+    }
+@endphp
 <div class="section">
     <div class="section-title">{{ $section['label'] }}</div>
-    @if(!empty($section['content']))
-        <div class="section-content">{{ $section['content'] }}</div>
+    @if($content !== '' && $content !== null)
+        <div class="section-content">{{ $content }}</div>
     @else
         <div class="section-content empty">—</div>
     @endif

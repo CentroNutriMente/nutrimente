@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -16,8 +17,13 @@ class BookingRequest extends Model
     ];
 
     protected $casts = [
-        'requested_date' => 'date',
-        'confirmed_at'   => 'datetime',
+        'requested_date'  => 'date',
+        'confirmed_at'    => 'datetime',
+        'patient_name'    => Encrypted::class,
+        'patient_surname' => Encrypted::class,
+        'patient_email'   => Encrypted::class,
+        'patient_phone'   => Encrypted::class,
+        'notes'           => Encrypted::class,
     ];
 
     public function professional(): BelongsTo

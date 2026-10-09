@@ -1,0 +1,17 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# "Data referto" con orario (datetime).
+# PRIMA: eseguire deploy/aruba/report-date-datetime.sql in phpMyAdmin.
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Report.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Report.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/report.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/report.blade.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_07_08_130000_report_date_to_datetime.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_07_08_130000_report_date_to_datetime.php
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

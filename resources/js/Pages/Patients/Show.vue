@@ -9,19 +9,38 @@ const props = defineProps({
     patient:                Object,
     isCreator:              Boolean,
     canCreateQuestionnaire: Boolean,
+    archived:               Boolean,
 });
+
+// "Elimina" = archivia: nessun dato viene cancellato, la cartella resta
+// consultabile dall'archivio (obbligo di conservazione) e si può ripristinare.
+const archivePatient = () => {
+    const nome = `${props.patient.last_name} ${props.patient.first_name}`;
+    if (confirm(`Eliminare la cartella di ${nome}?\n\nI dati non vengono cancellati: la cartella esce dall'elenco dei pazienti e resta consultabile nell'archivio, da cui puoi ripristinarla.`)) {
+        router.delete(route('patients.destroy', props.patient.id));
+    }
+};
+
+const restorePatient = () => {
+    if (confirm('Riportare questa cartella nell\'elenco dei pazienti?')) {
+        router.post(route('patients.restore', props.patient.id));
+    }
+};
 
 // Stato cliente modificabile dal professionista
 const STATUS_OPTIONS = [
+    { value: 'primo_contatto', label: 'Solo primo contatto' },
     { value: 'attivo',   label: 'Attivo' },
     { value: 'sospeso',  label: 'Sospeso' },
     { value: 'concluso', label: 'Concluso' },
 ];
 const statusClass = (s) => s === 'attivo'
     ? 'bg-purple-100 text-purple-700 border-purple-200'
-    : s === 'sospeso'
-        ? 'bg-amber-100 text-amber-700 border-amber-200'
-        : 'bg-gray-100 text-gray-500 border-gray-200';
+    : s === 'primo_contatto'
+        ? 'bg-sky-100 text-sky-700 border-sky-200'
+        : s === 'sospeso'
+            ? 'bg-amber-100 text-amber-700 border-amber-200'
+            : 'bg-gray-100 text-gray-500 border-gray-200';
 const changeStatus = (e) => {
     router.put(route('patients.status', props.patient.id), { status: e.target.value }, { preserveScroll: true });
 };
@@ -38,7 +57,7 @@ const tabs = computed(() => [
 ]);
 
 // ── Note cliniche (sezione autonoma) ──
-const noteForm = useForm({ body: '' });
+const noteForm = useForm({ body: '', is_private: false });
 const submitNote = () => noteForm.post(route('patients.notes.store', props.patient.id), {
     preserveScroll: true,
     onSuccess: () => noteForm.reset(),
@@ -115,6 +134,21 @@ const invoiceStatusClass = {
     paid: 'bg-purple-100 text-purple-700',
     cancelled: 'bg-red-100 text-red-600',
 };
+
+// Registrazione consensi (GDPR)
+const consentTypeLabel = { gdpr: 'Informativa privacy (GDPR)', trattamento_dati: 'Trattamento dei dati', consenso_informato: 'Consenso informato' };
+const consentMethodLabel = { digital: 'Digitale', paper: 'Cartaceo', verbal: 'Verbale' };
+const showConsentForm = ref(false);
+const consentForm = useForm({ type: 'gdpr', accepted: true, method: 'digital' });
+function submitConsent() {
+    consentForm.post(route('patients.consents.store', props.patient.id), {
+        preserveScroll: true,
+        onSuccess: () => { consentForm.reset(); showConsentForm.value = false; },
+    });
+}
+function deleteConsent(c) {
+    if (confirm('Rimuovere questo consenso?')) router.delete(route('patients.consents.destroy', [props.patient.id, c.id]), { preserveScroll: true });
+}
 
 // Consent document upload
 const showUploadForm = ref(false);
@@ -236,6 +270,16 @@ const chartsData = computed(() => {
 
 <template>
     <AppLayout :title="`${patient.last_name} ${patient.first_name}`">
+        <div v-if="archived" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="text-sm text-amber-800">
+                <span class="font-medium">Cartella archiviata.</span>
+                Non compare nell'elenco generale dei pazienti; resta consultabile dall'archivio.
+            </div>
+            <div class="flex items-center gap-3 text-sm">
+                <Link :href="route('patients.archived')" class="text-amber-800 hover:underline">Torna all'archivio</Link>
+                <button @click="restorePatient" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium hover:bg-amber-700">Ripristina</button>
+            </div>
+        </div>
         <template #header>
             <div class="w-full">
                 <div class="flex items-center gap-3">
@@ -273,6 +317,14 @@ const chartsData = computed(() => {
                         <Link :href="route('patients.edit', patient.id)" class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
                             Modifica
                         </Link>
+                        <a :href="route('patients.export', patient.id)" title="Esporta tutti i dati del paziente (GDPR)"
+                           class="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+                            Esporta dati
+                        </a>
+                        <button v-if="!archived" @click="archivePatient" title="Sposta la cartella nell'archivio (recuperabile)"
+                                class="px-3 py-2 border border-gray-300 text-gray-500 rounded-lg text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200">
+                            Elimina
+                        </button>
                     </div>
                 </div>
                 <!-- Bottoni azione — versione mobile, sotto il nome -->
@@ -306,7 +358,26 @@ const chartsData = computed(() => {
                         <div><dt class="text-gray-400 text-xs">Genere</dt><dd>{{ patient.gender ?? '—' }}</dd></div>
                         <div><dt class="text-gray-400 text-xs">Città</dt><dd>{{ patient.city ?? '—' }}</dd></div>
                         <div><dt class="text-gray-400 text-xs">Indirizzo</dt><dd>{{ patient.address ?? '—' }}</dd></div>
+                        <div v-if="patient.stato_civile"><dt class="text-gray-400 text-xs">Stato civile</dt><dd>{{ patient.stato_civile }}</dd></div>
+                        <div v-if="patient.educazione"><dt class="text-gray-400 text-xs">Educazione</dt><dd>{{ patient.educazione }}</dd></div>
+                        <div v-if="patient.professione"><dt class="text-gray-400 text-xs">Professione</dt><dd>{{ patient.professione }}</dd></div>
                     </dl>
+                </div>
+
+                <div v-if="patient.relatives && patient.relatives.length" class="bg-white rounded-xl border border-gray-200 p-4">
+                    <h3 class="font-medium text-gray-700 mb-3 text-sm uppercase tracking-wide">Parenti / Tutori legali</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li v-for="(rel, idx) in patient.relatives" :key="idx" class="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+                            <div class="font-medium text-gray-700">{{ rel.name || '—' }}</div>
+                            <div v-if="rel.relationship" class="text-gray-400 text-xs">{{ rel.relationship }}</div>
+                            <div v-if="rel.phone" class="text-gray-500 text-xs">{{ rel.phone }}</div>
+                            <div v-if="rel.email" class="text-gray-500 text-xs">{{ rel.email }}</div>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                <span v-if="rel.can_access_data" class="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Accesso dati medici</span>
+                                <span v-if="rel.is_legal_guardian" class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">Tutore legale</span>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <h3 class="font-medium text-gray-700 mb-3 text-sm uppercase tracking-wide">Contatti</h3>
@@ -593,7 +664,11 @@ const chartsData = computed(() => {
                             class="w-full rounded-lg border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
                             placeholder="Scrivi una nota clinica (visibile solo a te)…"></textarea>
                         <p v-if="noteForm.errors.body" class="text-xs text-red-500 mt-1">{{ noteForm.errors.body }}</p>
-                        <div class="flex justify-end mt-2">
+                        <div class="flex items-center justify-between mt-2">
+                            <label class="flex items-center gap-2 text-xs text-gray-500 select-none cursor-pointer">
+                                <input type="checkbox" v-model="noteForm.is_private" class="rounded border-gray-300 text-purple-600 focus:ring-purple-400" />
+                                Nota riservata (visibile solo a me)
+                            </label>
                             <button @click="submitNote" :disabled="noteForm.processing || !noteForm.body.trim()"
                                 class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-60">
                                 Aggiungi nota
@@ -606,7 +681,10 @@ const chartsData = computed(() => {
                         <div v-for="n in patient.clinical_notes" :key="n.id"
                             class="bg-white rounded-xl border border-gray-200 p-4">
                             <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-xs text-gray-400">{{ fmtNoteDate(n.created_at) }}<span v-if="n.author"> · {{ n.author.name }}</span></span>
+                                <span class="text-xs text-gray-400">
+                                    {{ fmtNoteDate(n.created_at) }}<span v-if="n.author"> · {{ n.author.name }}</span>
+                                    <span v-if="n.is_private" class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-medium">Riservata</span>
+                                </span>
                                 <button @click="deleteNote(n)" class="text-gray-300 hover:text-red-500 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-7 0h8l-1 12a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1L7 7Z"/></svg>
                                 </button>
@@ -659,7 +737,45 @@ const chartsData = computed(() => {
 
                     <!-- Consensi registrati -->
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Consensi registrati</h3>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Consensi registrati</h3>
+                            <button v-if="isCreator" @click="showConsentForm = !showConsentForm"
+                                class="text-xs px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                + Registra consenso
+                            </button>
+                        </div>
+
+                        <!-- Form registrazione consenso -->
+                        <div v-if="showConsentForm" class="bg-white rounded-xl border border-gray-200 p-4 mb-3">
+                            <form @submit.prevent="submitConsent" class="space-y-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Tipo</label>
+                                        <select v-model="consentForm.type" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                                            <option v-for="(lbl, k) in consentTypeLabel" :key="k" :value="k">{{ lbl }}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Modalità</label>
+                                        <select v-model="consentForm.method" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                                            <option v-for="(lbl, k) in consentMethodLabel" :key="k" :value="k">{{ lbl }}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Esito</label>
+                                        <select v-model="consentForm.accepted" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                                            <option :value="true">Accettato</option>
+                                            <option :value="false">Negato/Revocato</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 justify-end">
+                                    <button type="button" @click="showConsentForm = false" class="text-xs px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">Annulla</button>
+                                    <button type="submit" :disabled="consentForm.processing" class="text-xs px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Salva</button>
+                                </div>
+                            </form>
+                        </div>
+
                         <div v-if="!patient.consents.length" class="bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-400 text-sm">
                             Nessun consenso registrato.
                         </div>
@@ -671,9 +787,12 @@ const chartsData = computed(() => {
                                     </svg>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="font-medium text-gray-800 text-sm">{{ c.type }}</div>
-                                    <div class="text-xs text-gray-400">{{ c.method }} · {{ fmtDatetime(c.accepted_at) }}</div>
+                                    <div class="font-medium text-gray-800 text-sm">{{ consentTypeLabel[c.type] || c.type }}</div>
+                                    <div class="text-xs text-gray-400">{{ consentMethodLabel[c.method] || c.method }} · {{ c.accepted ? 'accettato' : 'negato' }}<span v-if="c.accepted_at"> · {{ fmtDatetime(c.accepted_at) }}</span></div>
                                 </div>
+                                <button v-if="isCreator" @click="deleteConsent(c)" class="text-gray-300 hover:text-red-500 shrink-0" title="Rimuovi">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
                             </div>
                         </div>
                     </div>

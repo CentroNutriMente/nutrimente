@@ -1,0 +1,33 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# =====================================================================
+# GDPR hardening — deploy completo (via VPN).
+# PRIMA: eseguire in phpMyAdmin deploy/aruba/gdpr-security.sql
+#        (e, se non ancora fatto, deploy/aruba/encrypt-sensitive-columns.sql).
+# =====================================================================
+
+# Codice applicativo (mirror: allinea il server al locale)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/app        www.saraalessandripsicologa.it/nutrimente_app/app
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/config     www.saraalessandripsicologa.it/nutrimente_app/config
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/routes     www.saraalessandripsicologa.it/nutrimente_app/routes
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/database/migrations www.saraalessandripsicologa.it/nutrimente_app/database/migrations
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/resources/views www.saraalessandripsicologa.it/nutrimente_app/resources/views
+
+# Frontend compilato (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+
+# Config PHP upload foto (se non già presente)
+put /Users/alfonso/nutrimente/nutrimente/public/.user.ini -o www.saraalessandripsicologa.it/.user.ini
+put /Users/alfonso/nutrimente/nutrimente/public/.htaccess -o www.saraalessandripsicologa.it/.htaccess
+
+# Svuota le cache compilate (config/route/view) — verranno rigenerate
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

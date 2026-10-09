@@ -1,0 +1,34 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# =====================================================================
+# Ruolo "Amministratore di sistema" + gestione utenti.
+# PRIMA: eseguire deploy/aruba/system-admin.sql in phpMyAdmin (crea ruolo+utente).
+# =====================================================================
+
+# Middleware (nuovo RequireClinical + liste ruoli aggiornate)
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/RequireClinical.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/RequireClinical.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/RequireProfessional.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/RequireProfessional.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/RequirePatient.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/RequirePatient.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Middleware/HandleInertiaRequests.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Middleware/HandleInertiaRequests.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Responses/LoginResponse.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Responses/LoginResponse.php
+
+# Controller gestione utenti + seeder + config middleware alias + rotte
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/UserManagementController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/UserManagementController.php
+put /Users/alfonso/nutrimente/nutrimente/database/seeders/RolesAndPermissionsSeeder.php -o www.saraalessandripsicologa.it/nutrimente_app/database/seeders/RolesAndPermissionsSeeder.php
+put /Users/alfonso/nutrimente/nutrimente/bootstrap/app.php -o www.saraalessandripsicologa.it/nutrimente_app/bootstrap/app.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+
+# Frontend ricompilato (sidebar per ruolo + pagina Users)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+
+# Svuota cache config/route/view
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

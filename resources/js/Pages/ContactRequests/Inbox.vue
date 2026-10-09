@@ -16,7 +16,7 @@ const CONTACT_LABELS = {
     whatsapp: 'WhatsApp',
     telefono: 'Telefono',
 };
-const DAY_LABELS = { lun: 'Lun', mar: 'Mar', mer: 'Mer', gio: 'Gio', ven: 'Ven', sab: 'Sab' };
+const DAY_LABELS = { lun: 'Lun', mar: 'Mar', mer: 'Mer', gio: 'Gio', ven: 'Ven', sab: 'Sab', dom: 'Dom' };
 
 const STATUS = {
     pending:  { label: 'Da gestire', cls: 'bg-amber-50 text-amber-700 border-amber-200' },

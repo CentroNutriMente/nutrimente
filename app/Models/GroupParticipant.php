@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class GroupParticipant extends Model
 {
@@ -13,6 +15,9 @@ class GroupParticipant extends Model
 
     protected $casts = [
         'joined_at' => 'datetime',
+        'name'      => Encrypted::class,
+        'email'     => Encrypted::class,
+        'phone'     => Encrypted::class,
     ];
 
     public function group(): BelongsTo
@@ -23,5 +28,10 @@ class GroupParticipant extends Model
     public function patient(): BelongsTo
     {
         return $this->belongsTo(Patient::class);
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(GroupAttendance::class, 'group_participant_id');
     }
 }

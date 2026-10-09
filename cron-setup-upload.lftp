@@ -1,0 +1,11 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Entry point cron per Aruba (docroot) + scheduler aggiornato
+put /Users/alfonso/nutrimente/nutrimente/deploy/aruba/webroot/cron.php -o www.saraalessandripsicologa.it/cron.php
+put /Users/alfonso/nutrimente/nutrimente/routes/console.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/console.php
+ls -l www.saraalessandripsicologa.it/cron.php
+bye

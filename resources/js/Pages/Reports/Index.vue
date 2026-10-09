@@ -19,7 +19,7 @@ function applyFilter() {
 
 function fmt(d) {
     if (!d) return '—';
-    return new Date(d).toLocaleDateString('it-IT');
+    return new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function destroy(report) {

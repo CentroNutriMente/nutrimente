@@ -33,8 +33,9 @@ class MessageControllerTest extends TestCase
             'sender_id' => $sender->id,
             'channel_type' => 'direct',
             'channel_id' => $channelId,
-            'body' => 'Ciao, ci sei?',
         ]);
+        // body è cifrato a riposo: si verifica decifrato via modello
+        $this->assertSame('Ciao, ci sei?', Message::latest('id')->first()->body);
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $recipient->id,
@@ -98,8 +99,8 @@ class MessageControllerTest extends TestCase
             'sender_id' => $sender->id,
             'channel_type' => 'direct',
             'channel_id' => $channelId,
-            'body' => 'Canale normalizzato',
         ]);
+        $this->assertSame('Canale normalizzato', Message::latest('id')->first()->body);
 
         $this->assertSame($channelId, Notification::first()->data['channel_id']);
     }

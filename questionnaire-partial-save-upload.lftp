@@ -1,0 +1,18 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Fix questionario non salvato: la validazione richiedeva una risposta per OGNI
+# domanda ('required'), ma il form permette la compilazione parziale e non blocca
+# il salvataggio -> con anche una sola domanda saltata l'intero salvataggio falliva
+# in silenzio (nessun errore mostrato) e il questionario non veniva creato.
+# Ora answer_id/score sono nullable e il punteggio si calcola solo sulle risposte date.
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/QuestionnaireController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/QuestionnaireController.php
+# Svuota cache config/route/view
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/QuestionnaireController.php
+bye

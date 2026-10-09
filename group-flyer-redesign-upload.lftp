@@ -1,0 +1,9 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Volantino PDF gruppi: nuovo layout (flusso 5 step + tabella richieste con badge)
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/group-flyer.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/group-flyer.blade.php
+bye

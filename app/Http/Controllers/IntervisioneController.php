@@ -43,7 +43,7 @@ class IntervisioneController extends Controller
                 'id' => $i->id,
                 'title' => $i->title,
                 'status' => $i->status,
-                'scheduled_at' => $i->scheduled_at,
+                'scheduled_at' => $i->scheduled_at?->format('Y-m-d\TH:i:s'),
                 'patient_name' => $i->patient ? $i->patient->full_name : null,
                 'created_by_name' => $i->createdBy->name,
                 'created_at' => $i->created_at,
@@ -59,8 +59,9 @@ class IntervisioneController extends Controller
         $patients = Patient::visibleTo($request->user())
             ->select('id', 'first_name', 'last_name')
             ->where('is_active', true)
-            ->orderBy('last_name')
             ->get()
+            ->sortBy(fn ($p) => mb_strtolower((string) $p->last_name))
+            ->values()
             ->map(fn ($p) => ['id' => $p->id, 'name' => $p->full_name]);
 
         $users = User::whereHas('professionalProfile')
@@ -127,8 +128,9 @@ class IntervisioneController extends Controller
         $patients = Patient::visibleTo(auth()->user())
             ->select('id', 'first_name', 'last_name')
             ->where('is_active', true)
-            ->orderBy('last_name')
             ->get()
+            ->sortBy(fn ($p) => mb_strtolower((string) $p->last_name))
+            ->values()
             ->map(fn ($p) => ['id' => $p->id, 'name' => $p->full_name]);
 
         $users = User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']);

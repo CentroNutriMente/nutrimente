@@ -1,0 +1,17 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Fix fuso orario (audit completo): Intervisioni/Index e lista incontri dei Gruppi
+# costruivano array grezzi / usavano toISOString() -> orario mostrato +2h in JS.
+# Ora emettono l'orario "da parete" (Y-m-d\TH:i:s), coerente con il resto dell'app.
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/IntervisioneController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/IntervisioneController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+# Svuota cache config/route/view
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+bye

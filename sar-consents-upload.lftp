@@ -1,0 +1,26 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# =====================================================================
+# Punti 4 (export dati paziente / SAR) e 5 (registrazione consensi).
+# NESSUN SQL richiesto: la tabella patient_consents esiste già.
+# =====================================================================
+
+# Backend
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Models/PatientConsent.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/PatientConsent.php
+put /Users/alfonso/nutrimente/nutrimente/app/Support/EncryptedFile.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Support/EncryptedFile.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+
+# Frontend ricompilato (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+
+# Svuota cache route/config compilate (se presenti)
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

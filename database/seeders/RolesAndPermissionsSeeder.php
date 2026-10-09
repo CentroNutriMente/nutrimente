@@ -40,9 +40,13 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Admin: accesso totale
+        // Admin: accesso totale (super-utente clinico + gestione)
         $admin = Role::firstOrCreate(['name' => 'admin']);
         $admin->givePermissionTo(Permission::all());
+
+        // Amministratore di sistema: gestione utenti/impostazioni, NESSUN accesso clinico.
+        $systemAdmin = Role::firstOrCreate(['name' => 'system_admin']);
+        $systemAdmin->syncPermissions(['users.invite', 'users.manage', 'settings.manage']);
 
         // Psicologo
         $psicologo = Role::firstOrCreate(['name' => 'psicologo']);

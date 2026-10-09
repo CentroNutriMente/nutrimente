@@ -1,0 +1,8 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Rimozione della rotta temporanea di migrazione cifratura
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+bye

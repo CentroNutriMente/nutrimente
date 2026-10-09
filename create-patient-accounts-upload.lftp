@@ -1,0 +1,12 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set net:max-retries 5
+set xfer:clobber on
+# Comando artisan per creare in blocco gli account portale dei pazienti
+# con email ma senza account (password temporanea).
+
+put /Users/alfonso/nutrimente/nutrimente/app/Console/Commands/CreatePatientPortalAccounts.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Console/Commands/CreatePatientPortalAccounts.php
+
+cls -l www.saraalessandripsicologa.it/nutrimente_app/app/Console/Commands/CreatePatientPortalAccounts.php
+bye

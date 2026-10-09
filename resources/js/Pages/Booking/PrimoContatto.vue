@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({ professional: Object });
@@ -17,14 +18,17 @@ const CONTACT_METHOD = [
 ];
 
 const DAYS  = [
-    { code: 'lun', label: 'Lun' },
-    { code: 'mar', label: 'Mar' },
-    { code: 'mer', label: 'Mer' },
-    { code: 'gio', label: 'Gio' },
-    { code: 'ven', label: 'Ven' },
-    { code: 'sab', label: 'Sab' },
+    { code: 'lun', label: 'Lunedì' },
+    { code: 'mar', label: 'Martedì' },
+    { code: 'mer', label: 'Mercoledì' },
+    { code: 'gio', label: 'Giovedì' },
+    { code: 'ven', label: 'Venerdì' },
+    { code: 'sab', label: 'Sabato' },
+    { code: 'dom', label: 'Domenica' },
 ];
 const HOURS = Array.from({ length: 12 }, (_, i) => String(8 + i).padStart(2, '0') + ':00'); // 08:00 → 19:00
+// "dalle": l'ultima ora non può essere un inizio, servirebbe un "alle" oltre il limite.
+const START_HOURS = HOURS.slice(0, -1);
 
 const form = useForm({
     name:           '',
@@ -43,13 +47,45 @@ function toggle(list, value) {
     else form[list].splice(i, 1);
 }
 
-function slotKey(day, hour) { return `${day}|${hour}`; }
-function hasSlot(day, hour) { return form.availability.includes(slotKey(day, hour)); }
+// ── Disponibilità: elenco di fasce (giorno, dalle, alle) ─────────────────────
+// Il backend continua a ricevere lo stesso formato di prima ("lun|09:00"),
+// una voce per ogni ora coperta dalla fascia: la conversione è in rowsToSlots().
+const emptyRow = () => ({ day: '', from: '09:00', to: '12:00' });
+const rows = ref([emptyRow()]);
+
+function addRow() {
+    const last = rows.value[rows.value.length - 1];
+    rows.value.push(last ? { ...last, day: last.day || 'lun' } : { ...emptyRow(), day: 'lun' });
+}
+
+function removeRow(i) {
+    rows.value.splice(i, 1);
+}
+
+// "alle" deve restare dopo "dalle": invece di bloccare, si sposta al primo orario valido.
+function normalizeRow(row) {
+    if (HOURS.indexOf(row.to) <= HOURS.indexOf(row.from)) {
+        row.to = HOURS[HOURS.indexOf(row.from) + 1];
+    }
+}
+
+function rowsToSlots(list) {
+    const slots = new Set();
+    list.forEach(({ day, from, to }) => {
+        const start = HOURS.indexOf(from);
+        const end   = HOURS.indexOf(to);
+        if (!day || start === -1 || end <= start) return;
+        for (let i = start; i < end; i++) slots.add(`${day}|${HOURS[i]}`);
+    });
+    return [...slots].sort();
+}
 
 function submit() {
+    form.availability = rowsToSlots(rows.value);
     form.post(`/prenota/${props.professional.slug}`, {
         onSuccess: () => {
             form.reset();
+            rows.value = [emptyRow()];
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
     });
@@ -183,36 +219,56 @@ function submit() {
 
                 <!-- Giorni e fasce orarie -->
                 <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Giorni e fasce orarie disponibili</h2>
+                    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Giorni e fasce orarie disponibili (facoltativo)</h2>
                     <p class="text-xs text-gray-500 mb-4">
-                        Seleziona <span class="font-semibold text-gray-700">tutte</span> le caselle in cui sei disponibile — puoi indicarne
-                        quante vuoi, non solo una. Più opzioni dai, più è facile trovare un orario insieme.
+                        Aggiungi i giorni e gli orari in cui sei disponibile — puoi indicarne
+                        quanti vuoi, non solo uno. Più opzioni dai, più è facile trovare un orario insieme.
+                        Puoi anche lasciare vuota questa sezione: ne parleremo al momento del contatto.
                     </p>
-                    <div class="overflow-x-auto">
-                        <table class="w-full border-collapse text-center text-sm">
-                            <thead>
-                                <tr>
-                                    <th class="p-2"></th>
-                                    <th v-for="d in DAYS" :key="d.code"
-                                        class="p-2 font-semibold text-gray-600">{{ d.label }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="hour in HOURS" :key="hour">
-                                    <td class="p-2 text-gray-400 font-medium whitespace-nowrap">{{ hour }}</td>
-                                    <td v-for="d in DAYS" :key="d.code" class="p-1">
-                                        <button type="button" @click="toggle('availability', slotKey(d.code, hour))"
-                                            class="w-full h-9 rounded-lg border text-xs transition-colors"
-                                            :class="hasSlot(d.code, hour)
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-gray-50 border-gray-200 text-transparent hover:bg-purple-50 hover:border-purple-200'">
-                                            ✓
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <div class="space-y-3">
+                        <div v-for="(row, i) in rows" :key="i"
+                            class="flex flex-wrap sm:flex-nowrap items-end gap-3">
+                            <div class="w-full sm:flex-1 min-w-0">
+                                <label :for="`avail-day-${i}`" class="sr-only">Giorno</label>
+                                <select :id="`avail-day-${i}`" v-model="row.day"
+                                    class="w-full rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400">
+                                    <option value="">Seleziona un giorno…</option>
+                                    <option v-for="d in DAYS" :key="d.code" :value="d.code">{{ d.label }}</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <label :for="`avail-from-${i}`" class="sr-only">Dalle ore</label>
+                                <select :id="`avail-from-${i}`" v-model="row.from" @change="normalizeRow(row)"
+                                    class="w-full rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400">
+                                    <option v-for="h in START_HOURS" :key="h" :value="h">dalle {{ h }}</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <label :for="`avail-to-${i}`" class="sr-only">Alle ore</label>
+                                <select :id="`avail-to-${i}`" v-model="row.to" @change="normalizeRow(row)"
+                                    class="w-full rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400">
+                                    <option v-for="h in HOURS" :key="h" :value="h">alle {{ h }}</option>
+                                </select>
+                            </div>
+                            <button type="button" @click="removeRow(i)" aria-label="Rimuovi disponibilità"
+                                class="shrink-0 w-10 h-10 rounded-xl border border-gray-200 text-gray-400 flex items-center justify-center hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
+
+                    <button type="button" @click="addRow"
+                        class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-purple-600 hover:text-purple-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Aggiungi disponibilità
+                    </button>
+
+                    <p v-if="form.errors.availability" class="text-xs text-red-500 mt-2">{{ form.errors.availability }}</p>
                 </section>
 
                 <!-- Note -->

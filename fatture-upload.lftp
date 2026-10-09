@@ -1,0 +1,16 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Build (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Fatture: archivio per mese, anteprima PDF online, export Excel, caricamento PDF
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/InvoiceController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/InvoiceController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Support/SimpleXlsx.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Support/SimpleXlsx.php
+mkdir -f -p www.saraalessandripsicologa.it/nutrimente_app/app/Services
+put /Users/alfonso/nutrimente/nutrimente/app/Services/InvoicePdfExtractor.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Services/InvoicePdfExtractor.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_08_06_100000_make_invoice_patient_nullable.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_08_06_100000_make_invoice_patient_nullable.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

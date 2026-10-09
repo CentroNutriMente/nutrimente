@@ -1,0 +1,10 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Mail automatica di partecipazione al gruppo
+put /Users/alfonso/nutrimente/nutrimente/app/Mail/GroupParticipationMail.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Mail/GroupParticipationMail.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/mail/group-participation.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/mail/group-participation.blade.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupController.php
+ls -l www.saraalessandripsicologa.it/nutrimente_app/resources/views/mail/group-participation.blade.php
+bye

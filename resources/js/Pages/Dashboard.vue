@@ -42,7 +42,7 @@ const statTiles = [
     { label: 'Pazienti attivi', value: props.stats.active_patients, sub: 'Totali',        icon: 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a6 6 0 0 1 12 0M15 14a6 6 0 0 1 6 6', tone: 'sage',     delta: props.stats.new_patients ? `+ ${props.stats.new_patients} questo mese` : null },
     { label: 'Nuovi pazienti',  value: props.stats.new_patients,    sub: 'Questo mese',   icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM5 21a7 7 0 0 1 14 0', tone: 'lavender' },
     { label: 'Colloqui svolti', value: props.stats.sessions_done,   sub: 'Questo mese',   icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z', tone: 'sage' },
-    { label: 'Fatturato mese',  value: euro(props.stats.revenue_month), sub: 'Lordo',     icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2m0 0a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', tone: 'lavender' },
+    { label: 'Fatturato mese',  value: euro(props.stats.revenue_month), sub: 'Lordo',     text: '€', tone: 'lavender' },
     { label: 'Fatture emesse',  value: props.stats.invoices_month,  sub: 'Questo mese',   icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z', tone: 'peach' },
 ];
 </script>
@@ -53,11 +53,11 @@ const statTiles = [
         <WatercolorHeader class="px-1 pb-2">
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 px-2 pt-4 pb-6">
                 <div>
-                    <h1 class="font-serif text-4xl md:text-[52px] font-semibold text-ink leading-none">{{ greeting }}, {{ firstName }}</h1>
+                    <h1 class="relative z-10 font-serif text-4xl md:text-[52px] font-semibold text-ink leading-none">{{ greeting }}, {{ firstName }}</h1>
 
                     <!-- Bloom watercolor (lavanda tint --lav-tint) + fogliame sotto il saluto -->
                     <div class="relative h-14 w-full max-w-md mt-2 mb-1">
-                        <span class="wash" style="top:-14px;left:-6px;width:280px;height:100px;background:radial-gradient(circle at 40% 50%, var(--lav-tint), rgba(236,230,244,0) 70%);"></span>
+                        <span class="wash" style="top:18px;left:2px;width:230px;height:48px;opacity:.85;background:radial-gradient(circle at 42% 55%, var(--lav-tint), rgba(236,230,244,0) 66%);"></span>
                         <div class="relative flex items-end gap-5 pl-1 h-full">
                             <svg class="w-5 h-11" style="color:var(--lav)" aria-hidden="true"><use href="#bot-lavender" /></svg>
                             <svg class="w-20 h-7 mb-2" style="color:var(--sage)" aria-hidden="true"><use href="#bot-sprig" /></svg>
@@ -65,7 +65,7 @@ const statTiles = [
                         </div>
                     </div>
 
-                    <p class="text-inkSoft">
+                    <p class="relative z-10 text-inkSoft">
                         Hai {{ todayAppointments.length }} {{ todayAppointments.length === 1 ? 'colloquio' : 'colloqui' }} oggi,
                         {{ tasks.length }} {{ tasks.length === 1 ? 'attività' : 'attività' }} da completare e
                         {{ requestsTotal }} {{ requestsTotal === 1 ? 'richiesta' : 'richieste' }} da gestire.
@@ -138,7 +138,7 @@ const statTiles = [
                 </div>
                 <div class="space-y-3">
                     <Link v-for="r in requests" :key="r.label" :href="r.href" class="flex items-center gap-3 group">
-                        <span class="font-serif text-2xl font-semibold w-7 text-center" :class="r.tone === 'sage' ? 'text-sage' : 'text-lavender'">{{ r.count }}</span>
+                        <span class="font-serif text-2xl font-semibold w-7 text-center" :class="r.tone === 'sage' ? 'text-sage' : r.tone === 'blush' ? 'text-blushDeep' : 'text-lavender'">{{ r.count }}</span>
                         <div class="min-w-0">
                             <div class="text-sm font-medium text-ink group-hover:underline">{{ r.label }}</div>
                             <div class="text-xs text-inkSoft">{{ r.sub }}</div>

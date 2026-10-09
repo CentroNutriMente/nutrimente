@@ -1,0 +1,15 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Richieste appuntamento dal portale paziente: notifica + card dashboard + pagina elenco
+# --- Backend ---
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientPortalController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientPortalController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/AppointmentRequestController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/AppointmentRequestController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/DashboardController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/DashboardController.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+# --- Frontend (bundle ricompilato) ---
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

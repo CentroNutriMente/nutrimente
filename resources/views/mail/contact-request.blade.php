@@ -8,7 +8,7 @@
         'whatsapp' => 'WhatsApp',
         'telefono' => 'Telefono',
     ];
-    $dayLabels = ['lun' => 'Lun', 'mar' => 'Mar', 'mer' => 'Mer', 'gio' => 'Gio', 'ven' => 'Ven', 'sab' => 'Sab'];
+    $dayLabels = ['lun' => 'Lun', 'mar' => 'Mar', 'mer' => 'Mer', 'gio' => 'Gio', 'ven' => 'Ven', 'sab' => 'Sab', 'dom' => 'Dom'];
     $slotsByDay = [];
     foreach ($contact->availability ?? [] as $slot) {
         [$d, $h] = explode('|', $slot);

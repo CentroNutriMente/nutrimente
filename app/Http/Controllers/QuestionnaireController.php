@@ -59,8 +59,12 @@ class QuestionnaireController extends Controller
             'filled_at'                 => 'required|date',
             'answers'                   => 'required|array',
             'answers.*.question_id'     => 'required|string',
-            'answers.*.answer_id'       => 'required|string',
-            'answers.*.score'           => 'required|numeric',
+            // Risposte facoltative: il form consente la compilazione parziale
+            // (il punteggio è calcolato solo sulle domande a cui si è risposto).
+            // Prima erano 'required' e una sola domanda saltata faceva fallire in
+            // silenzio l'intero salvataggio → il questionario non veniva creato.
+            'answers.*.answer_id'       => 'nullable|string',
+            'answers.*.score'           => 'nullable|numeric',
             'notes'                     => 'nullable|string',
         ]);
 
@@ -73,7 +77,10 @@ class QuestionnaireController extends Controller
         }
 
         $template   = QuestionnaireTemplate::findOrFail($validated['questionnaire_template_id']);
-        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? [], $template->questions ?? []);
+        // Il punteggio si calcola solo sulle domande a cui si è risposto (come il
+        // punteggio live nel form), ma si salvano tutte le risposte per la modifica.
+        $answered   = array_values(array_filter($validated['answers'], fn ($a) => isset($a['score']) && $a['score'] !== null));
+        $totalScore = $this->computeScore($answered, $template->scoring ?? [], $template->questions ?? []);
 
         $questionnaire = Questionnaire::create([
             'user_id'                   => $request->user()->id,
@@ -141,13 +148,18 @@ class QuestionnaireController extends Controller
             'filled_at'                 => 'required|date',
             'answers'                   => 'required|array',
             'answers.*.question_id'     => 'required|string',
-            'answers.*.answer_id'       => 'required|string',
-            'answers.*.score'           => 'required|numeric',
+            // Risposte facoltative: il form consente la compilazione parziale
+            // (il punteggio è calcolato solo sulle domande a cui si è risposto).
+            // Prima erano 'required' e una sola domanda saltata faceva fallire in
+            // silenzio l'intero salvataggio → il questionario non veniva creato.
+            'answers.*.answer_id'       => 'nullable|string',
+            'answers.*.score'           => 'nullable|numeric',
             'notes'                     => 'nullable|string',
         ]);
 
         $template   = QuestionnaireTemplate::findOrFail($validated['questionnaire_template_id']);
-        $totalScore = $this->computeScore($validated['answers'], $template->scoring ?? [], $template->questions ?? []);
+        $answered   = array_values(array_filter($validated['answers'], fn ($a) => isset($a['score']) && $a['score'] !== null));
+        $totalScore = $this->computeScore($answered, $template->scoring ?? [], $template->questions ?? []);
 
         $questionnaire->update([
             'questionnaire_template_id' => $validated['questionnaire_template_id'],
@@ -167,6 +179,7 @@ class QuestionnaireController extends Controller
         abort_if($questionnaire->user_id !== $request->user()->id, 403);
 
         $patientId = $questionnaire->patient_id;
+        \App\Models\AuditLog::record('deleted', $questionnaire);
         $questionnaire->delete();
 
         return redirect()->route('patients.show', $patientId)

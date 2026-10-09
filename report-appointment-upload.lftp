@@ -1,0 +1,24 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# =====================================================================
+# Referto: campo Data reale + "Prossimo appuntamento" che crea l'appuntamento.
+# PRIMA: eseguire deploy/aruba/report-appointment.sql in phpMyAdmin.
+# =====================================================================
+put /Users/alfonso/nutrimente/nutrimente/app/Models/Report.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Models/Report.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ReportController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ReportController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Mail/AppointmentScheduledMail.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Mail/AppointmentScheduledMail.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/mail/appointment-scheduled.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/mail/appointment-scheduled.blade.php
+put /Users/alfonso/nutrimente/nutrimente/resources/views/pdf/report.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/pdf/report.blade.php
+put /Users/alfonso/nutrimente/nutrimente/database/migrations/2026_07_08_120000_add_next_appointment_to_reports.php -o www.saraalessandripsicologa.it/nutrimente_app/database/migrations/2026_07_08_120000_add_next_appointment_to_reports.php
+# Frontend ricompilato (form referto + campanella)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Svuota cache
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/config.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

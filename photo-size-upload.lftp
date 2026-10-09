@@ -1,0 +1,17 @@
+set ftp:ssl-allow true
+set ftp:ssl-force true
+set ftp:ssl-protect-data true
+set ssl:verify-certificate false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set ftp:fix-pasv-address true
+set net:timeout 30
+set net:max-retries 5
+set net:reconnect-interval-base 5
+set xfer:clobber on
+# Foto profilo fino a 5 MB: regola di validazione + limiti PHP
+put /Users/alfonso/nutrimente/nutrimente/app/Actions/Fortify/UpdateUserProfileInformation.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Actions/Fortify/UpdateUserProfileInformation.php
+put /Users/alfonso/nutrimente/nutrimente/public/.htaccess -o www.saraalessandripsicologa.it/.htaccess
+put /Users/alfonso/nutrimente/nutrimente/public/.user.ini -o www.saraalessandripsicologa.it/.user.ini
+ls -l www.saraalessandripsicologa.it/.user.ini
+bye

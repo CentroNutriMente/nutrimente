@@ -1,7 +1,9 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({ status: Number });
+const page = usePage();
 
 const info = {
     403: { title: 'Accesso negato',            desc: 'Non hai i permessi per accedere a questa risorsa.' },
@@ -11,6 +13,19 @@ const info = {
 };
 
 const { title, desc } = info[props.status] ?? { title: 'Errore', desc: 'Si è verificato un errore imprevisto.' };
+
+// Destinazione "casa" coerente col ruolo, per non rimandare l'utente su una
+// pagina a cui non ha accesso (es. system_admin → dashboard = 403).
+const roles = computed(() => page.props.userRoles ?? []);
+const isAuth = computed(() => !! page.props.auth?.user);
+
+const home = computed(() => {
+    if (! isAuth.value) return { href: '/', label: 'Torna alla home' };
+    if (roles.value.includes('system_admin')) return { href: '/utenti', label: 'Torna alla gestione utenti' };
+    const clinical = ['admin', 'psicologo', 'nutrizionista', 'osteopata', 'collaboratore'];
+    if (roles.value.some(r => clinical.includes(r))) return { href: '/dashboard', label: 'Torna alla dashboard' };
+    return { href: '/mia-area', label: 'Torna alla tua area' };
+});
 </script>
 
 <template>
@@ -28,9 +43,12 @@ const { title, desc } = info[props.status] ?? { title: 'Errore', desc: 'Si è ve
         <h1 class="text-xl font-semibold text-gray-800 mb-2">{{ title }}</h1>
         <p class="text-sm text-gray-500 mb-8 max-w-xs text-center">{{ desc }}</p>
 
-        <a href="/dashboard"
+        <a :href="home.href"
             class="px-5 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
-            Torna alla dashboard
+            {{ home.label }}
+        </a>
+        <a v-if="home.href !== '/'" href="/" class="mt-3 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+            Vai alla landing
         </a>
     </div>
 </template>

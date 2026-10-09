@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
+use App\Casts\EncryptedArray;
+use App\Models\Concerns\HasBlindIndexes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,24 +14,49 @@ use Illuminate\Support\Str;
 
 class Patient extends Model
 {
-    use SoftDeletes;
+    use HasBlindIndexes, SoftDeletes;
+
+    /** Attributi cifrati con blind index per i lookup esatti / unicità. */
+    protected array $blindIndexes = [
+        'email'          => 'email_hash',
+        'codice_fiscale' => 'codice_fiscale_hash',
+    ];
 
     protected $fillable = [
         'first_name', 'last_name', 'codice_fiscale', 'date_of_birth', 'gender',
         'email', 'phone', 'address', 'city', 'cap',
         'emergency_contact_name', 'emergency_contact_phone',
-        'medico_base', 'notes', 'diagnosis', 'is_active', 'status', 'created_by',
+        'medico_base', 'stato_civile', 'educazione', 'professione', 'relatives',
+        'notes', 'diagnosis', 'is_active', 'status', 'created_by',
     ];
 
     // booking_token è volutamente NON fillable: viene generato dal model (hook creating)
     // e non deve mai essere impostabile via mass assignment.
 
     /** Stati gestiti dal professionista. */
-    public const STATUSES = ['attivo', 'sospeso', 'concluso'];
+    public const STATUSES = ['primo_contatto', 'attivo', 'sospeso', 'concluso'];
 
     protected $casts = [
-        'date_of_birth' => 'date',
-        'is_active' => 'boolean',
+        'is_active'               => 'boolean',
+        'first_name'              => Encrypted::class,
+        'last_name'               => Encrypted::class,
+        'codice_fiscale'          => Encrypted::class,
+        'date_of_birth'           => Encrypted::class,
+        'gender'                  => Encrypted::class,
+        'email'                   => Encrypted::class,
+        'phone'                   => Encrypted::class,
+        'address'                 => Encrypted::class,
+        'city'                    => Encrypted::class,
+        'cap'                     => Encrypted::class,
+        'emergency_contact_name'  => Encrypted::class,
+        'emergency_contact_phone' => Encrypted::class,
+        'medico_base'             => Encrypted::class,
+        'stato_civile'            => Encrypted::class,
+        'educazione'              => Encrypted::class,
+        'professione'             => Encrypted::class,
+        'relatives'               => EncryptedArray::class,
+        'notes'                   => Encrypted::class,
+        'diagnosis'               => Encrypted::class,
     ];
 
     protected static function booted(): void

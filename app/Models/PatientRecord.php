@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\Encrypted;
+use App\Casts\EncryptedArray;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,9 +18,12 @@ class PatientRecord extends Model
     ];
 
     protected $casts = [
-        'data' => 'array',
+        'data'                => EncryptedArray::class,
+        'title'               => Encrypted::class,
+        'notes'               => Encrypted::class,
+        'treatment_plan'      => Encrypted::class,
         'is_shared_with_team' => 'boolean',
-        'record_date' => 'date',
+        'record_date'         => 'date',
     ];
 
     public function patient(): BelongsTo

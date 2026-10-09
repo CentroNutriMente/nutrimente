@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import BotanicalSprig from '@/Components/ui/BotanicalSprig.vue';
@@ -12,36 +12,51 @@ defineProps({ title: String });
 
 // Su mobile parte chiuso, su desktop aperto
 const sidebarOpen = ref(false);
-const moreOpen = ref(false);
 
 onMounted(() => {
     sidebarOpen.value = window.innerWidth >= 768;
 });
 
-// Nav primaria (mockup). href = nome route Laravel.
+// Nav primaria (mockup). href = nome route Laravel. Tutte le sezioni sempre visibili.
 const navItems = [
-    { name: 'Dashboard',         href: 'dashboard',           match: 'dashboard',                 icon: 'M3 10.5 12 4l9 6.5M5 9.5V19a1 1 0 0 0 1 1h3v-5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v5h3a1 1 0 0 0 1-1V9.5' },
-    { name: 'Pazienti',          href: 'patients.index',      match: 'patients.*',                icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM5 21a7 7 0 0 1 14 0' },
-    { name: 'Gruppi',            href: 'groups.index',        match: 'groups.*',                  icon: 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a6 6 0 0 1 12 0M15 14a6 6 0 0 1 6 6' },
-    { name: 'Agenda',            href: 'calendar',            match: 'calendar',                  icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z' },
-    { name: 'Cartelle cliniche', href: 'reports.index',       match: 'reports.*',                 icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z' },
-    { name: 'Fatture',           href: 'invoices.index',      match: 'invoices.*',                icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z' },
-    { name: 'Moduli e documenti',href: 'documents.index',     match: 'documents.*',               icon: 'M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z' },
-    { name: 'Risorse',           href: 'workspace.index',     match: 'workspace.*',               icon: 'M4 6h16M4 12h16M4 18h7' },
-    { name: 'Impostazioni',      href: 'profile.show',        match: 'profile.*',                 icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z' },
+    { name: 'Utenti',               href: 'utenti.index',                  match: 'utenti.*',                  icon: 'M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z' },
+    { name: 'Dashboard',            href: 'dashboard',                     match: 'dashboard',                 icon: 'M3 10.5 12 4l9 6.5M5 9.5V19a1 1 0 0 0 1 1h3v-5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v5h3a1 1 0 0 0 1-1V9.5' },
+    { name: 'Pazienti',             href: 'patients.index',                match: 'patients.*',                icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM5 21a7 7 0 0 1 14 0' },
+    { name: 'Gruppi',               href: 'groups.index',                  match: 'groups.*',                  icon: 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a6 6 0 0 1 12 0M15 14a6 6 0 0 1 6 6' },
+    { name: 'Agenda',               href: 'calendar',                      match: 'calendar',                  icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z' },
+    { name: 'Cartelle cliniche',    href: 'reports.index',                 match: 'reports.*',                 icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z' },
+    { name: 'Fatture',              href: 'invoices.index',                match: 'invoices.*',                icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z' },
+    { name: 'Moduli e documenti',   href: 'documents.index',               match: 'documents.*',               icon: 'M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z' },
+    { name: 'Risorse',              href: 'workspace.index',               match: 'workspace.*',               icon: 'M4 6h16M4 12h16M4 18h7' },
+    { name: 'Richieste',            href: 'contact-requests.inbox',        match: 'contact-requests.*',        icon: 'M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z' },
+    { name: 'Intervisioni',         href: 'intervisioni.index',            match: 'intervisioni.*',            icon: 'M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z' },
+    { name: 'Gestione Referti',     href: 'report-templates.index',        match: 'report-templates.*',        icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z' },
+    { name: 'Gestione Questionari', href: 'questionnaire-templates.index', match: 'questionnaire-templates.*', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9h6m-6 4h3' },
+    { name: 'Chat Team',            href: 'messages.index',                match: 'messages.*',                icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z' },
+    { name: 'Social',               href: 'social.index',                  match: 'social.*',                  icon: 'M7 20l4-16m2 16l4-16M6 9h14M4 15h14' },
+    { name: 'Professionisti',       href: 'professionals.index',           match: 'professionals.*',           icon: 'M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z' },
+    { name: 'GDPR & Privacy',       href: 'gdpr.index',                    match: 'gdpr.*',                    icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016Z' },
+    { name: 'Registro operazioni',  href: 'audit.index',                   match: 'audit.*',                   icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4' },
+    { name: 'Impostazioni',         href: 'profile.show',                  match: 'profile.*',                 icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z' },
 ];
 
-// Voci secondarie (preservano l'accesso a tutte le sezioni esistenti)
-const moreItems = [
-    { name: 'Richieste',            href: 'contact-requests.inbox',      match: 'contact-requests.*' },
-    { name: 'Intervisioni',         href: 'intervisioni.index',          match: 'intervisioni.*' },
-    { name: 'Gestione Referti',     href: 'report-templates.index',      match: 'report-templates.*' },
-    { name: 'Gestione Questionari', href: 'questionnaire-templates.index', match: 'questionnaire-templates.*' },
-    { name: 'Chat Team',            href: 'messages.index',              match: 'messages.*' },
-    { name: 'Social',               href: 'social.index',                match: 'social.*' },
-    { name: 'Professionisti',       href: 'professionals.index',         match: 'professionals.*' },
-    { name: 'GDPR & Privacy',       href: 'gdpr.index',                  match: 'gdpr.*' },
-];
+const userRoles = computed(() => page.props.userRoles ?? []);
+const isSystemAdmin = computed(() => userRoles.value.includes('system_admin'));
+
+// Home coerente col ruolo: il system_admin non ha accesso alla dashboard clinica
+// (require.clinical → 403), quindi il logo lo porta alla gestione utenti.
+const homeHref = computed(() => (isSystemAdmin.value ? route('utenti.index') : route('dashboard')));
+
+// Voci visibili all'amministratore di sistema (nessun accesso clinico).
+const SYSTEM_ADMIN_NAV = ['utenti.index', 'report-templates.index', 'questionnaire-templates.index', 'calendar', 'profile.show'];
+
+const visibleNavItems = computed(() => {
+    if (isSystemAdmin.value) {
+        return navItems.filter(i => SYSTEM_ADMIN_NAV.includes(i.href));
+    }
+    // I ruoli clinici non vedono la gestione utenti.
+    return navItems.filter(i => i.href !== 'utenti.index');
+});
 
 const has = (name) => {
     try { route(name); return true; } catch { return false; }
@@ -96,6 +111,12 @@ function notificationTarget(n) {
     if (n.type === 'group_enrollment_new') {
         return n.data?.group_id ? route('groups.show', n.data.group_id) : route('groups.index');
     }
+    if (n.type === 'booking_request_new') {
+        return route('appointment-requests.index');
+    }
+    if (n.type === 'appointment_scheduled') {
+        return route('calendar');
+    }
     return null;
 }
 
@@ -116,6 +137,8 @@ const notifIcon = {
     contact_request_assigned:  'M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z',
     contact_request_rejected:  'M6 18 18 6M6 6l12 12',
     group_enrollment_new:      'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a6 6 0 0 1 12 0M15 14a6 6 0 0 1 6 6',
+    booking_request_new:       'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z',
+    appointment_scheduled:     'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z',
 };
 
 const notifColor = {
@@ -128,6 +151,8 @@ const notifColor = {
     contact_request_assigned:  'text-blue-500 bg-blue-50',
     contact_request_rejected:  'text-amber-500 bg-amber-50',
     group_enrollment_new:      'text-sage bg-sageLight',
+    booking_request_new:       'text-blushDeep bg-blush',
+    appointment_scheduled:     'text-sage bg-sageLight',
 };
 
 onMounted(() => {
@@ -159,7 +184,7 @@ onUnmounted(() => {
         >
             <!-- Logo / wordmark -->
             <div class="px-6 pt-7 pb-5">
-                <Link :href="route('dashboard')" class="flex flex-col items-center text-center gap-1">
+                <Link :href="homeHref" class="flex flex-col items-center text-center gap-1">
                     <BotanicalSprig id="bot-sprout" klass="w-7 h-9 text-sage" />
                     <div class="font-serif text-2xl leading-none text-ink lowercase tracking-wide">nutrimente</div>
                     <div class="text-[9px] text-inkSoft uppercase tracking-[0.18em] leading-tight mt-0.5">
@@ -171,7 +196,7 @@ onUnmounted(() => {
             <!-- Nav primaria -->
             <nav class="flex-1 overflow-y-auto px-3 space-y-1">
                 <Link
-                    v-for="item in navItems.filter(i => has(i.href))"
+                    v-for="item in visibleNavItems.filter(i => has(i.href))"
                     :key="item.href"
                     :href="route(item.href)"
                     @click="closeSidebar"
@@ -187,29 +212,6 @@ onUnmounted(() => {
                     </svg>
                     <span class="whitespace-nowrap">{{ item.name }}</span>
                 </Link>
-
-                <!-- Altro -->
-                <button
-                    @click="moreOpen = !moreOpen"
-                    class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-ctrl text-sm text-inkSoft hover:bg-cream hover:text-ink transition-colors"
-                >
-                    <svg class="w-[18px] h-[18px] shrink-0 transition-transform" :class="moreOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span>Altro</span>
-                </button>
-                <div v-if="moreOpen" class="pl-3 space-y-0.5 pb-2">
-                    <Link
-                        v-for="item in moreItems.filter(i => has(i.href))"
-                        :key="item.href"
-                        :href="route(item.href)"
-                        @click="closeSidebar"
-                        :class="[
-                            isActive(item.match) ? 'text-sage font-medium' : 'text-inkSoft hover:text-ink',
-                            'block px-3.5 py-2 rounded-xl text-[13px] transition-colors hover:bg-cream'
-                        ]"
-                    >{{ item.name }}</Link>
-                </div>
             </nav>
 
             <!-- User -->

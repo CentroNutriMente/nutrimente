@@ -55,8 +55,10 @@ class AppointmentController extends Controller
                     return [
                         'id'       => $apt->id,
                         'title'    => $isCancelled ? "✕ {$baseTitle}" : $baseTitle,
-                        'start'    => $apt->start_at,
-                        'end'      => $apt->end_at,
+                        // Orario "da parete" senza suffisso Z: il calendario e new Date()
+                        // in JS lo interpretano come ora locale, senza sfasare di +2h.
+                        'start'    => $apt->start_at?->format('Y-m-d\TH:i:s'),
+                        'end'      => $apt->end_at?->format('Y-m-d\TH:i:s'),
                         'color'    => $isCancelled ? '#d1d5db' : ($isPrivate ? '#9ca3af' : ($apt->color ?? $this->colorForType($apt->type))),
                         'textColor'=> $isCancelled ? '#6b7280' : '#ffffff',
                         'editable' => ! $isPrivate && ! $isCancelled && $apt->user_id === $userId,
@@ -95,8 +97,8 @@ class AppointmentController extends Controller
                     return [
                         'id'        => "group-{$m->id}",
                         'title'     => '👥 ' . ($m->title ?: $m->group?->name ?? 'Incontro di gruppo'),
-                        'start'     => $m->scheduled_at,
-                        'end'       => $endAt,
+                        'start'     => $m->scheduled_at->format('Y-m-d\TH:i:s'),
+                        'end'       => $endAt->format('Y-m-d\TH:i:s'),
                         'color'     => '#f59e0b',   // ambra – incontro di gruppo
                         'textColor' => '#ffffff',
                         'editable'  => false,
@@ -140,7 +142,7 @@ class AppointmentController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('Calendar/AppointmentForm', [
-            'patients'      => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+            'patients'      => Patient::get(['id', 'first_name', 'last_name'])->sortBy(fn ($p) => mb_strtolower((string) $p->last_name))->values(),
             'professionals' => User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']),
             'prefill'       => $request->only(['patient_id', 'start_at']),
             'authUserId'    => $request->user()->id,
@@ -196,7 +198,7 @@ class AppointmentController extends Controller
 
         return Inertia::render('Calendar/AppointmentForm', [
             'appointment'   => $appointment,
-            'patients'      => Patient::orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+            'patients'      => Patient::get(['id', 'first_name', 'last_name'])->sortBy(fn ($p) => mb_strtolower((string) $p->last_name))->values(),
             'professionals' => User::whereHas('professionalProfile')->orderBy('name')->get(['id', 'name']),
             'authUserId'    => $request->user()->id,
             'returnTo'      => $request->input('return_to'),
@@ -247,6 +249,7 @@ class AppointmentController extends Controller
 
         $appointment->load('user', 'patient');
         $this->notifyPatientCancelled($appointment);
+        \App\Models\AuditLog::record('deleted', $appointment);
         $appointment->delete();
         return redirect()->route('calendar')->with('success', 'Appuntamento eliminato.');
     }

@@ -27,7 +27,7 @@ class PatientPortalController extends Controller
     {
         $user = auth()->user();
 
-        $patient = Patient::where('email', $user->email)
+        $patient = Patient::whereBlind('email', $user->email)
             ->with([
                 'appointments'     => fn ($q) => $q->with('user')->orderBy('start_at'),
                 'invoices'         => fn ($q) => $q->orderByDesc('issued_at'),
@@ -62,7 +62,7 @@ class PatientPortalController extends Controller
     {
         $user = auth()->user();
 
-        $patient = Patient::where('email', $user->email)->first();
+        $patient = Patient::whereBlind('email', $user->email)->first();
         abort_if(! $patient || $appointment->patient_id !== $patient->id, 403);
         abort_if($appointment->start_at->isPast(), 422, 'Non puoi disdire un appuntamento già passato.');
 
@@ -95,7 +95,7 @@ class PatientPortalController extends Controller
     {
         $user = auth()->user();
 
-        $patient = Patient::where('email', $user->email)->first();
+        $patient = Patient::whereBlind('email', $user->email)->first();
         abort_if(! $patient || ! $patient->created_by, 422, 'Nessun professionista associato.');
 
         $creator = User::with('professionalProfile')->find($patient->created_by);
@@ -121,6 +121,15 @@ class PatientPortalController extends Controller
             'reject_token'     => Str::random(48),
             'invite_token'     => Str::random(48),
         ]);
+
+        Notification::send(
+            $creator->id,
+            'booking_request_new',
+            'Nuova richiesta di appuntamento',
+            "{$patient->first_name} {$patient->last_name} ha richiesto un appuntamento per il "
+                .\Carbon\Carbon::parse($validated['requested_date'])->format('d/m/Y')." alle {$validated['requested_time']}.",
+            ['booking_id' => $booking->id],
+        );
 
         try {
             Mail::to($creator->email)->send(new BookingRequestMail($booking->load('professional.professionalProfile')));

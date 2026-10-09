@@ -1,0 +1,32 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# =====================================================================
+# SEO tecnico — meta server-side, Open Graph, JSON-LD, sitemap, robots
+# Nessun asset JS ricompilato: modifiche solo lato PHP/blade.
+# PRIMA DI ANDARE LIVE: verificare che nel .env di produzione
+#   APP_URL=https://www.saraalessandripsicologa.it
+# (usato per canonical, og:url, sitemap e JSON-LD).
+# =====================================================================
+
+# Layout blade con i meta tag renderizzati lato server
+put /Users/alfonso/nutrimente/nutrimente/resources/views/app.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/app.blade.php
+
+# Controller pagine pubbliche (meta per landing, /prenota, /iscrizione-gruppo) + sitemap
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ContactRequestController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ContactRequestController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/GroupEnrollmentController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/GroupEnrollmentController.php
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/SitemapController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/SitemapController.php
+
+# Rotta /sitemap.xml
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+
+# robots.txt nella docroot (esclusioni aree riservate + riferimento sitemap)
+put /Users/alfonso/nutrimente/nutrimente/public/robots.txt -o www.saraalessandripsicologa.it/robots.txt
+
+# Svuota le cache compilate (rotte e viste) — verranno rigenerate
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/bootstrap/cache/routes-v7.php
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+
+cls -l www.saraalessandripsicologa.it/robots.txt
+bye

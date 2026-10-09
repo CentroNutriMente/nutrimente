@@ -11,6 +11,7 @@ const props = defineProps({
     participants: Array,
     requests: Array,
     meetings: Array,
+    attendance: { type: Object, default: () => ({}) },
     materials: Array,
     patientsOptions: Array,
     leaders: Array,
@@ -20,11 +21,11 @@ const props = defineProps({
     participantStatuses: Array,
 });
 
-const leafIcon = 'M12 3c1.5 2 4 3.5 4 7a4 4 0 1 1-8 0c0-3.5 2.5-5 4-7Z';
 const tab = ref('partecipanti');
 const tabs = [
     { key: 'partecipanti', label: 'Partecipanti' },
     { key: 'incontri', label: 'Incontri' },
+    { key: 'presenze', label: 'Presenze' },
     { key: 'materiali', label: 'Materiali' },
     { key: 'impostazioni', label: 'Impostazioni' },
 ];
@@ -70,7 +71,54 @@ const submitMeeting = () => meetForm.post(route('groups.meetings.store', props.g
     preserveScroll: true,
     onSuccess: () => meetForm.reset(),
 });
+
+// Note della singola giornata: bozza locale per incontro, salvata su richiesta.
+const openNote = ref(null);
+const noteDrafts = ref({});
+const savingNote = ref(null);
+const savedNote = ref(null);
+const toggleNote = (m) => {
+    if (openNote.value === m.id) { openNote.value = null; return; }
+    if (noteDrafts.value[m.id] === undefined) noteDrafts.value[m.id] = m.notes || '';
+    openNote.value = m.id;
+};
+const saveNote = (m) => {
+    savingNote.value = m.id;
+    router.put(route('groups.meetings.update', [props.group.id, m.id]), { notes: noteDrafts.value[m.id] ?? '' }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => { savedNote.value = m.id; setTimeout(() => { if (savedNote.value === m.id) savedNote.value = null; }, 2500); },
+        onFinish: () => { savingNote.value = null; },
+    });
+};
 const deleteMeeting = (m) => { if (confirm('Eliminare questo incontro?')) router.delete(route('groups.meetings.destroy', [props.group.id, m.id]), { preserveScroll: true }); };
+
+// ── Presenze ──
+// Stato per cella: true = presente, false = assente, null = non registrata.
+const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+const roman = (n) => romans[n - 1] || String(n);
+const fmtShort = (iso) => iso ? new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : '—';
+
+const attState = (meetingId, participantId) => {
+    const row = props.attendance?.[meetingId];
+    const v = row ? row[participantId] : undefined;
+    return v === undefined ? null : v;
+};
+const postAttendance = (meetingId, payload) => router.post(
+    route('groups.meetings.attendance', [props.group.id, meetingId]),
+    payload,
+    { preserveScroll: true, preserveState: true },
+);
+// Click: non registrata → presente → assente → non registrata.
+const cycleAttendance = (m, p) => {
+    const cur = attState(m.id, p.id);
+    postAttendance(m.id, { participant_id: p.id, present: cur === null ? true : cur === true ? false : null });
+};
+const markAllPresent = (m) => postAttendance(m.id, { participant_id: null, present: true });
+const clearMeeting = (m) => postAttendance(m.id, { participant_id: null, present: null });
+
+const presentCount = (meetingId) => props.participants.filter(p => attState(meetingId, p.id) === true).length;
+const participantPresences = (participantId) => props.meetings.filter(m => attState(m.id, participantId) === true).length;
 
 // ── Materiali ──
 const matForm = useForm({ label: '', file: null });
@@ -91,6 +139,8 @@ const settings = useForm({
     modality: props.group.modality,
     location: props.group.location,
     capacity: props.group.capacity,
+    price_per_session: props.group.price_per_session,
+    session_duration_minutes: props.group.session_duration_minutes,
     next_meeting_at: props.group.next_meeting_at ? props.group.next_meeting_at.substring(0, 16) : '',
     status: props.group.status,
 });
@@ -115,9 +165,8 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
         <!-- Header gruppo -->
         <Card class="mb-5">
             <div class="flex items-start gap-4">
-                <div class="w-16 h-16 rounded-full flex items-center justify-center shrink-0"
-                     :class="group.tone === 'sage' ? 'bg-sageLight' : group.tone === 'lavender' ? 'bg-lavenderLight' : 'bg-blush'">
-                    <IconCircle :icon="leafIcon" :tone="group.tone" size="lg" />
+                <div class="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-lavenderLight">
+                    <img src="/images/gruppo-cerchio.png?v=2" alt="" class="w-full h-full object-cover" />
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 flex-wrap">
@@ -134,12 +183,13 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
             </div>
 
             <!-- Meta -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-5 pt-5 border-t border-line">
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-5 pt-5 border-t border-line">
                 <div><div class="text-xs text-inkSoft">Conduttrice</div><div class="text-sm font-medium text-ink mt-0.5">{{ group.leader || '—' }}</div></div>
                 <div><div class="text-xs text-inkSoft">Periodicità</div><div class="text-sm font-medium text-ink mt-0.5 capitalize">{{ group.cadence || '—' }}</div></div>
                 <div><div class="text-xs text-inkSoft">Prossimo incontro</div><div class="text-sm font-medium text-ink mt-0.5">{{ fmtDate(group.next_meeting_at) }}</div></div>
                 <div><div class="text-xs text-inkSoft">Modalità</div><div class="text-sm font-medium text-ink mt-0.5">{{ group.modality === 'online' ? 'Online' : 'In presenza' }}</div></div>
                 <div><div class="text-xs text-inkSoft">Posti disponibili</div><div class="text-sm font-medium text-ink mt-0.5">{{ Math.max(0, group.capacity - group.enrolled) }} / {{ group.capacity }}</div></div>
+                <div><div class="text-xs text-inkSoft">Quota</div><div class="text-sm font-medium text-ink mt-0.5">{{ group.price_label || '—' }}</div></div>
             </div>
         </Card>
 
@@ -286,15 +336,40 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                     <h3 class="font-serif text-lg text-ink">Incontri programmati</h3>
                 </div>
                 <div class="divide-y divide-line">
-                    <div v-for="m in meetings" :key="m.id" class="flex items-center gap-4 px-5 py-3">
-                        <IconCircle icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" tone="sage" size="sm" />
-                        <div class="flex-1 min-w-0">
-                            <div class="text-sm font-medium text-ink capitalize">{{ fmtDateTime(m.datetime) }}</div>
-                            <div class="text-xs text-inkSoft">{{ m.duration }} min<span v-if="m.title"> · {{ m.title }}</span></div>
+                    <div v-for="m in meetings" :key="m.id" class="px-5 py-3">
+                        <div class="flex items-center gap-4">
+                            <IconCircle icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" tone="sage" size="sm" />
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-ink capitalize">{{ fmtDateTime(m.datetime) }}</div>
+                                <div class="text-xs text-inkSoft">{{ m.duration }} min<span v-if="m.title"> · {{ m.title }}</span></div>
+                            </div>
+                            <button @click="toggleNote(m)"
+                                :class="['inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs transition-colors', m.notes ? 'border-sage text-sage bg-sageLight' : 'border-line text-inkSoft hover:bg-cream']">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8h6M9 12h6M9 16h3M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg>
+                                {{ m.notes ? 'Note' : 'Aggiungi note' }}
+                            </button>
+                            <button @click="deleteMeeting(m)" class="text-inkSoft hover:text-red-500 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-7 0h8l-1 12a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1L7 7Z"/></svg>
+                            </button>
                         </div>
-                        <button @click="deleteMeeting(m)" class="text-inkSoft hover:text-red-500 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-7 0h8l-1 12a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1L7 7Z"/></svg>
-                        </button>
+
+                        <!-- Anteprima note (chiuse) -->
+                        <p v-if="m.notes && openNote !== m.id" class="text-xs text-inkSoft mt-2 ml-12 whitespace-pre-line line-clamp-3">{{ m.notes }}</p>
+
+                        <!-- Editor note della giornata -->
+                        <div v-if="openNote === m.id" class="mt-3 ml-12 rounded-ctrl bg-cream border border-line p-3">
+                            <label class="block text-xs font-medium text-inkSoft mb-1">Note della giornata</label>
+                            <textarea v-model="noteDrafts[m.id]" rows="4" :class="inputCls"
+                                      placeholder="Temi trattati, dinamiche del gruppo, promemoria per il prossimo incontro…"></textarea>
+                            <div class="flex items-center justify-end gap-3 mt-2">
+                                <span v-if="savedNote === m.id" class="text-xs text-sage">Salvate ✓</span>
+                                <button @click="openNote = null" class="text-xs text-inkSoft hover:underline">Chiudi</button>
+                                <button @click="saveNote(m)" :disabled="savingNote === m.id"
+                                        class="px-4 py-2 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-xs font-medium disabled:opacity-60">
+                                    Salva note
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div v-if="meetings.length === 0" class="px-5 py-10 text-center text-inkSoft text-sm">Nessun incontro programmato.</div>
                 </div>
@@ -316,9 +391,91 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                         <label class="block text-xs font-medium text-inkSoft mb-1">Titolo (opzionale)</label>
                         <input v-model="meetForm.title" type="text" :class="inputCls" placeholder="Es. Incontro introduttivo" />
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-inkSoft mb-1">Note (opzionale)</label>
+                        <textarea v-model="meetForm.notes" rows="3" :class="inputCls" placeholder="Temi previsti, materiali da portare…"></textarea>
+                    </div>
                     <button @click="submitMeeting" :disabled="meetForm.processing" class="w-full px-4 py-2.5 rounded-ctrl bg-sage hover:bg-sageDeep text-white shadow-btn text-sm font-medium disabled:opacity-60">
                         Aggiungi incontro
                     </button>
+                </div>
+            </Card>
+        </div>
+
+        <!-- Tab: Presenze -->
+        <div v-show="tab === 'presenze'" class="space-y-5">
+            <Card :padded="false">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 px-5 pt-5 pb-3">
+                    <div>
+                        <h3 class="font-serif text-lg text-ink">Registro presenze</h3>
+                        <p class="text-xs text-inkSoft mt-0.5">Le date sono quelle degli incontri programmati. Clicca una casella per cambiarne lo stato.</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs text-inkSoft shrink-0">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded border border-sage bg-sageLight inline-flex items-center justify-center">
+                                <svg class="w-3 h-3 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </span>
+                            Presente
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded border border-red-300 bg-red-50 inline-flex items-center justify-center">
+                                <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+                            </span>
+                            Assente
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded border border-line bg-cardWarm"></span>
+                            Non registrata
+                        </span>
+                    </div>
+                </div>
+
+                <div v-if="meetings.length === 0 || participants.length === 0" class="px-5 py-10 text-center text-inkSoft text-sm">
+                    <span v-if="meetings.length === 0">Aggiungi almeno un incontro dalla scheda «Incontri» per registrare le presenze.</span>
+                    <span v-else>Nessun partecipante nel gruppo.</span>
+                </div>
+
+                <div v-else class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-xs text-inkSoft border-y border-line">
+                                <th class="font-medium text-left px-5 py-3 sticky left-0 bg-card z-10 min-w-[190px]">Nome e cognome</th>
+                                <th v-for="(m, i) in meetings" :key="m.id" class="font-medium px-3 py-3 text-center whitespace-nowrap min-w-[110px]">
+                                    <div class="text-ink">{{ roman(i + 1) }} incontro</div>
+                                    <div class="mt-0.5 inline-flex items-center gap-1">
+                                        {{ fmtShort(m.datetime) }}
+                                        <svg v-if="m.notes" class="w-3 h-3 text-sage" :title="m.notes" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8h6M9 12h6M9 16h3M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg>
+                                    </div>
+                                    <div class="mt-1 text-[10px] text-inkMuted">{{ presentCount(m.id) }}/{{ participants.length }} presenti</div>
+                                    <div class="mt-1 flex items-center justify-center gap-2">
+                                        <button @click="markAllPresent(m)" class="text-[10px] text-sage hover:underline" title="Segna tutti presenti">Tutti</button>
+                                        <button @click="clearMeeting(m)" class="text-[10px] text-inkMuted hover:underline" title="Azzera le presenze dell'incontro">Azzera</button>
+                                    </div>
+                                </th>
+                                <th class="font-medium px-5 py-3 text-center whitespace-nowrap">Totale</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line">
+                            <tr v-for="p in participants" :key="p.id" class="hover:bg-cream">
+                                <td class="px-5 py-3 font-medium sticky left-0 bg-card z-10">
+                                    <Link v-if="p.patient_id" :href="route('patients.show', p.patient_id)" class="text-ink hover:text-sage hover:underline">{{ p.name }}</Link>
+                                    <span v-else class="text-ink">{{ p.name }}</span>
+                                </td>
+                                <td v-for="m in meetings" :key="m.id" class="px-3 py-3 text-center">
+                                    <button @click="cycleAttendance(m, p)"
+                                        :title="attState(m.id, p.id) === true ? 'Presente' : attState(m.id, p.id) === false ? 'Assente' : 'Non registrata'"
+                                        class="w-7 h-7 rounded-md border inline-flex items-center justify-center transition-colors"
+                                        :class="attState(m.id, p.id) === true ? 'border-sage bg-sageLight hover:bg-sage/20'
+                                            : attState(m.id, p.id) === false ? 'border-red-300 bg-red-50 hover:bg-red-100'
+                                            : 'border-line bg-cardWarm hover:border-sage'">
+                                        <svg v-if="attState(m.id, p.id) === true" class="w-4 h-4 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        <svg v-else-if="attState(m.id, p.id) === false" class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+                                    </button>
+                                </td>
+                                <td class="px-5 py-3 text-center text-inkSoft whitespace-nowrap">{{ participantPresences(p.id) }}/{{ meetings.length }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </Card>
         </div>
@@ -411,6 +568,16 @@ const inputCls = 'w-full px-4 py-2.5 rounded-ctrl border border-line bg-cardWarm
                     <div>
                         <label class="block text-sm font-medium text-ink mb-1.5">Posti totali</label>
                         <input v-model="settings.capacity" type="number" min="1" max="200" :class="inputCls" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-ink mb-1.5">Quota a persona (€ a incontro)</label>
+                        <input v-model="settings.price_per_session" type="number" min="0" step="0.01" :class="inputCls" placeholder="35.00" />
+                        <p v-if="settings.errors.price_per_session" class="text-xs text-red-500 mt-1">{{ settings.errors.price_per_session }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-ink mb-1.5">Durata incontro (minuti)</label>
+                        <input v-model="settings.session_duration_minutes" type="number" min="15" max="600" step="15" :class="inputCls" placeholder="120" />
+                        <p v-if="settings.errors.session_duration_minutes" class="text-xs text-red-500 mt-1">{{ settings.errors.session_duration_minutes }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-ink mb-1.5">Prossimo incontro</label>

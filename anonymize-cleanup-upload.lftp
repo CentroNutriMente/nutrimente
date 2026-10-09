@@ -1,0 +1,13 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set net:max-retries 5
+set xfer:clobber on
+# Fix: l'anonimizzazione utente ora rimuove anche profilo professionista e slot,
+# cosi' l'utente eliminato sparisce dagli elenchi visti dalla professionista.
+# NB: per gli utenti gia' eliminati, eseguire deploy/cleanup-anonymized-professionals.sql in phpMyAdmin.
+
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/UserManagementController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/UserManagementController.php
+
+cls -l www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/UserManagementController.php
+bye

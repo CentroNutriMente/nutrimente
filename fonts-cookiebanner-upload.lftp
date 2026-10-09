@@ -1,0 +1,20 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set ftp:prefer-epsv false
+set net:timeout 60
+set net:max-retries 3
+set xfer:clobber on
+# Font self-hosted (GDPR) + cookie banner Iubenda site-wide (guest)
+# Crea la cartella fonts nella docroot (put non la crea)
+mkdir -f -p www.saraalessandripsicologa.it/fonts
+# Font self-hosted
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/fonts www.saraalessandripsicologa.it/fonts
+# Blade aggiornato (font locali + banner @guest)
+put /Users/alfonso/nutrimente/nutrimente/resources/views/app.blade.php -o www.saraalessandripsicologa.it/nutrimente_app/resources/views/app.blade.php
+# Landing ricompilata (link Privacy/Cookie nel footer) — assets prima, manifest per ultimo
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Svuota cache view
+glob -a rm -f www.saraalessandripsicologa.it/nutrimente_app/storage/framework/views/*.php
+ls -l www.saraalessandripsicologa.it/fonts/fonts.css
+bye
