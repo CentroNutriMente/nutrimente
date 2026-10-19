@@ -1,0 +1,14 @@
+set ftp:ssl-allow false
+set ftp:passive-mode true
+set net:timeout 60
+set xfer:clobber on
+# Build (assets prima, manifest per ultimo)
+mirror -R --ignore-time --parallel=2 --no-perms /Users/alfonso/nutrimente/nutrimente/public/build/assets www.saraalessandripsicologa.it/build/assets
+put /Users/alfonso/nutrimente/nutrimente/public/build/manifest.json -o www.saraalessandripsicologa.it/build/manifest.json
+# Sidebar a sole icone + tendina "Altro", Social disattivato, notifiche appuntamento solo alla creazione
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/ReportController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/ReportController.php
+# Note cliniche: unico campo di testo
+put /Users/alfonso/nutrimente/nutrimente/app/Http/Controllers/PatientController.php -o www.saraalessandripsicologa.it/nutrimente_app/app/Http/Controllers/PatientController.php
+put /Users/alfonso/nutrimente/nutrimente/routes/web.php -o www.saraalessandripsicologa.it/nutrimente_app/routes/web.php
+ls -l www.saraalessandripsicologa.it/build/manifest.json
+bye

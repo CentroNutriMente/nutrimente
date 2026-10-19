@@ -435,34 +435,59 @@ class PatientController extends Controller
     }
 
     // ── Note cliniche (sezione autonoma, scollegata dai referti) ─────────────
-    public function storeNote(Request $request, Patient $patient): RedirectResponse
+    // Un unico testo per paziente, da aggiornare di volta in volta. Le eventuali
+    // note multiple del vecchio elenco vengono proposte unite nel campo e, al primo
+    // salvataggio, confluiscono in una sola riga (le altre finiscono nel cestino).
+    public function updateNote(Request $request, Patient $patient): RedirectResponse
     {
         $this->authorizePatient($patient);
 
         $validated = $request->validate([
-            'body'       => 'required|string|max:5000',
-            'is_private' => 'sometimes|boolean',
+            'body' => 'nullable|string|max:20000',
         ]);
 
-        $note = $patient->clinicalNotes()->create([
-            'user_id'    => auth()->id(),
-            'body'       => $validated['body'],
-            'is_private' => $validated['is_private'] ?? false,
-        ]);
+        $body = trim((string) ($validated['body'] ?? ''));
 
-        \App\Models\AuditLog::record('created', $note);
+        // Stessa visibilità della scheda: le note riservate altrui non si toccano.
+        $notes = $patient->clinicalNotes()
+            ->where(fn ($q) => $q->where('is_private', false)->orWhere('user_id', auth()->id()))
+            ->reorder('created_at')
+            ->get();
 
-        return back()->with('success', 'Nota aggiunta.');
-    }
+        $note = $notes->first();
 
-    public function destroyNote(Patient $patient, \App\Models\ClinicalNote $note): RedirectResponse
-    {
-        $this->authorizePatient($patient);
-        abort_unless($note->patient_id === $patient->id, 404);
-        \App\Models\AuditLog::record('deleted', $note);
-        $note->delete();
+        foreach ($notes->slice(1) as $extra) {
+            \App\Models\AuditLog::record('deleted', $extra);
+            $extra->delete();
+        }
 
-        return back()->with('success', 'Nota eliminata.');
+        if ($body === '') {
+            if ($note) {
+                \App\Models\AuditLog::record('deleted', $note);
+                $note->delete();
+            }
+
+            return back()->with('success', 'Note cliniche svuotate.');
+        }
+
+        if ($note) {
+            $note->update([
+                'user_id'    => auth()->id(),
+                'body'       => $body,
+                // Se nel testo è confluita una nota riservata, il testo resta riservato.
+                'is_private' => $notes->contains('is_private', true),
+            ]);
+            \App\Models\AuditLog::record('updated', $note);
+        } else {
+            $note = $patient->clinicalNotes()->create([
+                'user_id'    => auth()->id(),
+                'body'       => $body,
+                'is_private' => false,
+            ]);
+            \App\Models\AuditLog::record('created', $note);
+        }
+
+        return back()->with('success', 'Note cliniche salvate.');
     }
 
     // ── Consensi (GDPR) ──────────────────────────────────────────────────────

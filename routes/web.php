@@ -112,8 +112,7 @@ Route::middleware([
     Route::post('patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore')->withTrashed();
     Route::resource('patients', PatientController::class)->withTrashed(['show']);
     Route::put('patients/{patient}/status', [PatientController::class, 'updateStatus'])->name('patients.status');
-    Route::post('patients/{patient}/notes', [PatientController::class, 'storeNote'])->name('patients.notes.store');
-    Route::delete('patients/{patient}/notes/{note}', [PatientController::class, 'destroyNote'])->name('patients.notes.destroy');
+    Route::put('patients/{patient}/notes', [PatientController::class, 'updateNote'])->name('patients.notes.update');
     Route::post('patients/{patient}/consents', [PatientController::class, 'storeConsent'])->name('patients.consents.store');
     Route::delete('patients/{patient}/consents/{consent}', [PatientController::class, 'destroyConsent'])->name('patients.consents.destroy');
     Route::get('patients/{patient}/export', [PatientController::class, 'export'])->name('patients.export');
@@ -189,11 +188,12 @@ Route::middleware([
     Route::put('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::delete('tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 
-    // Social content calendar
-    Route::get('social', [SocialController::class, 'index'])->name('social.index');
-    Route::post('social', [SocialController::class, 'store'])->name('social.store');
-    Route::put('social/{socialPost}', [SocialController::class, 'update'])->name('social.update');
-    Route::delete('social/{socialPost}', [SocialController::class, 'destroy'])->name('social.destroy');
+    // Social content calendar — disattivato per ora (sezione non in uso).
+    // Per riattivarlo: decommentare queste route e la voce "Social" in AppLayout.vue.
+    // Route::get('social', [SocialController::class, 'index'])->name('social.index');
+    // Route::post('social', [SocialController::class, 'store'])->name('social.store');
+    // Route::put('social/{socialPost}', [SocialController::class, 'update'])->name('social.update');
+    // Route::delete('social/{socialPost}', [SocialController::class, 'destroy'])->name('social.destroy');
 
     // GDPR & Privacy
     Route::get('gdpr', [\App\Http\Controllers\GdprController::class, 'index'])->name('gdpr.index');

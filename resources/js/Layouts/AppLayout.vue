@@ -15,6 +15,7 @@ const sidebarOpen = ref(false);
 
 onMounted(() => {
     sidebarOpen.value = window.innerWidth >= 768;
+    moreOpen.value = moreActive.value;
 });
 
 // Nav primaria (mockup). href = nome route Laravel. Tutte le sezioni sempre visibili.
@@ -33,7 +34,8 @@ const navItems = [
     { name: 'Gestione Referti',     href: 'report-templates.index',        match: 'report-templates.*',        icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z' },
     { name: 'Gestione Questionari', href: 'questionnaire-templates.index', match: 'questionnaire-templates.*', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9h6m-6 4h3' },
     { name: 'Chat Team',            href: 'messages.index',                match: 'messages.*',                icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z' },
-    { name: 'Social',               href: 'social.index',                  match: 'social.*',                  icon: 'M7 20l4-16m2 16l4-16M6 9h14M4 15h14' },
+    // Social: sezione non in uso, disattivata per ora (vedi anche le route in web.php).
+    // { name: 'Social',               href: 'social.index',                  match: 'social.*',                  icon: 'M7 20l4-16m2 16l4-16M6 9h14M4 15h14' },
     { name: 'Professionisti',       href: 'professionals.index',           match: 'professionals.*',           icon: 'M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z' },
     { name: 'GDPR & Privacy',       href: 'gdpr.index',                    match: 'gdpr.*',                    icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016Z' },
     { name: 'Registro operazioni',  href: 'audit.index',                   match: 'audit.*',                   icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4' },
@@ -66,8 +68,29 @@ const isActive = (match) => {
     try { return route().current(match); } catch { return false; }
 };
 
+// Voci raccolte nel menù a tendina "Altro" in fondo alla nav.
+const MORE_NAV = ['professionals.index', 'gdpr.index', 'profile.show'];
+
+const availableNavItems = computed(() => visibleNavItems.value.filter(i => has(i.href)));
+const moreCandidates    = computed(() => availableNavItems.value.filter(i => MORE_NAV.includes(i.href)));
+// Con una sola voce (es. system_admin, che vede solo Impostazioni) la tendina non serve.
+const moreNavItems      = computed(() => (moreCandidates.value.length > 1 ? moreCandidates.value : []));
+const mainNavItems      = computed(() => availableNavItems.value.filter(i => !moreNavItems.value.includes(i)));
+
+const moreActive = computed(() => moreNavItems.value.some(i => isActive(i.match)));
+const moreOpen   = ref(false);
+
+// Sidebar compatta (solo icone): il nome della voce compare come etichetta al passaggio del mouse.
+// Posizionata in fixed perché la nav scorre in verticale e taglierebbe un tooltip assoluto.
+const tip = ref({ show: false, text: '', top: 0, left: 0 });
+function showTip(e, text) {
+    const r = e.currentTarget.getBoundingClientRect();
+    tip.value = { show: true, text, top: r.top + r.height / 2, left: r.right + 10 };
+}
+function hideTip() { tip.value.show = false; }
+
 const logout = () => router.post(route('logout'));
-const closeSidebar = () => { if (window.innerWidth < 768) sidebarOpen.value = false; };
+const closeSidebar = () => { hideTip(); if (window.innerWidth < 768) sidebarOpen.value = false; };
 
 // ── Notifications (logica invariata) ─────────────────────────────────────────
 const notifications = ref([]);
@@ -180,51 +203,92 @@ onUnmounted(() => {
         <!-- Sidebar -->
         <aside
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-            class="fixed top-0 left-0 md:sticky md:top-0 z-40 w-64 h-screen flex flex-col bg-cream border-r border-line transition-transform duration-200 shrink-0"
+            class="fixed top-0 left-0 md:sticky md:top-0 z-40 w-[76px] h-screen flex flex-col bg-cream border-r border-line transition-transform duration-200 shrink-0"
         >
             <!-- Logo / wordmark -->
-            <div class="px-6 pt-7 pb-5">
-                <Link :href="homeHref" class="flex flex-col items-center text-center gap-1">
+            <div class="pt-6 pb-4">
+                <Link :href="homeHref" class="flex justify-center" aria-label="nutrimente — Studio di psicologia"
+                    @mouseenter="showTip($event, 'nutrimente')" @mouseleave="hideTip">
                     <BotanicalSprig id="bot-sprout" klass="w-7 h-9 text-sage" />
-                    <div class="font-serif text-2xl leading-none text-ink lowercase tracking-wide">nutrimente</div>
-                    <div class="text-[9px] text-inkSoft uppercase tracking-[0.18em] leading-tight mt-0.5">
-                        Studio di<br>psicologia
-                    </div>
                 </Link>
             </div>
 
             <!-- Nav primaria -->
             <nav class="flex-1 overflow-y-auto px-3 space-y-1">
                 <Link
-                    v-for="item in visibleNavItems.filter(i => has(i.href))"
+                    v-for="item in mainNavItems"
                     :key="item.href"
                     :href="route(item.href)"
+                    :aria-label="item.name"
                     @click="closeSidebar"
+                    @mouseenter="showTip($event, item.name)"
+                    @mouseleave="hideTip"
                     :class="[
                         isActive(item.match)
-                            ? 'bg-sageLight text-sageDeep font-semibold'
-                            : 'text-inkSoft hover:bg-cream hover:text-ink',
-                        'flex items-center gap-3 px-3.5 py-2.5 rounded-ctrl text-sm transition-colors'
+                            ? 'bg-sageLight text-sageDeep'
+                            : 'text-inkSoft hover:bg-white hover:text-ink',
+                        'flex items-center justify-center h-10 rounded-ctrl transition-colors'
                     ]"
                 >
-                    <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
                         <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
                     </svg>
-                    <span class="whitespace-nowrap">{{ item.name }}</span>
                 </Link>
+
+                <!-- Menù a tendina: Professionisti, GDPR & Privacy, Impostazioni -->
+                <div v-if="moreNavItems.length">
+                    <button
+                        type="button"
+                        @click="moreOpen = !moreOpen"
+                        :aria-expanded="moreOpen"
+                        aria-label="Altro"
+                        @mouseenter="showTip($event, 'Altro')"
+                        @mouseleave="hideTip"
+                        :class="[
+                            moreActive && !moreOpen ? 'bg-sageLight text-sageDeep' : 'text-inkSoft hover:bg-white hover:text-ink',
+                            'relative w-full flex items-center justify-center h-10 rounded-ctrl transition-colors'
+                        ]"
+                    >
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" />
+                        </svg>
+                        <svg :class="['absolute right-1 w-3 h-3 transition-transform', moreOpen ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div v-show="moreOpen" class="mt-1 p-1 rounded-ctrl bg-white/70 border border-line space-y-1">
+                        <Link
+                            v-for="item in moreNavItems"
+                            :key="item.href"
+                            :href="route(item.href)"
+                            :aria-label="item.name"
+                            @click="closeSidebar"
+                            @mouseenter="showTip($event, item.name)"
+                            @mouseleave="hideTip"
+                            :class="[
+                                isActive(item.match)
+                                    ? 'bg-sageLight text-sageDeep'
+                                    : 'text-inkSoft hover:bg-white hover:text-ink',
+                                'flex items-center justify-center h-9 rounded-ctrl transition-colors'
+                            ]"
+                        >
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+                                <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
+                            </svg>
+                        </Link>
+                    </div>
+                </div>
             </nav>
 
             <!-- User -->
             <div class="border-t border-line p-3">
-                <div class="flex items-center gap-2.5">
-                    <Link :href="route('profile.show')" @click="closeSidebar" class="flex items-center gap-2.5 flex-1 min-w-0 px-1.5 py-1.5 rounded-ctrl hover:bg-cream transition-colors">
+                <div class="flex flex-col items-center gap-1.5">
+                    <Link :href="route('profile.show')" @click="closeSidebar" :aria-label="$page.props.auth.user.name"
+                        @mouseenter="showTip($event, $page.props.auth.user.name)" @mouseleave="hideTip"
+                        class="p-1 rounded-full hover:bg-white transition-colors">
                         <img class="w-9 h-9 rounded-full object-cover shrink-0 ring-2 ring-white" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name" />
-                        <div class="text-left min-w-0">
-                            <div class="text-sm font-semibold text-ink truncate">{{ $page.props.auth.user.name }}</div>
-                            <div class="text-[11px] text-inkSoft truncate">Nutrimente</div>
-                        </div>
                     </Link>
-                    <button @click="logout" title="Esci" class="p-2 rounded-xl text-inkSoft hover:bg-red-50 hover:text-red-500 transition-colors shrink-0">
+                    <button @click="logout" aria-label="Esci" @mouseenter="showTip($event, 'Esci')" @mouseleave="hideTip" class="p-2 rounded-xl text-inkSoft hover:bg-red-50 hover:text-red-500 transition-colors shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />
                         </svg>
@@ -232,6 +296,13 @@ onUnmounted(() => {
                 </div>
             </div>
         </aside>
+
+        <!-- Etichetta della voce di sidebar al passaggio del mouse -->
+        <div
+            v-if="tip.show"
+            class="fixed z-50 -translate-y-1/2 pointer-events-none whitespace-nowrap rounded-ctrl bg-ink px-2.5 py-1.5 text-xs font-medium text-white shadow-lg"
+            :style="{ top: tip.top + 'px', left: tip.left + 'px' }"
+        >{{ tip.text }}</div>
 
         <!-- Main -->
         <div class="flex-1 flex flex-col min-w-0">

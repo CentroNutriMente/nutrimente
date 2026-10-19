@@ -149,8 +149,9 @@ class ReportController extends Controller
 
     /**
      * Sincronizza l'appuntamento derivato dal campo "Prossimo appuntamento" del referto:
-     * crea/aggiorna/elimina l'Appointment collegato, aggiorna la stringa mostrata nel PDF,
-     * invia le conferme (paziente + professionista) e la notifica in-app.
+     * crea/aggiorna/elimina l'Appointment collegato, aggiorna la stringa mostrata nel PDF
+     * e, solo quando l'appuntamento viene creato, invia le conferme (paziente + professionista)
+     * e la notifica in-app.
      */
     private function syncNextAppointment(Report $report): void
     {
@@ -184,10 +185,12 @@ class ReportController extends Controller
             'color'      => '#10b981',
         ];
 
+        $isNew = false;
         if ($report->next_appointment_id && ($appt = Appointment::find($report->next_appointment_id))) {
             $appt->update($attrs);
         } else {
-            $appt = Appointment::create($attrs);
+            $appt  = Appointment::create($attrs);
+            $isNew = true;
         }
 
         // Stringa leggibile per PDF/Show (i campi restano invariati) + link all'appuntamento.
@@ -195,6 +198,12 @@ class ReportController extends Controller
             'next_appointment'    => $start->format('d/m/Y').' alle '.$start->format('H:i'),
             'next_appointment_id' => $appt->id,
         ])->saveQuietly();
+
+        // Notifiche ed email solo alla creazione: risalvare il referto (o spostare
+        // l'appuntamento già collegato) non deve rimandarle ogni volta.
+        if (! $isNew) {
+            return;
+        }
 
         AuditLog::record('created', $appt);
 
